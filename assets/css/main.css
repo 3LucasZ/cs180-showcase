@@ -205,7 +205,9 @@ img { max-width: 100%; display: block; }
   position: relative;
   aspect-ratio: 3 / 2;
   overflow: hidden;
-  background: var(--panel-2);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.55), transparent 55%),
+    linear-gradient(135deg, #ECE3D0, #D8CFBA);
   border: 10px solid var(--paper);
   border-radius: 2px;
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
@@ -306,6 +308,81 @@ img { max-width: 100%; display: block; }
   border-radius: 2px;
   padding: 3px 9px;
 }
+
+/* ---------- develop into the frame ---------- */
+
+/* Undeveloped paper: the image starts masked out, color drained. */
+.print .print-photo img {
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
+  -webkit-mask-size: 200% 100%;
+  mask-size: 200% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+  filter: saturate(0.05) brightness(1.4);
+}
+
+.print.develop .print-photo img { filter: saturate(1) brightness(1); }
+
+.print.develop .print-photo img {
+  -webkit-animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards;
+  animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards;
+}
+
+@-webkit-keyframes dev-reveal {
+  from { -webkit-mask-position: 100% 0; }
+  to   { -webkit-mask-position: 0% 0; }
+}
+
+@keyframes dev-reveal {
+  from { mask-position: 100% 0; }
+  to   { mask-position: 0% 0; }
+}
+
+/* The developer wash — an amber band sweeping across as the image develops. */
+.print-develop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(232, 155, 60, 0.16) 34%,
+    rgba(232, 155, 60, 0.38) 50%,
+    rgba(232, 155, 60, 0.16) 66%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-115%);
+  pointer-events: none;
+}
+
+.print.develop .print-develop {
+  -webkit-animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards;
+  animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards;
+}
+
+@-webkit-keyframes develop-sweep {
+  0%   { transform: translateX(-115%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(115%); opacity: 0; }
+}
+
+@keyframes develop-sweep {
+  0%   { transform: translateX(-115%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(115%); opacity: 0; }
+}
+
+/* Stagger — each print develops a beat after the one before it. */
+.print:nth-child(1) { --d: 0.05s; }
+.print:nth-child(2) { --d: 0.18s; }
+.print:nth-child(3) { --d: 0.31s; }
+.print:nth-child(4) { --d: 0.44s; }
+.print:nth-child(5) { --d: 0.57s; }
+.print:nth-child(6) { --d: 0.70s; }
 
 /* ---------- reveal on scroll ---------- */
 
@@ -519,6 +596,15 @@ figcaption {
     transition: none !important;
   }
   .reveal { opacity: 1; transform: none; }
+  /* the develop reveal is a gentle one-shot — keep it on under reduced motion */
+  .print.develop .print-photo img {
+    -webkit-animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards !important;
+    animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards !important;
+  }
+  .print.develop .print-develop {
+    -webkit-animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards !important;
+    animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards !important;
+  }
   .print-photo { transform: none !important; }
   .print-overlay { opacity: 0; }
   .print:hover .print-overlay,

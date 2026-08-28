@@ -26,6 +26,29 @@
     reveals.forEach(el => io.observe(el));
   }
 
+  // Develop — each print develops into its frame as it enters view.
+  // Cards develop in order: each needs to be a bit more visible than the last,
+  // so the cascade reads as a sequence instead of one batch.
+  const prints = document.querySelectorAll('.print');
+  const develop = el => el.classList.add('develop');
+  if (!('IntersectionObserver' in window)) {
+    prints.forEach(develop);
+  } else {
+    const n = prints.length;
+    prints.forEach((el, i) => {
+      const t = i === 0 ? 0.45 : i === n - 1 ? 1.0 : 0.45 + (0.55 * i) / (n - 2);
+      const devIO = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            develop(entry.target);
+            devIO.unobserve(entry.target);
+          }
+        }
+      }, { threshold: t });
+      devIO.observe(el);
+    });
+  }
+
   // Safelight — a warm pool of light that trails the cursor over the table.
   const safelight = document.querySelector('.safelight');
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
