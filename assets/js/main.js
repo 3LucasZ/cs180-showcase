@@ -26,6 +26,30 @@
     reveals.forEach(el => io.observe(el));
   }
 
+  // Safelight — a warm pool of light that trails the cursor over the table.
+  const safelight = document.querySelector('.safelight');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (safelight && finePointer) {
+    let tX = 0, tY = 0, cX = 0, cY = 0, raf = 0, shown = false;
+    const loop = () => {
+      cX += (tX - cX) * 0.14;
+      cY += (tY - cY) * 0.14;
+      safelight.style.setProperty('--sx', cX + 'px');
+      safelight.style.setProperty('--sy', cY + 'px');
+      raf = requestAnimationFrame(loop);
+    };
+    window.addEventListener('pointermove', (e) => {
+      tX = e.clientX;
+      tY = e.clientY;
+      if (!shown) { shown = true; safelight.classList.add('is-on'); }
+    }, { passive: true });
+    document.documentElement.addEventListener('mouseleave', () => {
+      shown = false;
+      safelight.classList.remove('is-on');
+    });
+    raf = requestAnimationFrame(loop);
+  }
+
   window.addEventListener('scroll', updateExposure, { passive: true });
   window.addEventListener('resize', updateExposure);
   updateExposure();

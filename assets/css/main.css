@@ -155,9 +155,34 @@ img { max-width: 100%; display: block; }
 /* ---------- light table ---------- */
 
 .table {
+  position: relative;
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 40px 28px 110px;
+}
+
+.table::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 130%;
+  height: 130%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse 55% 42% at 50% 50%,
+    rgba(232, 155, 60, 0.14),
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: table-breathe 8s ease-in-out infinite;
+}
+
+.table > * { position: relative; z-index: 1; }
+
+@keyframes table-breathe {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
 }
 
 .table-intro {
@@ -481,6 +506,34 @@ figcaption {
   box-shadow: 0 0 12px rgba(232, 155, 60, 0.55);
 }
 
+/* ---------- safelight cursor glow ---------- */
+
+.safelight {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 560px;
+  height: 560px;
+  margin-left: -280px;
+  margin-top: -280px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(232, 155, 60, 0.30) 0%,
+    rgba(232, 155, 60, 0.12) 42%,
+    rgba(232, 155, 60, 0.04) 60%,
+    transparent 72%
+  );
+  transform: translate(var(--sx, -40vw), var(--sy, 30vh));
+  pointer-events: none;
+  z-index: 55;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  will-change: transform;
+}
+
+.safelight.is-on { opacity: 1; }
+
 /* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -489,6 +542,8 @@ figcaption {
     animation: none !important;
     transition: none !important;
   }
+  /* the table glow and safelight are ambient, not vestibular — keep them on */
+  .table::before { animation: table-breathe 8s ease-in-out infinite !important; }
   .reveal { opacity: 1; transform: none; }
   .print-photo { transform: none !important; }
   .print-overlay { opacity: 0; }
