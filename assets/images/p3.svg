@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="P3 placeholder — mosaic horizon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A241C"/>
+      <stop offset="55%" stop-color="#171410"/>
+      <stop offset="100%" stop-color="#0C0A08"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <circle cx="900" cy="270" r="72" fill="#E89B3C" opacity="0.5"/>
+  <line x1="0" y1="470" x2="1200" y2="470" stroke="#C9C2B4" stroke-width="2" opacity="0.25"/>
+  <rect x="210" y="150" width="320" height="210" fill="none" stroke="#C9C2B4" stroke-width="2" opacity="0.4" transform="rotate(-5 370 255)"/>
+  <rect x="290" y="180" width="320" height="210" fill="none" stroke="#C9C2B4" stroke-width="2" opacity="0.4" transform="rotate(4 450 285)"/>
+  <text x="48" y="756" font-family="monospace" font-size="22" fill="#7E786A" letter-spacing="2">P3 · MOSAICS · replace this image</text>
+</svg>

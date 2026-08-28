@@ -1,0 +1,497 @@
+/* ============================================================
+   CS180 Showcase — design system
+   The darkroom: prints on a light table.
+   Change everything from the tokens below.
+   ============================================================ */
+
+:root {
+  --ink:        #0B0A08;
+  --ink-2:      #100E0B;
+  --panel:      #191712;
+  --panel-2:    #211E16;
+  --silver:     #C9C2B4;
+  --silver-dim: #A8A08E;
+  --dust:       #7E786A;
+  --amber:      #E89B3C;
+  --paper:      #EFE8D8;
+  --line:       rgba(201, 194, 180, 0.14);
+
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body:    'Archivo', system-ui, -apple-system, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --maxw: 1200px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--silver);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--amber); color: var(--ink); }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+img { max-width: 100%; display: block; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+/* ---------- film sprockets ---------- */
+
+.sprockets {
+  height: 26px;
+  background-color: var(--panel);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 44px,
+    var(--ink) 44px 58px
+  );
+  background-size: 100% 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ---------- header ---------- */
+
+.site-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px 28px;
+  padding: 18px 28px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+
+.brand {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--dust);
+}
+
+.brand-cs { color: var(--amber); }
+
+.nav { display: flex; gap: 22px; }
+
+.nav a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--dust);
+  transition: color 0.25s;
+}
+
+.nav a:hover,
+.nav a.is-current { color: var(--silver); }
+
+/* ---------- hero ---------- */
+
+.hero {
+  text-align: center;
+  padding: clamp(72px, 12vw, 148px) 28px clamp(56px, 9vw, 96px);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dust);
+  margin: 0 0 26px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 420;
+  font-size: clamp(2.7rem, 8vw, 5.8rem);
+  line-height: 1.03;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--silver);
+  text-wrap: balance;
+}
+
+.hero-title em { font-style: italic; color: var(--amber); }
+
+.hero-sub {
+  max-width: 560px;
+  margin: 26px auto 0;
+  color: var(--silver-dim);
+  font-size: 1.06rem;
+  text-wrap: pretty;
+}
+
+/* ---------- light table ---------- */
+
+.table {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 40px 28px 110px;
+}
+
+.table-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-bottom: 44px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  margin: 0;
+  color: var(--silver);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 52px 44px;
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 48px 36px; }
+}
+
+@media (max-width: 580px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- prints ---------- */
+
+.print { position: relative; }
+
+.print-link { display: block; text-decoration: none; color: inherit; }
+
+.print-photo {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--panel-2);
+  border: 10px solid var(--paper);
+  border-radius: 2px;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
+  transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease);
+}
+
+.print:hover .print-photo,
+.print:focus-within .print-photo {
+  transform: translateY(-8px);
+  box-shadow: 0 44px 90px rgba(0, 0, 0, 0.72);
+}
+
+.print-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.8) contrast(1.02);
+  transition: filter 0.5s;
+}
+
+.print:hover .print-photo img,
+.print:focus-within .print-photo img {
+  filter: saturate(1.05) contrast(1.02);
+}
+
+.print-label {
+  position: absolute;
+  top: -12px;
+  left: -9px;
+  z-index: 3;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--amber);
+  padding: 5px 11px;
+  transform: rotate(-2deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.print-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 22px;
+  background: linear-gradient(
+    to top,
+    rgba(11, 10, 8, 0.94) 0%,
+    rgba(11, 10, 8, 0.55) 46%,
+    transparent 78%
+  );
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+.print:hover .print-overlay,
+.print:focus-within .print-overlay {
+  opacity: 1;
+  transform: none;
+}
+
+.print-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.65rem;
+  margin: 0;
+  color: var(--silver);
+}
+
+.print-pitch {
+  margin: 0;
+  font-size: 0.96rem;
+  color: var(--silver-dim);
+}
+
+.print-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dust);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 3px 9px;
+}
+
+/* ---------- reveal on scroll ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+
+.reveal.in { opacity: 1; transform: none; }
+
+/* ---------- project page ---------- */
+
+.project-hero {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(56px, 9vw, 96px) 28px 36px;
+  text-align: center;
+}
+
+.project-title {
+  font-family: var(--font-display);
+  font-weight: 420;
+  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  margin: 0 0 16px;
+  color: var(--silver);
+  text-wrap: balance;
+}
+
+.project-title em { font-style: italic; color: var(--amber); }
+
+.project-pitch {
+  max-width: 620px;
+  margin: 0 auto 20px;
+  color: var(--silver-dim);
+  font-size: 1.06rem;
+}
+
+.project-hero .print-tags { justify-content: center; }
+
+.project-hero-figure { margin: 44px 0 0; }
+
+.project-hero-figure img {
+  width: 100%;
+  border: 10px solid var(--paper);
+  border-radius: 2px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+}
+
+figcaption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--dust);
+  margin-top: 12px;
+}
+
+/* ---------- prose ---------- */
+
+.prose {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 28px 28px 90px;
+}
+
+.prose-h {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.55rem;
+  color: var(--silver);
+  margin: 2.1em 0 0.9em;
+}
+
+.prose p {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--silver-dim);
+  margin: 0 0 1.5em;
+}
+
+.figure { margin: 2.4em 0; }
+
+.figure img {
+  width: 100%;
+  border: 8px solid var(--paper);
+  border-radius: 2px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- reel (prev / next) ---------- */
+
+.reel {
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+@media (max-width: 640px) {
+  .reel { grid-template-columns: 1fr; }
+}
+
+.reel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 30px 16px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.reel-card:hover,
+.reel-card:focus-visible { background: var(--panel); }
+
+.reel-card.is-next {
+  border-left: 1px solid var(--line);
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .reel-card.is-next { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+.reel-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.3rem;
+  color: var(--silver);
+}
+
+.reel-card .mono { font-size: 11px; }
+
+/* ---------- footer ---------- */
+
+.foot-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 40px 28px 56px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 28px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+.foot-inner .amber { color: var(--amber); }
+
+/* ---------- exposure meter ---------- */
+
+.exposure {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  z-index: 60;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.exposure-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(232, 155, 60, 0.55);
+}
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  .print-photo { transform: none !important; }
+  .print-overlay { opacity: 0; }
+  .print:hover .print-overlay,
+  .print:focus-within .print-overlay { opacity: 1; transform: none; }
+}

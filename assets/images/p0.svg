@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="P0 placeholder — camera lens">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#3A2F20"/>
+      <stop offset="55%" stop-color="#1C1812"/>
+      <stop offset="100%" stop-color="#0D0B08"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <g fill="none" stroke="#C9C2B4" stroke-width="2" opacity="0.45">
+    <circle cx="600" cy="400" r="210"/>
+    <circle cx="600" cy="400" r="150" opacity="0.6"/>
+    <circle cx="600" cy="400" r="100" opacity="0.7"/>
+  </g>
+  <circle cx="600" cy="400" r="52" fill="#E89B3C" opacity="0.85"/>
+  <text x="48" y="756" font-family="monospace" font-size="22" fill="#7E786A" letter-spacing="2">P0 · CAMERA · replace this image</text>
+</svg>
