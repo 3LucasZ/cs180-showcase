@@ -100,40 +100,11 @@ img { max-width: 100%; display: block; }
 
 .site-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px 28px;
-  padding: 18px 28px;
+  justify-content: flex-end;
+  padding: 16px 28px;
   max-width: var(--maxw);
   margin: 0 auto;
 }
-
-.brand {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--dust);
-}
-
-.brand-cs { color: var(--amber); }
-
-.nav { display: flex; align-items: center; gap: 22px; }
-
-.nav a {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--dust);
-  transition: color 0.25s;
-}
-
-.nav a:hover,
-.nav a.is-current { color: var(--silver); }
 
 .light-switch {
   display: inline-flex;
@@ -165,15 +136,6 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   padding: clamp(72px, 12vw, 148px) 28px clamp(56px, 9vw, 96px);
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--dust);
-  margin: 0 0 26px;
-}
-
 .hero-title {
   font-family: var(--font-display);
   font-weight: 420;
@@ -202,26 +164,6 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 40px 28px 110px;
-}
-
-.table-intro {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px 24px;
-  margin-bottom: 44px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-
-.table-title {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 420;
-  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
-  margin: 0;
-  color: var(--silver);
 }
 
 .grid {
@@ -447,6 +389,15 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   margin: 0 auto;
   padding: clamp(56px, 9vw, 96px) 28px 36px;
   text-align: center;
+}
+
+.project-kicker {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dust);
+  margin: 0 0 16px;
 }
 
 .project-title {
