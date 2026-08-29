@@ -24,27 +24,31 @@
     reveals.forEach(el => io.observe(el));
   }
 
-  // Hand-place the prints — each gets an alternating tilt and a nudge off its
-  // grid slot, like prints dropped on a table. Both roll back on hover.
+  // Hand-place the prints — a seeded random tilt (±3.2°) and a random nudge off
+  // each grid slot (up to ±46px, y and x), like prints dropped on a table.
+  // Seeded so the arrangement is the same on every reload.
   const prints = document.querySelectorAll('.print');
-  const tilts = [-1.9, 1.7, -1.5, 1.9, -1.7, 1.5];
-  const drifts = [-10, 8, -7, 9, -6, 10];
-  const drops = [-6, 7, -5, 6, -8, 5];
-  prints.forEach((el, i) => {
-    el.style.setProperty('--tilt', (tilts[i % tilts.length]) + 'deg');
-    el.style.setProperty('--drift', (drifts[i % drifts.length]) + 'px');
-    el.style.setProperty('--drop', (drops[i % drops.length]) + 'px');
+  const rand = (() => {
+    let s = 0x2f6e2b1;
+    return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  })();
+  prints.forEach(el => {
+    el.style.setProperty('--tilt', ((rand() * 2 - 1) * 3.2).toFixed(2) + 'deg');
+    el.style.setProperty('--drift', ((rand() * 2 - 1) * 46).toFixed(0) + 'px');
+    el.style.setProperty('--drop', ((rand() * 2 - 1) * 46).toFixed(0) + 'px');
   });
 
   // Develop — scrolling develops each print into its frame. As a print's top
-  // rises through the viewport (entry → fully entered) `--dev` goes 0 → 1,
-  // sweeping the mask open and riding the developer wash across. Scroll back up
-  // and the print re-develops — scrubbing both ways.
+  // rises from near the bottom of the viewport to mid-screen, `--dev` goes
+  // 0 → 1, sweeping the mask open and riding the developer wash across. Scroll
+  // back up and the print re-develops — scrubbing both ways. The window ends
+  // at mid-screen so every print finishes developing before the page runs out
+  // of scroll (the last row can't rise past ~a third of the viewport).
   const devPhase = () => {
     const vh = window.innerHeight;
     for (const el of prints) {
       const t = el.getBoundingClientRect().top;
-      let p = (vh * 0.9 - t) / (vh * 0.7);
+      let p = (vh * 0.9 - t) / (vh * 0.4);
       p = Math.max(0, Math.min(1, p));
       el.style.setProperty('--dev', p.toFixed(3));
       el.style.setProperty('--wash', (p > 0.05 && p < 0.95 ? 1 : 0).toFixed(0));

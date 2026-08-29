@@ -64,27 +64,28 @@ body {
 /* ---------- aperture opening ----------
    A camera diaphragm: six leaves, each pinned at its own rim point, sitting
    closed over the page. They swing open in sequence about their pivots — the
-   classic shutter motion — then the whole shutter lifts to reveal the page.
-   The dark field is the aperture's own background, so the reveal is clean even
-   if the leaves' star doesn't reach the viewport corners. */
+   classic shutter motion — and as they swing, the shutter's dark field fades
+   in sync, so the page comes up through the opening iris. The shutter is
+   always dark: it's a physical lens cap, not part of the theme. */
 
 .aperture {
   position: fixed;
   inset: 0;
   z-index: 95;
   pointer-events: none;
-  background: var(--ink);
-  animation: aperture-lift 0.5s ease 1.55s forwards;
+  background: #0B0A08;
+  animation: aperture-reveal 1.3s var(--ease) 0.1s forwards;
 }
 
-@keyframes aperture-lift {
-  to { opacity: 0; }
+@keyframes aperture-reveal {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 .blade {
   position: absolute;
   inset: 0;
-  background: var(--ink);
+  background: #0B0A08;
   animation: blade-open 1.05s var(--ease) forwards;
 }
 
