@@ -24,18 +24,16 @@
     reveals.forEach(el => io.observe(el));
   }
 
-  // Hand-place the prints — a seeded random tilt (±3.2°) and a random nudge off
-  // each grid slot (up to ±46px, y and x), like prints dropped on a table.
-  // Seeded so the arrangement is the same on every reload.
+  // Hand-place the prints — a curated scatter. Each print gets a fixed tilt and
+  // a fixed drop below its grid slot (y only), picked so every row breathes
+  // slightly and the prints feel dropped by hand, not aligned by machine.
+  // Hover straightens a print but leaves it where it landed.
   const prints = document.querySelectorAll('.print');
-  const rand = (() => {
-    let s = 0x2f6e2b1;
-    return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
-  })();
-  prints.forEach(el => {
-    el.style.setProperty('--tilt', ((rand() * 2 - 1) * 3.2).toFixed(2) + 'deg');
-    el.style.setProperty('--drift', ((rand() * 2 - 1) * 46).toFixed(0) + 'px');
-    el.style.setProperty('--drop', ((rand() * 2 - 1) * 46).toFixed(0) + 'px');
+  const tilts = [-1.9, 1.6, -1.7, 1.8, -1.5, 1.9];
+  const drops = [-14, 12, 20, -10, -18, 8];
+  prints.forEach((el, i) => {
+    el.style.setProperty('--tilt', (tilts[i % tilts.length]) + 'deg');
+    el.style.setProperty('--drop', (drops[i % drops.length]) + 'px');
   });
 
   // Develop — scrolling develops each print into its frame. As a print's top

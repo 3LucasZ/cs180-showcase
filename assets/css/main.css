@@ -173,7 +173,7 @@ img { max-width: 100%; display: block; }
   background-position: 0 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  animation: sprockets-drift 9s linear infinite;
+  animation: sprockets-drift 3s linear infinite;
   transition: background-color 0.55s ease, border-color 0.55s ease, color 0.55s ease;
 }
 
@@ -277,24 +277,25 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 110px 48px;
+  gap: 150px 48px;
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 90px 36px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 120px 36px; }
 }
 
 @media (max-width: 580px) {
-  .grid { grid-template-columns: 1fr; gap: 80px; }
+  .grid { grid-template-columns: 1fr; gap: 100px; }
 }
 
 /* ---------- prints ---------- */
 
 .print {
   position: relative;
-  /* hand-placed: each print tilts and sits off-center, like it was dropped
-     onto the table by hand; both are rolled back on hover */
-  translate: var(--drift, 0px) var(--drop, 0px);
+  /* hand-placed: each print tilts and drops a little below its grid slot, like
+     it was dropped onto the table by hand. Hover straightens the tilt but
+     keeps the drop — the print stays where it landed. */
+  translate: 0 var(--drop, 0px);
   transform: rotate(var(--tilt, 0deg));
   transition: transform 0.55s var(--ease), translate 0.55s var(--ease);
 }
@@ -348,7 +349,7 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
 
 .print:hover,
 .print:focus-within {
-  translate: 0 0;
+  z-index: 5;
   transform: rotate(0deg);
 }
 
