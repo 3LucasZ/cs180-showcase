@@ -191,34 +191,98 @@ body.project-page .sprockets { border-color: var(--amber); }
 
 .site-head {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
   padding: 16px 28px;
   max-width: var(--maxw);
   margin: 0 auto;
 }
 
-.light-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.home-link {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--dust);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  padding: 6px 11px;
-  cursor: pointer;
-  transition: color 0.25s, border-color 0.25s, background-color 0.25s;
+  text-decoration: none;
+  transition: color 0.25s;
 }
 
-.light-switch:hover { color: var(--silver); border-color: var(--silver-dim); }
+.home-link:hover { color: var(--amber); }
 
-.light-switch-icon { font-size: 13px; line-height: 1; }
+.light-switch {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s var(--ease);
+}
+.light-switch:hover { transform: translateY(-2px); }
+.light-switch:focus-visible { outline-offset: 6px; }
 
-html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
+/* the fixture — cord + bulb on a chain, dangling in the header */
+.light-switch-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 66px;
+  width: 46px;
+}
+
+.cord {
+  width: 2px;
+  height: 14px;
+  background: var(--dust);
+  margin-top: 8px;
+  transition: background-color 0.55s ease;
+}
+
+.bulb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.bulb-neck {
+  width: 10px;
+  height: 8px;
+  background: var(--dust);
+  border-radius: 1px 1px 3px 3px;
+  transition: background-color 0.55s ease;
+}
+
+.bulb-glass {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 48% 48%;
+  background: radial-gradient(circle at 50% 38%, #5a5346 0%, #33302a 62%, #1c1a15 100%);
+  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.5);
+  transition: background 0.55s ease, box-shadow 0.55s ease;
+}
+
+/* room light on — the bulb burns amber */
+html.room-lit .bulb-glass {
+  background: radial-gradient(circle at 50% 38%, #ffe9c4 0%, #ffce8a 45%, #f2a64f 80%, #d98a2b 100%);
+  box-shadow: 0 0 18px 6px rgba(232, 155, 60, 0.55), inset 0 -3px 8px rgba(160, 95, 10, 0.4);
+}
+
+/* click — the bulb swings on its cord */
+.light-switch.pull .light-switch-icon {
+  animation: bulb-swing 0.7s var(--ease);
+}
+@keyframes bulb-swing {
+  0%   { transform: rotate(0deg); }
+  35%  { transform: rotate(-18deg); }
+  70%  { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
 
 /* ---------- hero ---------- */
 
@@ -451,38 +515,38 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
 }
 
 /* ---------- develop into the frame ----------
-   A print develops as it scrolls through the frame and scrubs back if you
-   scroll up. JS measures how far each print's top has risen through the
-   viewport and sets `--dev` (0 undeveloped → 1 developed); the mask sweep and
-   the developer wash are driven off that single value, so scrolling is what
-   brings the image up. */
+   A print develops as it scrolls into view: as the card climbs the frame the
+   image rises up out of the bottom, like a print coming up out of the
+   developer bath. JS sets `--dev` (0 undeveloped → 1 developed) from the
+   card's travel and latches it — a print develops once and stays developed,
+   so scrolling back up never re-masks it. */
 
 /* Undeveloped paper: masked out, color drained. */
 .print .print-photo img {
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
-  -webkit-mask-size: 200% 100%;
-  mask-size: 200% 100%;
-  -webkit-mask-position: calc((1 - var(--dev, 0)) * 100%) 0;
-  mask-position: calc((1 - var(--dev, 0)) * 100%) 0;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 50%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 50%, transparent 50%, transparent 100%);
+  -webkit-mask-size: 100% 200%;
+  mask-size: 100% 200%;
+  -webkit-mask-position: 0 calc(var(--dev, 0) * 100%);
+  mask-position: 0 calc(var(--dev, 0) * 100%);
   filter: saturate(calc(0.05 + var(--dev, 0) * 0.95)) brightness(calc(1.4 - var(--dev, 0) * 0.4));
 }
 
-/* The developer wash — an amber band that rides the sweep as the image develops. */
+/* The developer wash — an amber line that rises with the image as it develops. */
 .print-develop {
   position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(
-    100deg,
+    180deg,
     transparent 0%,
-    rgba(232, 155, 60, 0.16) 34%,
+    rgba(232, 155, 60, 0.16) 40%,
     rgba(232, 155, 60, 0.38) 50%,
-    rgba(232, 155, 60, 0.16) 66%,
+    rgba(232, 155, 60, 0.16) 60%,
     transparent 100%
   );
   opacity: var(--wash, 0);
-  transform: translateX(calc(-115% + var(--dev, 0) * 230%));
+  transform: translateY(calc(-100% + var(--dev, 0) * 200%));
   pointer-events: none;
 }
 
@@ -612,6 +676,33 @@ figcaption {
   border-radius: 2px;
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
 }
+
+/* ---------- colophon ---------- */
+
+.colophon {
+  text-align: center;
+  padding: 160px 28px 140px;
+}
+
+.colophon-credit {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.35rem;
+  color: var(--silver);
+  margin: 0 0 10px;
+}
+
+.colophon-source {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+.colophon-source a { text-decoration: none; color: var(--dust); transition: color 0.25s; }
+.colophon-source a:hover { color: var(--amber); }
 
 /* ---------- reel (prev / next) ---------- */
 

@@ -36,20 +36,24 @@
     el.style.setProperty('--drop', (drops[i % drops.length]) + 'px');
   });
 
-  // Develop — scrolling develops each print into its frame. As a print's top
-  // rises from near the bottom of the viewport to mid-screen, `--dev` goes
-  // 0 → 1, sweeping the mask open and riding the developer wash across. Scroll
-  // back up and the print re-develops — scrubbing both ways. The window ends
-  // at mid-screen so every print finishes developing before the page runs out
-  // of scroll (the last row can't rise past ~a third of the viewport).
+  // Develop — scrolling develops each print into its frame. Progress runs from
+  // the print's bottom entering the viewport to its bottom reaching mid-screen,
+  // so the image rises up out of the bottom as the card climbs. Every print can
+  // reach mid-screen, so every one fully develops before the page ends. Each
+  // print latches: it develops once, up to its peak, and stays developed —
+  // scrolling back up never re-masks it.
   const devPhase = () => {
     const vh = window.innerHeight;
+    const ends = vh * 0.5;
     for (const el of prints) {
-      const t = el.getBoundingClientRect().top;
-      let p = (vh * 0.9 - t) / (vh * 0.4);
+      const r = el.getBoundingClientRect();
+      let p = (vh - r.bottom) / (vh - ends);
       p = Math.max(0, Math.min(1, p));
-      el.style.setProperty('--dev', p.toFixed(3));
-      el.style.setProperty('--wash', (p > 0.05 && p < 0.95 ? 1 : 0).toFixed(0));
+      if (p > parseFloat(el.dataset.dev || 0)) {
+        el.dataset.dev = String(p);
+        el.style.setProperty('--dev', p.toFixed(3));
+        el.style.setProperty('--wash', (p > 0.05 && p < 0.95 ? 1 : 0).toFixed(0));
+      }
     }
   };
   devPhase();
@@ -91,6 +95,7 @@
   });
 
   // The room light — flip between darkroom (amber glow) and room-lit (paper & ink).
+  // Pulling the dangling bulb swings it, then the room flips.
   const switchBtn = document.querySelector('.light-switch');
   const setLit = lit => {
     document.documentElement.classList.toggle('room-lit', lit);
@@ -100,6 +105,9 @@
   if (switchBtn) {
     setLit(localStorage.getItem('cs180-room-lit') === '1');
     switchBtn.addEventListener('click', () => {
+      switchBtn.classList.remove('pull');
+      void switchBtn.offsetWidth; // restart the swing
+      switchBtn.classList.add('pull');
       setLit(!document.documentElement.classList.contains('room-lit'));
     });
   }
