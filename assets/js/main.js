@@ -25,26 +25,30 @@
   }
 
   // Develop — each print develops into its frame as it enters view.
-  // Cards develop in order: each needs to be a bit more visible than the last,
-  // so the cascade reads as a sequence instead of one batch.
+  // Cards queue in sequence: each starts a beat after the previous, so on load
+  // the prints develop one by one like a tray coming up, and any card that
+  // scrolls into view later joins the queue at the next beat.
   const prints = document.querySelectorAll('.print');
   const develop = el => el.classList.add('develop');
+
+  // Hand-place the prints — each gets a small alternating tilt.
+  const tilts = [-0.6, 0.5, -0.45, 0.55, -0.5, 0.45];
+  prints.forEach((el, i) => el.style.setProperty('--tilt', (tilts[i % tilts.length]) + 'deg'));
   if (!('IntersectionObserver' in window)) {
     prints.forEach(develop);
   } else {
-    const n = prints.length;
-    prints.forEach((el, i) => {
-      const t = i === 0 ? 0.45 : i === n - 1 ? 1.0 : 0.45 + (0.55 * i) / (n - 2);
-      const devIO = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            develop(entry.target);
-            devIO.unobserve(entry.target);
-          }
+    let seq = 0;
+    const devIO = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.style.setProperty('--d', (seq * 0.5) + 's');
+          seq++;
+          develop(entry.target);
+          devIO.unobserve(entry.target);
         }
-      }, { threshold: t });
-      devIO.observe(el);
-    });
+      }
+    }, { threshold: 0.15 });
+    prints.forEach(el => devIO.observe(el));
   }
 
   // Safelight — a warm pool of light that trails the cursor over the table.

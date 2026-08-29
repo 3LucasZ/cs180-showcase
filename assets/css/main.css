@@ -42,6 +42,9 @@ html.room-lit {
   --line:       rgba(43, 40, 33, 0.14);
 }
 
+/* no backlit pools under the prints once the room light is on */
+html.room-lit .print::before { opacity: 0; }
+
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -56,6 +59,19 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background-color 0.55s ease, color 0.55s ease;
+}
+
+/* ---------- film grain ---------- */
+
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 90;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.055;
 }
 
 ::selection { background: var(--amber); color: var(--ink); }
@@ -157,6 +173,23 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   text-wrap: pretty;
 }
 
+.hero-credit {
+  margin: 30px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+.hero-credit a {
+  color: var(--silver-dim);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+.hero-credit a:hover { color: var(--amber); }
+
 /* ---------- light table ---------- */
 
 .table {
@@ -182,12 +215,37 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
 
 /* ---------- prints ---------- */
 
-.print { position: relative; }
+.print {
+  position: relative;
+  /* hand-placed: each print sits at a slight tilt, straightened on hover */
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.55s var(--ease);
+}
 
 .print-link { display: block; text-decoration: none; color: inherit; }
 
+/* backlit light table — amber pools beneath each print in the darkroom */
+.print::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 92%;
+  height: 34%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(232, 155, 60, 0.26),
+    rgba(232, 155, 60, 0.08) 55%,
+    transparent 75%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
 .print-photo {
   position: relative;
+  z-index: 1;
   aspect-ratio: 3 / 2;
   overflow: hidden;
   background:
@@ -198,6 +256,11 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
   transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease),
     background-color 0.55s ease, border-color 0.55s ease;
+}
+
+.print:hover,
+.print:focus-within {
+  transform: rotate(0deg);
 }
 
 .print:hover .print-photo,
@@ -364,14 +427,6 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   100% { transform: translateX(115%); opacity: 0; }
 }
 
-/* Stagger — each print develops a beat after the one before it. */
-.print:nth-child(1) { --d: 0.05s; }
-.print:nth-child(2) { --d: 0.18s; }
-.print:nth-child(3) { --d: 0.31s; }
-.print:nth-child(4) { --d: 0.44s; }
-.print:nth-child(5) { --d: 0.57s; }
-.print:nth-child(6) { --d: 0.70s; }
-
 /* ---------- reveal on scroll ---------- */
 
 .reveal {
@@ -518,31 +573,6 @@ figcaption {
 
 .reel-card .mono { font-size: 11px; }
 
-/* ---------- footer ---------- */
-
-.foot-inner {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 40px 28px 56px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px 24px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--dust);
-}
-
-.foot-inner a {
-  color: var(--silver-dim);
-  text-decoration: none;
-  transition: color 0.25s;
-}
-
-.foot-inner a:hover { color: var(--amber); }
 
 /* ---------- exposure meter ---------- */
 
