@@ -212,79 +212,91 @@ body.project-page .sprockets { border-color: var(--amber); }
 .home-link:hover { color: var(--amber); }
 
 .light-switch {
+  position: fixed;
+  right: 18px;
+  top: 86px;
+  z-index: 70;
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: transparent;
   border: 0;
   padding: 0;
   cursor: pointer;
-  border-radius: 50%;
-  transition: transform 0.2s var(--ease);
+  border-radius: 4px;
 }
-.light-switch:hover { transform: translateY(-2px); }
 .light-switch:focus-visible { outline-offset: 6px; }
 
-/* the fixture — cord + bulb on a chain, dangling in the header */
+/* the wall switch — a dimmer plate with a rocker that flips to one side.
+   Flicking it lifts the curtains between darkroom and room-lit. */
 .light-switch-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 66px;
-  width: 46px;
-}
-
-.cord {
-  width: 2px;
-  height: 14px;
-  background: var(--dust);
-  margin-top: 8px;
-  transition: background-color 0.55s ease;
-}
-
-.bulb {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 2px;
+  width: 46px;
+  height: 74px;
 }
 
-.bulb-neck {
-  width: 10px;
-  height: 8px;
-  background: var(--dust);
-  border-radius: 1px 1px 3px 3px;
-  transition: background-color 0.55s ease;
+.switch-plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: linear-gradient(to bottom, #3b372c, #241f18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
-.bulb-glass {
+.switch-toggle {
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  transform: translateX(-50%);
   width: 30px;
-  height: 30px;
-  border-radius: 50% 50% 48% 48%;
-  background: radial-gradient(circle at 50% 38%, #5a5346 0%, #33302a 62%, #1c1a15 100%);
-  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.5);
-  transition: background 0.55s ease, box-shadow 0.55s ease;
+  height: 44px;
+  border-radius: 5px;
+  background: linear-gradient(to bottom, #19150f, #0b0907);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 
-/* room light on — the bulb burns amber */
-html.room-lit .bulb-glass {
-  background: radial-gradient(circle at 50% 38%, #ffe9c4 0%, #ffce8a 45%, #f2a64f 80%, #d98a2b 100%);
-  box-shadow: 0 0 18px 6px rgba(232, 155, 60, 0.55), inset 0 -3px 8px rgba(160, 95, 10, 0.4);
+/* the rocker — it slides up when the light's off, down when it's on */
+.switch-toggle-knob {
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 20px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #6d6657, #454033 78%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: top 0.2s var(--ease);
 }
 
-/* click — the bulb swings on its cord */
-.light-switch.pull .light-switch-icon {
-  animation: bulb-swing 0.7s var(--ease);
-}
-@keyframes bulb-swing {
-  0%   { transform: rotate(0deg); }
-  35%  { transform: rotate(-18deg); }
-  70%  { transform: rotate(10deg); }
-  100% { transform: rotate(0deg); }
-}
+/* flipped on — the rocker sits at the bottom, a slot of light behind it */
+html.room-lit .switch-toggle-knob { top: 19px; }
 
-/* ---------- hero ---------- */
+/* the click — the whole plate presses in briefly */
+.light-switch-icon.flick .switch-plate {
+  animation: switch-flick 0.18s ease;
+}
+@keyframes switch-flick {
+  0%   { transform: scaleY(1); }
+  50%  { transform: scaleY(0.94); }
+  100% { transform: scaleY(1); }
+}
+html.room-lit .switch-toggle {
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 2px 4px rgba(232, 155, 60, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+}/* ---------- hero ---------- */
 
 .hero {
   text-align: center;
@@ -681,28 +693,59 @@ figcaption {
 
 .colophon {
   text-align: center;
-  padding: 160px 28px 140px;
+  padding: 120px 28px 140px;
 }
 
-.colophon-credit {
+.colophon-title {
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 420;
-  font-size: 1.35rem;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  letter-spacing: 0.01em;
   color: var(--silver);
-  margin: 0 0 10px;
+  margin: 0 0 40px;
 }
 
-.colophon-source {
-  margin: 0;
+.colophon-credits {
+  margin: 0 0 64px;
+}
+
+.credit {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  align-items: baseline;
+  margin: 0 0 10px;
+}
+.credit dt {
+  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--dust);
 }
+.credit dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.25rem;
+  color: var(--silver);
+}
 
-.colophon-source a { text-decoration: none; color: var(--dust); transition: color 0.25s; }
-.colophon-source a:hover { color: var(--amber); }
+.colophon-end {
+  margin: 64px 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: clamp(2.6rem, 7vw, 3.8rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--silver);
+}
+
+.credit dd a { color: var(--silver); text-decoration: none; transition: color 0.25s; }
+.credit dd a:hover { color: var(--amber); }
 
 /* ---------- reel (prev / next) ---------- */
 

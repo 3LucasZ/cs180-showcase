@@ -104,10 +104,15 @@
   };
   if (switchBtn) {
     setLit(localStorage.getItem('cs180-room-lit') === '1');
+
+    // Wall switch — flick it and the room flips between darkroom and room-lit.
+    const switchIcon = switchBtn.querySelector('.light-switch-icon');
     switchBtn.addEventListener('click', () => {
-      switchBtn.classList.remove('pull');
-      void switchBtn.offsetWidth; // restart the swing
-      switchBtn.classList.add('pull');
+      if (switchIcon) {
+        switchIcon.classList.remove('flick');
+        void switchIcon.offsetWidth; // restart the click press
+        switchIcon.classList.add('flick');
+      }
       setLit(!document.documentElement.classList.contains('room-lit'));
     });
   }
