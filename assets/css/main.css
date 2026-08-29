@@ -524,9 +524,11 @@ figcaption {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 40px 28px 56px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 24px;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -534,30 +536,13 @@ figcaption {
   color: var(--dust);
 }
 
-@media (max-width: 760px) {
-  .foot-inner { grid-template-columns: repeat(2, 1fr); }
-}
-
-.colophon-col {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.colophon-head {
-  color: var(--silver);
-  margin-bottom: 4px;
-}
-
-.colophon-col a {
+.foot-inner a {
   color: var(--silver-dim);
   text-decoration: none;
-  overflow-wrap: anywhere;
   transition: color 0.25s;
 }
 
-.colophon-col a:hover { color: var(--amber); }
+.foot-inner a:hover { color: var(--amber); }
 
 /* ---------- exposure meter ---------- */
 
