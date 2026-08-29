@@ -1,6 +1,4 @@
 (() => {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   // Exposure meter — an amber bar at the bottom that fills with scroll progress.
   const fill = document.querySelector('.exposure-fill');
   const updateExposure = () => {
@@ -12,7 +10,7 @@
 
   // Scroll reveals — sections fade up once, then stop watching.
   const reveals = document.querySelectorAll('.reveal');
-  if (reduceMotion || !('IntersectionObserver' in window)) {
+  if (!('IntersectionObserver' in window)) {
     reveals.forEach(el => el.classList.add('in'));
   } else {
     const io = new IntersectionObserver(entries => {
@@ -71,6 +69,20 @@
       safelight.classList.remove('is-on');
     });
     raf = requestAnimationFrame(loop);
+  }
+
+  // The room light — flip between darkroom (amber glow) and room-lit (paper & ink).
+  const switchBtn = document.querySelector('.light-switch');
+  const setLit = lit => {
+    document.documentElement.classList.toggle('room-lit', lit);
+    if (switchBtn) switchBtn.setAttribute('aria-pressed', String(lit));
+    try { localStorage.setItem('cs180-room-lit', lit ? '1' : '0'); } catch {}
+  };
+  if (switchBtn) {
+    setLit(localStorage.getItem('cs180-room-lit') === '1');
+    switchBtn.addEventListener('click', () => {
+      setLit(!document.documentElement.classList.contains('room-lit'));
+    });
   }
 
   window.addEventListener('scroll', updateExposure, { passive: true });

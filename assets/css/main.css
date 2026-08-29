@@ -24,6 +24,24 @@
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* ---------- the room light ----------
+   Default is the darkroom: prints glow amber on a lit table, the room stays dark.
+   Flipping the switch lifts the curtains — paper and ink instead of glow.
+   The override block comes right after the tokens so the cascade is a simple
+   swap of the same custom properties. */
+html.room-lit {
+  --ink:        #E9E2D3;
+  --ink-2:      #E3DCCB;
+  --panel:      #EDE7D9;
+  --panel-2:    #DED6C3;
+  --silver:     #2B2821;
+  --silver-dim: #4A463B;
+  --dust:       #6C6657;
+  --amber:      #8C5A1E;
+  --paper:      #FBF8F0;
+  --line:       rgba(43, 40, 33, 0.14);
+}
+
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -37,6 +55,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.55s ease, color 0.55s ease;
 }
 
 ::selection { background: var(--amber); color: var(--ink); }
@@ -74,6 +93,7 @@ img { max-width: 100%; display: block; }
   background-position: center;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  transition: background-color 0.55s ease, border-color 0.55s ease;
 }
 
 /* ---------- header ---------- */
@@ -100,7 +120,7 @@ img { max-width: 100%; display: block; }
 
 .brand-cs { color: var(--amber); }
 
-.nav { display: flex; gap: 22px; }
+.nav { display: flex; align-items: center; gap: 22px; }
 
 .nav a {
   font-family: var(--font-mono);
@@ -114,6 +134,29 @@ img { max-width: 100%; display: block; }
 
 .nav a:hover,
 .nav a.is-current { color: var(--silver); }
+
+.light-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dust);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s, background-color 0.25s;
+}
+
+.light-switch:hover { color: var(--silver); border-color: var(--silver-dim); }
+
+.light-switch-icon { font-size: 13px; line-height: 1; }
+
+html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
 
 /* ---------- hero ---------- */
 
@@ -211,7 +254,8 @@ img { max-width: 100%; display: block; }
   border: 10px solid var(--paper);
   border-radius: 2px;
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
-  transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease);
+  transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease),
+    background-color 0.55s ease, border-color 0.55s ease;
 }
 
 .print:hover .print-photo,
@@ -248,6 +292,7 @@ img { max-width: 100%; display: block; }
   padding: 5px 11px;
   transform: rotate(-2deg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.55s ease, color 0.55s ease;
 }
 
 .print-overlay {
@@ -307,6 +352,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--line);
   border-radius: 2px;
   padding: 3px 9px;
+  transition: color 0.55s ease, border-color 0.55s ease;
 }
 
 /* ---------- develop into the frame ---------- */
@@ -527,10 +573,9 @@ figcaption {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 40px 28px 56px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px 28px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -538,7 +583,30 @@ figcaption {
   color: var(--dust);
 }
 
-.foot-inner .amber { color: var(--amber); }
+@media (max-width: 760px) {
+  .foot-inner { grid-template-columns: repeat(2, 1fr); }
+}
+
+.colophon-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.colophon-head {
+  color: var(--silver);
+  margin-bottom: 4px;
+}
+
+.colophon-col a {
+  color: var(--silver-dim);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: color 0.25s;
+}
+
+.colophon-col a:hover { color: var(--amber); }
 
 /* ---------- exposure meter ---------- */
 
@@ -586,27 +654,3 @@ figcaption {
 }
 
 .safelight.is-on { opacity: 1; }
-
-/* ---------- reduced motion ---------- */
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-  .reveal { opacity: 1; transform: none; }
-  /* the develop reveal is a gentle one-shot — keep it on under reduced motion */
-  .print.develop .print-photo img {
-    -webkit-animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards !important;
-    animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards !important;
-  }
-  .print.develop .print-develop {
-    -webkit-animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards !important;
-    animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards !important;
-  }
-  .print-photo { transform: none !important; }
-  .print-overlay { opacity: 0; }
-  .print:hover .print-overlay,
-  .print:focus-within .print-overlay { opacity: 1; transform: none; }
-}
