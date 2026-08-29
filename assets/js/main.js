@@ -24,32 +24,35 @@
     reveals.forEach(el => io.observe(el));
   }
 
-  // Develop — each print develops into its frame as it enters view.
-  // Cards queue in sequence: each starts a beat after the previous, so on load
-  // the prints develop one by one like a tray coming up, and any card that
-  // scrolls into view later joins the queue at the next beat.
+  // Hand-place the prints — each gets an alternating tilt and a nudge off its
+  // grid slot, like prints dropped on a table. Both roll back on hover.
   const prints = document.querySelectorAll('.print');
-  const develop = el => el.classList.add('develop');
+  const tilts = [-1.9, 1.7, -1.5, 1.9, -1.7, 1.5];
+  const drifts = [-10, 8, -7, 9, -6, 10];
+  const drops = [-6, 7, -5, 6, -8, 5];
+  prints.forEach((el, i) => {
+    el.style.setProperty('--tilt', (tilts[i % tilts.length]) + 'deg');
+    el.style.setProperty('--drift', (drifts[i % drifts.length]) + 'px');
+    el.style.setProperty('--drop', (drops[i % drops.length]) + 'px');
+  });
 
-  // Hand-place the prints — each gets a small alternating tilt.
-  const tilts = [-0.6, 0.5, -0.45, 0.55, -0.5, 0.45];
-  prints.forEach((el, i) => el.style.setProperty('--tilt', (tilts[i % tilts.length]) + 'deg'));
-  if (!('IntersectionObserver' in window)) {
-    prints.forEach(develop);
-  } else {
-    let seq = 0;
-    const devIO = new IntersectionObserver(entries => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.style.setProperty('--d', (seq * 0.5) + 's');
-          seq++;
-          develop(entry.target);
-          devIO.unobserve(entry.target);
-        }
-      }
-    }, { threshold: 0.15 });
-    prints.forEach(el => devIO.observe(el));
-  }
+  // Develop — scrolling develops each print into its frame. As a print's top
+  // rises through the viewport (entry → fully entered) `--dev` goes 0 → 1,
+  // sweeping the mask open and riding the developer wash across. Scroll back up
+  // and the print re-develops — scrubbing both ways.
+  const devPhase = () => {
+    const vh = window.innerHeight;
+    for (const el of prints) {
+      const t = el.getBoundingClientRect().top;
+      let p = (vh * 0.9 - t) / (vh * 0.7);
+      p = Math.max(0, Math.min(1, p));
+      el.style.setProperty('--dev', p.toFixed(3));
+      el.style.setProperty('--wash', (p > 0.05 && p < 0.95 ? 1 : 0).toFixed(0));
+    }
+  };
+  devPhase();
+  window.addEventListener('scroll', devPhase, { passive: true });
+  window.addEventListener('resize', devPhase);
 
   // Safelight — a warm pool of light that trails the cursor over the table.
   const safelight = document.querySelector('.safelight');
@@ -74,6 +77,16 @@
     });
     raf = requestAnimationFrame(loop);
   }
+
+  // Sprockets — the film strip drifts like a running reel. Hover pauses it, like
+  // catching the strip with a finger. Project pages run it in reverse, so the
+  // strip always leads back toward the index.
+  const sprockets = document.querySelectorAll('.sprockets');
+  sprockets.forEach(s => {
+    s.addEventListener('mouseenter', () => s.classList.add('paused'));
+    s.addEventListener('mouseleave', () => s.classList.remove('paused'));
+    if (document.body.classList.contains('project-page')) s.classList.add('reverse');
+  });
 
   // The room light — flip between darkroom (amber glow) and room-lit (paper & ink).
   const switchBtn = document.querySelector('.light-switch');

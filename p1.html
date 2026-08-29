@@ -4,14 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CS 180 · P1 — Images of the Russian Empire</title>
-  <meta name="description" content="Colorizing the Prokudin-Gorskii glass-plate collection with automatic registration.">
+  <meta name="description" content="Colorizing the Prokudin-Gorskii glass plates with automatic registration.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body>
+<body class="project-page">
+  <div class="aperture" aria-hidden="true">
+    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
+    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
+  </div>
   <div class="grain" aria-hidden="true"></div>
   <div class="sprockets" aria-hidden="true"></div>
 
@@ -21,7 +25,6 @@
       <span class="light-switch-label">room light</span>
     </button>
   </header>
-  </header>
 
   <main>
     <section class="project-hero">
@@ -30,38 +33,17 @@
       <p class="project-pitch">Colorizing the Prokudin-Gorskii glass-plate collection — three exposures, one photograph, a century apart.</p>
       <p class="print-tags"><span class="tag">colorization</span><span class="tag">registration</span><span class="tag">glass plates</span></p>
       <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
-
-      <figure class="project-hero-figure reveal">
-        <img src="assets/images/p1.svg" alt="Replace with your final colorized plate result." width="1200" height="800">
-        <figcaption>registration — align the three channel plates before stacking</figcaption>
-      </figure>
     </section>
 
-    <section class="prose">
-      <h2 class="prose-h reveal">Approach</h2>
-      <p class="reveal">Prokudin-Gorskii captured each scene three times through red, green, and blue filters. Nearly a century later, the three plates can be stacked into a color photograph — if the channels are aligned to within a few pixels. The whole project is registration.</p>
-      <p class="reveal">Each channel is a crop of one negative, so I align the green and red plates against the blue one by searching a small displacement window and keeping the offset that minimizes the difference between overlapping pixels. For the larger plates, a coarse-to-fine pyramid search keeps the cost reasonable.</p>
-
-      <figure class="figure reveal">
-        <img src="assets/images/p1.svg" alt="Replace with a channel-before-alignment figure." width="1200" height="800">
-        <figcaption>the three channels before alignment — note the displacement between plates</figcaption>
-      </figure>
-
-      <h2 class="prose-h reveal">Results</h2>
-      <p class="reveal">Once the channels line up, the colors fall into place. Edges go clean where they were fringed, and the portrait reads as a photograph rather than a triple exposure.</p>
-      <p class="reveal">The trickiest plates were the ones with large empty areas — sky, water, studio backdrops — where the alignment score goes flat and the search can drift. Cropping the evaluation to the center band of each plate fixes it.</p>
+    <section class="wip reveal">
+      <p class="wip-kicker mono">under the enlarger</p>
+      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
     </section>
   </main>
 
   <section class="reel" aria-label="Other projects">
-    <a class="reel-card" href="index.html">
-      <span class="mono">← previous</span>
-      <span class="reel-name">P0 · Camera</span>
-    </a>
-    <a class="reel-card is-next" href="index.html">
-      <span class="mono">next →</span>
-      <span class="reel-name">P2 · Filters &amp; Frequencies</span>
-    </a>
+    <a class="reel-card" href="p0.html"><span class="mono">← previous</span><span class="reel-name">P0 · Camera</span></a>
+    <a class="reel-card is-next" href="p2.html"><span class="mono">next →</span><span class="reel-name">P2 · Filters &amp; Frequencies</span></a>
   </section>
 
   <div class="sprockets" aria-hidden="true"></div>

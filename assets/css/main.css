@@ -61,6 +61,69 @@ body {
   transition: background-color 0.55s ease, color 0.55s ease;
 }
 
+/* ---------- aperture opening ----------
+   A camera diaphragm: six leaves, each pinned at its own rim point, sitting
+   closed over the page. They swing open in sequence about their pivots — the
+   classic shutter motion — then the whole shutter lifts to reveal the page.
+   The dark field is the aperture's own background, so the reveal is clean even
+   if the leaves' star doesn't reach the viewport corners. */
+
+.aperture {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  background: var(--ink);
+  animation: aperture-lift 0.5s ease 1.55s forwards;
+}
+
+@keyframes aperture-lift {
+  to { opacity: 0; }
+}
+
+.blade {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  animation: blade-open 1.05s var(--ease) forwards;
+}
+
+@keyframes blade-open {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(58deg); }
+}
+
+.blade:nth-child(1) {
+  transform-origin: 72.50% 50.00%;
+  clip-path: polygon(70.73% 27.63%, 72.50% 50.00%, 70.73% 72.37%, 47.50% 50.00%);
+  animation-delay: 0.15s;
+}
+.blade:nth-child(2) {
+  transform-origin: 61.25% 81.18%;
+  clip-path: polygon(72.47% 67.53%, 61.25% 81.18%, 48.26% 89.90%, 48.75% 46.54%);
+  animation-delay: 0.24s;
+}
+.blade:nth-child(3) {
+  transform-origin: 38.75% 81.18%;
+  clip-path: polygon(51.74% 89.90%, 38.75% 81.18%, 27.53% 67.53%, 51.25% 46.54%);
+  animation-delay: 0.33s;
+}
+.blade:nth-child(4) {
+  transform-origin: 27.50% 50.00%;
+  clip-path: polygon(29.27% 72.37%, 27.50% 50.00%, 29.27% 27.63%, 52.50% 50.00%);
+  animation-delay: 0.42s;
+}
+.blade:nth-child(5) {
+  transform-origin: 38.75% 18.82%;
+  clip-path: polygon(27.53% 32.47%, 38.75% 18.82%, 51.74% 10.10%, 51.25% 53.46%);
+  animation-delay: 0.51s;
+}
+.blade:nth-child(6) {
+  transform-origin: 61.25% 18.82%;
+  clip-path: polygon(48.26% 10.10%, 61.25% 18.82%, 72.47% 32.47%, 48.75% 53.46%);
+  animation-delay: 0.60s;
+}
+
 /* ---------- film grain ---------- */
 
 .grain {
@@ -96,21 +159,32 @@ img { max-width: 100%; display: block; }
 
 /* ---------- film sprockets ---------- */
 
+/* film perforations — the sprocket holes are `currentColor` so they follow
+   the ink when the room light flips. The strip is a 460px tile that drifts
+   one 46px period, so the holes appear to travel like a running reel. */
 .sprockets {
-  height: 26px;
-  background-color: var(--panel);
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0 44px,
-    var(--ink) 44px 58px
-  );
-  background-size: 100% 14px;
-  background-repeat: no-repeat;
-  background-position: center;
+  height: 46px;
+  color: var(--ink);
+  background-color: var(--panel-2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='46'%3E%3Crect x='14' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='60' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='106' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='152' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='198' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='244' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='290' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='336' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='382' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3Crect x='428' y='12' width='18' height='22' rx='6' fill='currentColor'/%3E%3C/svg%3E");
+  background-size: 460px 46px;
+  background-repeat: repeat-x;
+  background-position: 0 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  transition: background-color 0.55s ease, border-color 0.55s ease;
+  animation: sprockets-drift 9s linear infinite;
+  transition: background-color 0.55s ease, border-color 0.55s ease, color 0.55s ease;
 }
+
+@keyframes sprockets-drift {
+  from { background-position-x: 0; }
+  to   { background-position-x: -46px; }
+}
+
+.sprockets.paused { animation-play-state: paused; }
+.sprockets.reverse { animation-direction: reverse; }
+
+body.project-page .sprockets { border-color: var(--amber); }
 
 /* ---------- header ---------- */
 
@@ -196,30 +270,32 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   position: relative;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 40px 28px 110px;
+  padding: 40px 28px 180px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 52px 44px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 110px 48px;
 }
 
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 48px 36px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 90px 36px; }
 }
 
 @media (max-width: 580px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; gap: 80px; }
 }
 
 /* ---------- prints ---------- */
 
 .print {
   position: relative;
-  /* hand-placed: each print sits at a slight tilt, straightened on hover */
+  /* hand-placed: each print tilts and sits off-center, like it was dropped
+     onto the table by hand; both are rolled back on hover */
+  translate: var(--drift, 0px) var(--drop, 0px);
   transform: rotate(var(--tilt, 0deg));
-  transition: transform 0.55s var(--ease);
+  transition: transform 0.55s var(--ease), translate 0.55s var(--ease);
 }
 
 .print-link { display: block; text-decoration: none; color: inherit; }
@@ -252,14 +328,26 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
     radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.55), transparent 55%),
     linear-gradient(135deg, #ECE3D0, #D8CFBA);
   border: 10px solid var(--paper);
-  border-radius: 2px;
+  /* hand-cut corners — a print from the box, not a straight crop */
+  border-radius: 2px 5px 3px 6px / 6px 3px 5px 2px;
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
   transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease),
     background-color 0.55s ease, border-color 0.55s ease;
 }
 
+/* each print's corners are cut slightly differently */
+.print:nth-child(2) .print-photo,
+.print:nth-child(5) .print-photo {
+  border-radius: 6px 2px 4px 2px / 3px 5px 2px 6px;
+}
+.print:nth-child(3) .print-photo,
+.print:nth-child(6) .print-photo {
+  border-radius: 3px 6px 2px 5px / 5px 2px 6px 3px;
+}
+
 .print:hover,
 .print:focus-within {
+  translate: 0 0;
   transform: rotate(0deg);
 }
 
@@ -360,37 +448,25 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
   transition: color 0.55s ease, border-color 0.55s ease;
 }
 
-/* ---------- develop into the frame ---------- */
+/* ---------- develop into the frame ----------
+   A print develops as it scrolls through the frame and scrubs back if you
+   scroll up. JS measures how far each print's top has risen through the
+   viewport and sets `--dev` (0 undeveloped → 1 developed); the mask sweep and
+   the developer wash are driven off that single value, so scrolling is what
+   brings the image up. */
 
-/* Undeveloped paper: the image starts masked out, color drained. */
+/* Undeveloped paper: masked out, color drained. */
 .print .print-photo img {
   -webkit-mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
   mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 50%, transparent 100%);
   -webkit-mask-size: 200% 100%;
   mask-size: 200% 100%;
-  -webkit-mask-position: 100% 0;
-  mask-position: 100% 0;
-  filter: saturate(0.05) brightness(1.4);
+  -webkit-mask-position: calc((1 - var(--dev, 0)) * 100%) 0;
+  mask-position: calc((1 - var(--dev, 0)) * 100%) 0;
+  filter: saturate(calc(0.05 + var(--dev, 0) * 0.95)) brightness(calc(1.4 - var(--dev, 0) * 0.4));
 }
 
-.print.develop .print-photo img { filter: saturate(1) brightness(1); }
-
-.print.develop .print-photo img {
-  -webkit-animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards;
-  animation: dev-reveal 1.35s var(--ease) var(--d, 0s) forwards;
-}
-
-@-webkit-keyframes dev-reveal {
-  from { -webkit-mask-position: 100% 0; }
-  to   { -webkit-mask-position: 0% 0; }
-}
-
-@keyframes dev-reveal {
-  from { mask-position: 100% 0; }
-  to   { mask-position: 0% 0; }
-}
-
-/* The developer wash — an amber band sweeping across as the image develops. */
+/* The developer wash — an amber band that rides the sweep as the image develops. */
 .print-develop {
   position: absolute;
   inset: 0;
@@ -403,28 +479,9 @@ html.room-lit .light-switch { border-color: rgba(36, 31, 22, 0.35); }
     rgba(232, 155, 60, 0.16) 66%,
     transparent 100%
   );
-  opacity: 0;
-  transform: translateX(-115%);
+  opacity: var(--wash, 0);
+  transform: translateX(calc(-115% + var(--dev, 0) * 230%));
   pointer-events: none;
-}
-
-.print.develop .print-develop {
-  -webkit-animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards;
-  animation: develop-sweep 1.35s var(--ease) var(--d, 0s) forwards;
-}
-
-@-webkit-keyframes develop-sweep {
-  0%   { transform: translateX(-115%); opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { transform: translateX(115%); opacity: 0; }
-}
-
-@keyframes develop-sweep {
-  0%   { transform: translateX(-115%); opacity: 0; }
-  12%  { opacity: 1; }
-  88%  { opacity: 1; }
-  100% { transform: translateX(115%); opacity: 0; }
 }
 
 /* ---------- reveal on scroll ---------- */
@@ -492,6 +549,33 @@ figcaption {
   letter-spacing: 0.06em;
   color: var(--dust);
   margin-top: 12px;
+}
+
+/* ---------- work in progress ---------- */
+
+.wip {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 18px 28px 90px;
+  text-align: center;
+}
+
+.wip-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dust);
+  margin: 0 0 14px;
+}
+
+.wip-note {
+  margin: 0;
+  color: var(--silver-dim);
+  font-size: 0.98rem;
+  max-width: 44ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ---------- prose ---------- */

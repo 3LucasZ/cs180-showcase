@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS 180 · P3 — Warping & Mosaics</title>
+  <meta name="description" content="Stitching overlapping views into a single panorama.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body class="project-page">
+  <div class="aperture" aria-hidden="true">
+    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
+    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="sprockets" aria-hidden="true"></div>
+
+  <header class="site-head">
+    <button class="light-switch" type="button" aria-pressed="false" title="Flip the room light">
+      <span class="light-switch-icon" aria-hidden="true">◐</span>
+      <span class="light-switch-label">room light</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="project-hero">
+      <p class="project-kicker mono">CS 180 · project 03</p>
+      <h1 class="project-title">Warping &amp; <em>Mosaics</em></h1>
+      <p class="project-pitch">Stitching overlapping views into a single panorama.</p>
+      <p class="print-tags"><span class="tag">homography</span><span class="tag">stitching</span><span class="tag">ransac</span></p>
+      <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+    </section>
+
+    <section class="wip reveal">
+      <p class="wip-kicker mono">under the enlarger</p>
+      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
+    </section>
+  </main>
+
+  <section class="reel" aria-label="Other projects">
+    <a class="reel-card" href="p2.html"><span class="mono">← previous</span><span class="reel-name">P2 · Filters &amp; Frequencies</span></a>
+    <a class="reel-card is-next" href="p4.html"><span class="mono">next →</span><span class="reel-name">P4 · Light Field</span></a>
+  </section>
+
+  <div class="sprockets" aria-hidden="true"></div>
+  <div class="exposure" aria-hidden="true"><div class="exposure-fill"></div></div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
