@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS 180 · P0 — Camera</title>
-  <meta name="description" content="Becoming friends with your camera — perspective, focal length, and why you should step back.">
+  <title>CS 180 · Project 0 — Becoming Friends with Your Camera</title>
+  <meta name="description" content="Perspective, focal length, and the center of projection — close-up vs. stepped-back portraits, architectural compression, and a dolly zoom.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,15 +34,60 @@
   <main>
     <section class="project-hero">
       <p class="project-kicker mono">CS 180 · project 00</p>
-      <h1 class="project-title"><em>Camera</em></h1>
-      <p class="project-pitch">Becoming friends with your camera — perspective, focal length, and why you should step back.</p>
+      <h1 class="project-title">Becoming friends with your <em>camera</em></h1>
+      <p class="project-pitch">Perspective, focal length, and the center of projection — a close-up portrait done the wrong way and the right way, architectural compression, and a dolly zoom.</p>
       <p class="print-tags"><span class="tag">focal length</span><span class="tag">perspective</span><span class="tag">dolly zoom</span></p>
-      <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+      <p class="hero-credit">Lucas Zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
     </section>
 
-    <section class="wip reveal">
-      <p class="wip-kicker mono">under the enlarger</p>
-      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
+    <section class="prose">
+
+      <h2 class="prose-h">The wrong way, the right way</h2>
+      <p>Get close and the camera has to swing wide to fit the whole face, so the near features balloon — the nose, the brows, the hand that reaches toward the lens. Then step back, zoom in to keep the face the same size, and the relationship between the features settles into something the eyes already know.</p>
+      <div class="figure-grid">
+        <figure class="figure">
+          <img src="assets/images/p0/1.1.JPG" alt="Close-up wide-angle selfie, nose and chin pushed toward the lens" loading="lazy">
+          <figcaption>the wrong way — close, wide</figcaption>
+        </figure>
+        <figure class="figure">
+          <img src="assets/images/p0/1.3.JPG" alt="Stepped-back telephoto selfie, face the same size with natural proportions" loading="lazy">
+          <figcaption>the right way — stepped back, zoomed</figcaption>
+        </figure>
+      </div>
+      <p>The difference is the center of projection. Wide angle means the camera is inches from the face, so the rays from different parts of the face diverge sharply and near parts map to very different places. Telephoto pushes the camera back, the rays converge nearly parallel, and every part of the face is rendered at roughly the same scale. The face stops being a funhouse and starts being a face.</p>
+
+      <h2 class="prose-h">Architectural perspective compression</h2>
+      <p>Photograph a building from close and the facade leans back toward the corners, windows stretching away. Walk far away, zoom in so the building fills the frame the same way, and the same facade flattens into a nearly orthographic plane — the depth between near and far columns collapses.</p>
+      <div class="figure-grid">
+        <figure class="figure">
+          <img src="assets/images/p0/2.1.JPG" alt="Building facade photographed close and wide, with visible perspective" loading="lazy">
+          <figcaption>close, wide — perspective pulls the facade</figcaption>
+        </figure>
+        <figure class="figure">
+          <img src="assets/images/p0/2.2.JPG" alt="Same facade photographed from far away and zoomed in, looking flat" loading="lazy">
+          <figcaption>far, zoomed — the facade flattens</figcaption>
+        </figure>
+      </div>
+      <p>From close, the depth from the near corner to the far corner is a large fraction of the viewing distance, so the geometry reads as depth. From far away, that same depth is a tiny fraction of the distance, so the two corners land almost at the same place on the sensor. The compression is real foreshortening, and the whole scene collapses toward a single point — a reminder that perspective is a property of where you stand, not of the lens.</p>
+
+      <h2 class="prose-h">The dolly zoom</h2>
+      <p>Move the camera back while zooming in to keep the subject framed: the subject holds its size while the world behind it stretches and rushes. Ten frames, from wide to tele, shot on a morning street.</p>
+      <figure class="figure">
+        <img src="assets/images/p0/dolly.gif" alt="Animated dolly zoom — the subject holds size while the background compresses and swells" loading="lazy">
+        <figcaption>the vertigo shot — dolly back, zoom in</figcaption>
+      </figure>
+      <figure class="figure-grid">
+        <figure class="figure">
+          <img src="assets/images/p0/3.1.JPG" alt="Dolly zoom start frame — wide angle" loading="lazy">
+          <figcaption>frame one — wide</figcaption>
+        </figure>
+        <figure class="figure">
+          <img src="assets/images/p0/3.2.JPG" alt="Dolly zoom end frame — telephoto" loading="lazy">
+          <figcaption>frame ten — tele</figcaption>
+        </figure>
+      </figure>
+      <p>As the focal length climbs, the field of view narrows; moving back returns the subject to the same place on the sensor. The background can't do the same arithmetic, so it either swells to fill the narrowing frame or gets pushed past the edges — the whole world breathing around a subject that refuses to move.</p>
+
     </section>
   </main>
 

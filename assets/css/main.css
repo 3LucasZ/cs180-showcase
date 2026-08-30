@@ -689,6 +689,17 @@ figcaption {
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
 }
 
+.figure-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.figure-grid .figure { margin: 0; }
+
+@media (max-width: 640px) {
+  .figure-grid { grid-template-columns: 1fr; }
+}
+
 /* ---------- colophon ---------- */
 
 .colophon {
