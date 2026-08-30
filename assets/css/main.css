@@ -200,16 +200,32 @@ body.project-page .sprockets { border-color: var(--amber); }
 }
 
 .home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--dust);
+  color: var(--silver);
   text-decoration: none;
-  transition: color 0.25s;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
 }
-
-.home-link:hover { color: var(--amber); }
+.home-link:hover {
+  color: var(--amber);
+  border-color: rgba(232, 155, 60, 0.5);
+  background: var(--panel-2);
+}
+.home-link .home-arrow {
+  font-size: 13px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
 
 .light-switch {
   position: fixed;
@@ -694,10 +710,13 @@ figcaption {
   grid-template-columns: 1fr 1fr;
   gap: 28px;
 }
+.figure-grid.three {
+  grid-template-columns: repeat(3, 1fr);
+}
 .figure-grid .figure { margin: 0; }
 
 @media (max-width: 640px) {
-  .figure-grid { grid-template-columns: 1fr; }
+  .figure-grid, .figure-grid.three { grid-template-columns: 1fr; }
 }
 
 /* ---------- colophon ---------- */
