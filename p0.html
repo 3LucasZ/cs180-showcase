@@ -1,114 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS 180 · Project 0 — Becoming Friends with Your Camera</title>
-  <meta name="description" content="Perspective, focal length, and the center of projection — close-up vs. stepped-back portraits, architectural compression, and a dolly zoom.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
-</head>
-<body class="project-page">
-  <div class="aperture" aria-hidden="true">
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-  </div>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="sprockets" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS 180 · Project 0 — Becoming Friends with Your Camera</title>
+    <meta
+      name="description"
+      content="Perspective, focal length, and the center of projection — close-up vs. stepped-back portraits, architectural compression, and a dolly zoom."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body class="project-page">
+    <div class="aperture" aria-hidden="true">
+      <span class="blade"></span><span class="blade"></span
+      ><span class="blade"></span> <span class="blade"></span
+      ><span class="blade"></span><span class="blade"></span>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="sprockets" aria-hidden="true"></div>
 
-  <header class="site-head">
-    <a class="home-link" href="index.html" title="Back to the prints"><span class="home-arrow">←</span> home</a>
-    <button class="light-switch" type="button" aria-pressed="false" aria-label="Flip the room light" title="Flip the room light">
-      <span class="light-switch-icon" aria-hidden="true">
-        <span class="switch-plate"></span>
-        <span class="switch-toggle">
-          <span class="switch-toggle-knob"></span>
+    <header class="site-head">
+      <a class="home-link" href="index.html" title="Back to the prints"
+        ><span class="home-arrow">←</span> home</a
+      >
+      <button
+        class="light-switch"
+        type="button"
+        aria-pressed="false"
+        aria-label="Flip the room light"
+        title="Flip the room light"
+      >
+        <span class="light-switch-icon" aria-hidden="true">
+          <span class="switch-plate"></span>
+          <span class="switch-toggle">
+            <span class="switch-toggle-knob"></span>
+          </span>
         </span>
-      </span>
-    </button>
-  </header>
+      </button>
+    </header>
 
-  <main>
-    <section class="project-hero">
-      <p class="project-kicker mono">CS 180 · project 00</p>
-      <h1 class="project-title">Becoming friends with your <em>camera</em></h1>
-      <p class="project-pitch">Perspective, focal length, and the center of projection — a close-up portrait done the wrong way and the right way, architectural compression, and a dolly zoom.</p>
-      <p class="print-tags"><span class="tag">focal length</span><span class="tag">perspective</span><span class="tag">dolly zoom</span></p>
-      <p class="hero-credit">Lucas Zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+    <main>
+      <section class="project-hero">
+        <p class="project-kicker mono">CS 180 · project 00</p>
+        <h1 class="project-title">Becoming friends with your camera</h1>
+      </section>
+
+      <section class="prose">
+        <h2 class="prose-h">Science and Context</h2>
+        <div class="proj-panel">
+          <svg
+            id="proj-svg"
+            class="proj-svg"
+            viewBox="0 0 960 600"
+            role="img"
+            aria-label="Side view of a pinhole camera. The lens sits at the center of projection; rays from the subject's head and feet pass through it and land inverted on the sensor at the left. Drag the focal length or subject distance to explore how they change the image."
+          ></svg>
+          <p class="proj-readout" id="proj-readout"></p>
+          <div class="proj-controls">
+            <div class="proj-ctl">
+              <label class="proj-ctl-lab" for="proj-focal"
+                >focal length · zoom</label
+              >
+              <input
+                type="range"
+                id="proj-focal"
+                min="18"
+                max="70"
+                value="40"
+              />
+              <output id="proj-focal-val">40mm</output>
+            </div>
+            <div class="proj-ctl">
+              <label class="proj-ctl-lab" for="proj-dist"
+                >subject distance</label
+              >
+              <input
+                type="range"
+                id="proj-dist"
+                min="140"
+                max="615"
+                value="400"
+              />
+              <output id="proj-dist-val">40m</output>
+            </div>
+          </div>
+          <!-- <p class="proj-note">
+            Every ray the camera captures passes through one point — the center
+            of projection. Rays from the subject's head and feet cross there and
+            land inverted on the sensor; the image is exactly as tall as the
+            rays spread apart. Zooming lengthens the distance to the sensor and
+            spreads the rays wider; stepping back tightens the angle the subject
+            subtends.
+          </p> -->
+        </div>
+
+        <h2 class="prose-h">Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="assets/images/p0/1.1.JPG" loading="lazy" />
+            <figcaption>0.5</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="assets/images/p0/1.2.JPG" loading="lazy" />
+            <figcaption>normal</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="assets/images/p0/1.3.JPG" loading="lazy" />
+            <figcaption>zoomed</figcaption>
+          </figure>
+        </div>
+        <p>
+          During a 0.5 closeup selfie, the center of projection is very close to
+          your face. Your nose is much closer (proportionally) to the center of
+          projection with respect to your ears. This makes your nose
+          disproportionally larger while the ears are very small. It looks like
+          the face is bulging out. However, once you go farther away, the
+          distance from nose / ear to center becomes roughly the same. The face
+          looks flatter and more like how our eyes actually perceive faces
+          (mimicking our center of projection).
+        </p>
+
+        <h2 class="prose-h">Part 2: Architectural Perspective Compression</h2>
+        <!-- <p>
+          Photograph a building from close and the facade leans back toward the
+          corners, windows stretching away. Walk far away, zoom in so the
+          building fills the frame the same way, and the same facade flattens
+          into a nearly orthographic plane — the depth between near and far
+          columns collapses.
+        </p> -->
+        <div class="figure-grid three align-bottom">
+          <figure class="figure">
+            <img
+              src="assets/images/p0/2.1.JPG"
+              alt="Japantown facade photographed from far away and zoomed in, looking flat"
+              loading="lazy"
+            />
+            <figcaption>far = compressed</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="assets/images/p0/2.2.JPG"
+              alt="Japantown facade photographed from mid distance"
+              loading="lazy"
+            />
+            <figcaption>middle</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="assets/images/p0/2.3.JPG"
+              alt="Japantown facade photographed close and wide, with visible perspective"
+              loading="lazy"
+            />
+            <figcaption>close = perspective view</figcaption>
+          </figure>
+        </div>
+        <p>
+          With similar reasoning, we can see that from close up, the dist from
+          the near corner to the far corner of the restaurant is large relative
+          to the distance from the near corner to the center of projection. From
+          far away, the distance from the near corner to far corner becomes very
+          small relatively. Thus, the two corner pixels hit a similar place on
+          the iPhone camera sensor. This compresses the building in the image,
+          and the building seems to compress toward the center point. We learn
+          that our perspective depends on where we stand relative to the
+          building.
+        </p>
+
+        <!-- <p>A second example, same street, far to close.</p> -->
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="assets/images/p0/3.1.JPG"
+              alt="Japantown viewed from far away and zoomed in — flat and compressed"
+              loading="lazy"
+            />
+            <figcaption>far = compressed</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="assets/images/p0/3.2.JPG"
+              alt="Japantown viewed from close and wide — perspective pulls the facade"
+              loading="lazy"
+            />
+            <figcaption>close = perspective view</figcaption>
+          </figure>
+        </div>
+
+        <h2 class="prose-h">Part 3: The Dolly Zoom</h2>
+        <figure class="figure">
+          <img src="assets/images/p0/dolly.gif" loading="lazy" />
+          <figcaption>the vertigo shot!!</figcaption>
+        </figure>
+      </section>
+    </main>
+
+    <section class="reel" aria-label="Other projects">
+      <a class="reel-card" href="final.html"
+        ><span class="mono">← previous</span
+        ><span class="reel-name">FIN · Final</span></a
+      >
+      <a class="reel-card is-next" href="p1.html"
+        ><span class="mono">next →</span
+        ><span class="reel-name">P1 · Russian Empire</span></a
+      >
     </section>
 
-    <section class="prose">
+    <div class="sprockets" aria-hidden="true"></div>
+    <div class="exposure" aria-hidden="true">
+      <div class="exposure-fill"></div>
+    </div>
 
-      <h2 class="prose-h">The wrong way, the right way</h2>
-      <p>Get close and the camera has to swing wide to fit the whole face, so the near features balloon — the nose, the brows, the hand that reaches toward the lens. Then step back, zoom in to keep the face the same size, and the relationship between the features settles into something the eyes already know.</p>
-      <div class="figure-grid three">
-        <figure class="figure">
-          <img src="assets/images/p0/1.1.JPG" alt="Selfie taken close with a wide lens — near features pushed toward the lens" loading="lazy">
-          <figcaption>close — wide</figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="assets/images/p0/1.2.JPG" alt="Selfie taken a step back with a normal lens" loading="lazy">
-          <figcaption>a step back — normal</figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="assets/images/p0/1.3.JPG" alt="Selfie taken from farther back with a telephoto lens — natural proportions" loading="lazy">
-          <figcaption>far — tele</figcaption>
-        </figure>
-      </div>
-      <p>The difference is the center of projection. Wide angle means the camera is inches from the face, so the rays from different parts of the face diverge sharply and near parts map to very different places. Telephoto pushes the camera back, the rays converge nearly parallel, and every part of the face is rendered at roughly the same scale. The face stops being a funhouse and starts being a face.</p>
-
-      <h2 class="prose-h">Architectural perspective compression</h2>
-      <p>Photograph a building from close and the facade leans back toward the corners, windows stretching away. Walk far away, zoom in so the building fills the frame the same way, and the same facade flattens into a nearly orthographic plane — the depth between near and far columns collapses.</p>
-      <div class="figure-grid three">
-        <figure class="figure">
-          <img src="assets/images/p0/2.1.JPG" alt="Japantown facade photographed from far away and zoomed in, looking flat" loading="lazy">
-          <figcaption>far — compressed</figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="assets/images/p0/2.2.JPG" alt="Japantown facade photographed from mid distance" loading="lazy">
-          <figcaption>middle</figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="assets/images/p0/2.3.JPG" alt="Japantown facade photographed close and wide, with visible perspective" loading="lazy">
-          <figcaption>close — perspective pulls</figcaption>
-        </figure>
-      </div>
-      <p>From close, the depth from the near corner to the far corner is a large fraction of the viewing distance, so the geometry reads as depth. From far away, that same depth is a tiny fraction of the distance, so the two corners land almost at the same place on the sensor. The compression is real foreshortening, and the whole scene collapses toward a single point — a reminder that perspective is a property of where you stand, not of the lens.</p>
-
-      <p>A second example, same street, far to close.</p>
-      <div class="figure-grid">
-        <figure class="figure">
-          <img src="assets/images/p0/3.1.JPG" alt="Japantown viewed from far away and zoomed in — flat and compressed" loading="lazy">
-          <figcaption>far — compressed</figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="assets/images/p0/3.2.JPG" alt="Japantown viewed from close and wide — perspective pulls the facade" loading="lazy">
-          <figcaption>close — perspective pulls</figcaption>
-        </figure>
-      </div>
-
-      <h2 class="prose-h">The dolly zoom</h2>
-      <p>Move the camera back while zooming in to keep the subject framed: the subject holds its size while the world behind it stretches and rushes. Ten frames of an android, from close to far.</p>
-      <figure class="figure">
-        <img src="assets/images/p0/dolly.gif" alt="Animated dolly zoom — the android holds size while the background compresses and swells" loading="lazy">
-        <figcaption>the vertigo shot — android, close to far</figcaption>
-      </figure>
-      <p>As the focal length climbs, the field of view narrows; moving back returns the subject to the same place on the sensor. The background can't do the same arithmetic, so it either swells to fill the narrowing frame or gets pushed past the edges — the whole world breathing around a subject that refuses to move.</p>
-
-    </section>
-  </main>
-
-  <section class="reel" aria-label="Other projects">
-    <a class="reel-card" href="final.html"><span class="mono">← previous</span><span class="reel-name">FIN · Final</span></a>
-    <a class="reel-card is-next" href="p1.html"><span class="mono">next →</span><span class="reel-name">P1 · Russian Empire</span></a>
-  </section>
-
-  <div class="sprockets" aria-hidden="true"></div>
-  <div class="exposure" aria-hidden="true"><div class="exposure-fill"></div></div>
-
-  <script src="assets/js/main.js"></script>
-</body>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/proj-lab.js"></script>
+  </body>
 </html>
