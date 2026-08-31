@@ -96,15 +96,14 @@
 
   // The room light — flip between darkroom (amber glow) and room-lit (paper & ink).
   // Pulling the dangling bulb swings it, then the room flips.
-  // The darkroom is the default: every load starts dark; the switch is a
-  // session flourish and the choice is not persisted.
   const switchBtn = document.querySelector('.light-switch');
   const setLit = lit => {
     document.documentElement.classList.toggle('room-lit', lit);
     if (switchBtn) switchBtn.setAttribute('aria-pressed', String(lit));
+    try { localStorage.setItem('cs180-room-lit', lit ? '1' : '0'); } catch {}
   };
   if (switchBtn) {
-    setLit(false);
+    setLit(localStorage.getItem('cs180-room-lit') === '1');
 
     // Wall switch — flick it and the room flips between darkroom and room-lit.
     const switchIcon = switchBtn.querySelector('.light-switch-icon');
