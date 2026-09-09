@@ -4,26 +4,26 @@ from pathlib import Path
 
 # consts
 
-window_sz = 8
+window_sz = 12
 
 # for placing the 3 shifted images on top of each other
 
 
 def pad(im):
-    p = im.shape[0] // 10
+    p = im.shape[0] // 15
     return cv2.copyMakeBorder(
         im,
         p, p,
         p, p,
         cv2.BORDER_CONSTANT,
-        value=0
+        value=1
     )
 
 # for removing the frame around the images before alignment
 
 
 def crop(im):
-    p = im.shape[0] // 10
+    p = im.shape[0] // 15
     return im[p:-p, p:-p]
 
 
@@ -99,14 +99,17 @@ def find_shift(u, v, y=0, x=0):
 
 
 def align(u, v):
-    shift = find_shift_pyramid(u, v)
-    # u = pad(u)
-    return np.roll(u, shift=shift, axis=(0, 1))
+    # crop before finding shift to remove borders
+    shift = find_shift_pyramid(crop(u), crop(v))
+    # roll on a pad to simulate a padded shift
+    return np.roll(pad(u), shift=shift, axis=(0, 1))
 
 
 def main(IN_PATH, OUT_PATH):
 
     im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
+
+    im = cv2.resize(im, (400, 1200), interpolation=cv2.INTER_AREA)
     print("input image:", IN_PATH, im.shape, im.dtype)
     im = im.astype(np.float32)/255
     height = np.floor(im.shape[0] / 3.0).astype(np.uint)
@@ -125,7 +128,7 @@ def main(IN_PATH, OUT_PATH):
     ar = align(r, b)
     # create a color image
 
-    im_out = np.dstack([b, ag, ar])
+    im_out = np.dstack([pad(b), ag, ar])
     im_out = (im_out * 255).astype(np.uint8)
 
     # save the image
@@ -140,7 +143,7 @@ DIR = Path(__file__).resolve().parent
 IN_DIR = DIR / "in"
 OUT_DIR = DIR / "out"
 for IN_PATH in IN_DIR.iterdir():
-    if IN_PATH.suffix != ".jpg" and IN_PATH.name != "emir.tif":
-        continue
+    # if IN_PATH.suffix != ".jpg" and IN_PATH.name != "emir.tif":
+    #     continue
     OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
     main(IN_PATH, OUT_PATH)
