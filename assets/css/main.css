@@ -1040,3 +1040,225 @@ figcaption {
 }
 
 .safelight.is-on { opacity: 1; }
+
+/* ---------- experiments band (index) ---------- */
+
+.experiments-band {
+  margin-top: 160px;
+  text-align: center;
+}
+
+.band-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dust);
+  margin: 0 0 22px;
+}
+
+.band-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.band-card:hover,
+.band-card:focus-visible {
+  border-color: var(--amber);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.band-no {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+}
+
+.band-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 420;
+  font-size: 1.45rem;
+  color: var(--silver);
+}
+
+.band-open {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--dust);
+  transition: color 0.35s ease;
+}
+
+.band-card:hover .band-open,
+.band-card:focus-visible .band-open {
+  color: var(--amber);
+}
+
+/* ---------- experiments (off the syllabus) ---------- */
+
+.exp-panel {
+  max-width: 820px;
+  margin: 2.6em auto;
+  padding: 28px 28px 22px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
+.exp-stage {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.exp-svg {
+  display: block;
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.exp-well { fill: var(--panel-2); }
+.exp-split { stroke: var(--dust); stroke-width: 1; opacity: 0.55; }
+.exp-rim { fill: none; stroke: var(--silver-dim); stroke-width: 1.5; }
+
+.exp-status {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dust);
+  margin: 20px auto 0;
+  min-height: 1.5em;
+  max-width: 54ch;
+}
+
+.exp-status.is-match { color: var(--amber); }
+
+.exp-controls {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.exp-ctl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.exp-ctl-lab {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+.exp-ctl output,
+.exp-lamp output {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--silver);
+  justify-self: end;
+  min-width: 5ch;
+  text-align: right;
+}
+
+.exp-panel input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.exp-panel input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--line);
+}
+.exp-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+}
+.exp-panel input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: var(--line);
+}
+.exp-panel input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+}
+
+.exp-lamp {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.exp-lamp-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exp-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--glow, #888);
+  box-shadow: 0 0 12px var(--glow, transparent);
+  flex: 0 0 auto;
+}
+
+.exp-lamp-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dust);
+  cursor: pointer;
+}
+
+.exp-lamp.is-negative .exp-swatch {
+  box-shadow: 0 0 0 1px var(--amber), 0 0 14px var(--glow, transparent);
+}
+.exp-lamp.is-negative .exp-lamp-name {
+  color: var(--amber);
+}
+.exp-lamp.is-negative .exp-lamp-name::after {
+  content: " · on the test light";
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+.exp-lamp.is-negative output {
+  color: var(--amber);
+}
+
+@media (max-width: 560px) {
+  .band-card { flex-wrap: wrap; justify-content: center; }
+}

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Experiments · Maxwell's color matcher</title>
+    <meta
+      name="description"
+      content="Mix three lamps to reproduce a test light — and find the colors that can only be matched with a negative primary."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body class="project-page">
+    <div class="aperture" aria-hidden="true">
+      <span class="blade"></span><span class="blade"></span
+      ><span class="blade"></span> <span class="blade"></span
+      ><span class="blade"></span><span class="blade"></span>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="sprockets" aria-hidden="true"></div>
+
+    <header class="site-head">
+      <a class="home-link" href="index.html" title="Back to the prints"
+        ><span class="home-arrow">←</span> home</a
+      >
+      <button
+        class="light-switch"
+        type="button"
+        aria-pressed="false"
+        aria-label="Flip the room light"
+        title="Flip the room light"
+      >
+        <span class="light-switch-icon" aria-hidden="true">
+          <span class="switch-plate"></span>
+          <span class="switch-toggle">
+            <span class="switch-toggle-knob"></span>
+          </span>
+        </span>
+      </button>
+    </header>
+
+    <main>
+      <section class="project-hero">
+        <p class="project-kicker mono">experiments · off the syllabus</p>
+        <h1 class="project-title">Maxwell's color matcher</h1>
+      </section>
+
+      <section class="prose">
+        <p>
+          The eye reads every color as three numbers — the firing of its red-,
+          green-, and blue-sensitive cones. So any three fixed lights, mixed in
+          the right amounts, can stand in for a color that isn't physically
+          there. Screens, ink, and color photography all run on that trick.
+        </p>
+        <p>
+          Maxwell asked whether the trick always works. Below, a test light
+          shines on the left half of a split field; your three lamps light the
+          right. Match the halves. The lamps are imperfect on purpose — the
+          green one is really a yellow-green — because real primaries always
+          are.
+        </p>
+
+        <div class="exp-panel">
+          <div class="exp-stage">
+            <svg
+              id="exp-svg"
+              class="exp-svg"
+              viewBox="0 0 240 240"
+              role="img"
+              aria-label="A circular field split down the middle. The left half shows the test light; the right half shows the mixture of your three lamps."
+            >
+              <circle class="exp-well" cx="120" cy="120" r="108" />
+              <path id="exp-target" class="exp-half" d="M120 12 A108 108 0 0 0 120 228 Z" />
+              <path id="exp-mix" class="exp-half" d="M120 12 A108 108 0 0 1 120 228 Z" />
+              <line class="exp-split" x1="120" y1="12" x2="120" y2="228" />
+              <circle class="exp-rim" cx="120" cy="120" r="108" />
+            </svg>
+            <p id="exp-status" class="exp-status"></p>
+          </div>
+
+          <div class="exp-controls">
+            <div class="exp-ctl">
+              <label class="exp-ctl-lab" for="exp-lam"
+                >test light · wavelength</label
+              >
+              <input
+                type="range"
+                id="exp-lam"
+                min="400"
+                max="700"
+                step="1"
+                value="580"
+              />
+              <output id="exp-lam-val" for="exp-lam">580 nm</output>
+            </div>
+
+            <div class="exp-lamp" data-lamp="0">
+              <span class="exp-lamp-head">
+                <span class="exp-swatch" data-swatch></span>
+                <label class="exp-lamp-name" for="exp-lamp-0"
+                  >red lamp</label
+                >
+              </span>
+              <input
+                type="range"
+                id="exp-lamp-0"
+                min="-100"
+                max="150"
+                step="1"
+                value="0"
+                aria-label="red lamp amount"
+              />
+              <output class="exp-lamp-val" id="exp-lamp-val-0">0.00</output>
+            </div>
+
+            <div class="exp-lamp" data-lamp="1">
+              <span class="exp-lamp-head">
+                <span class="exp-swatch" data-swatch></span>
+                <label class="exp-lamp-name" for="exp-lamp-1"
+                  >green lamp</label
+                >
+              </span>
+              <input
+                type="range"
+                id="exp-lamp-1"
+                min="-100"
+                max="150"
+                step="1"
+                value="0"
+                aria-label="green lamp amount"
+              />
+              <output class="exp-lamp-val" id="exp-lamp-val-1">0.00</output>
+            </div>
+
+            <div class="exp-lamp" data-lamp="2">
+              <span class="exp-lamp-head">
+                <span class="exp-swatch" data-swatch></span>
+                <label class="exp-lamp-name" for="exp-lamp-2"
+                  >blue lamp</label
+                >
+              </span>
+              <input
+                type="range"
+                id="exp-lamp-2"
+                min="-100"
+                max="150"
+                step="1"
+                value="0"
+                aria-label="blue lamp amount"
+              />
+              <output class="exp-lamp-val" id="exp-lamp-val-2">0.00</output>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="prose-h">The failure mode</h2>
+        <p>
+          No three real lamps can reproduce every color. Sweep the test light
+          from the deep blues through the greens — about 470 to 555 nm — and
+          the halves will never agree while all your lamps stay positive. The
+          exact match calls for a <em>negative</em> red: less than none, which
+          on the bench means moving the red lamp to light the test half instead
+          of your own. Maxwell wrote exactly this down. It's the reason the
+          1931 CIE color-matching curves dip below zero around the greens, and
+          why the CIE later invented imaginary primaries that never need to.
+        </p>
+      </section>
+    </main>
+
+    <div class="sprockets" aria-hidden="true"></div>
+    <div class="exposure" aria-hidden="true">
+      <div class="exposure-fill"></div>
+    </div>
+    <div class="safelight" aria-hidden="true"></div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/maxwell.js"></script>
+  </body>
+</html>
