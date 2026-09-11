@@ -37,10 +37,10 @@ def expand_chs(im):
 
 
 def expand_ch(ch):
-    # a = np.percentile(im, 1)
-    # b = np.percentile(im, 99)
-    # im = (im - a) / (b - a)
-    # return np.clip(im, 0, 1)
+    a = np.percentile(ch, 1)
+    b = np.percentile(ch, 99)
+    ch = (ch - a) / (b - a)
+    return np.clip(ch, 0, 1)
     ch = cv2.normalize(ch, None, alpha=0, beta=1,
                        norm_type=cv2.NORM_MINMAX)
     return ch
@@ -51,6 +51,9 @@ IN_PATH = DIR / "out" / "sample3" / "lake.jpg"
 OUT_PATH = DIR / "out" / "test" / "expand_ch.jpg"
 im = cv2.imread(IN_PATH)
 print("input image:", IN_PATH, im.shape, im.dtype)
+t, b, l, r = autocrop_frame(im)
+im = im[t:b, l:r]
 im = im.astype(np.float32)/255
 im = expand_chs(im)
+im = (im*255).astype(np.uint)
 cv2.imwrite(OUT_PATH, im)
