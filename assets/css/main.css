@@ -744,6 +744,46 @@ figcaption {
   .figure-grid, .figure-grid.three { grid-template-columns: 1fr; }
 }
 
+/* A small diagram: a plate, an arrow, and the result it feeds into. The
+   result carries the weight, so it takes the rest of the row while the
+   plate stays a fixed, subordinate size. */
+.figure-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin: 2.4em 0;
+}
+.figure-flow .figure { margin: 0; }
+.figure-flow .figure-plates { flex: 0 0 auto; }
+.figure-flow .figure-plates img { max-height: 520px; }
+.figure-flow .figure-stacked { flex: 1 1 auto; min-width: 0; }
+.figure-flow .figure-stacked img {
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+}
+.flow-arrow {
+  flex: 0 0 auto;
+  display: block;
+  line-height: 0;
+  color: var(--amber);
+}
+.flow-arrow svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (max-width: 760px) {
+  .figure-flow { flex-direction: column; gap: 20px; }
+  /* in a column the figure would shrink to its natural width, so pin it wide */
+  .figure-flow .figure-stacked { width: 100%; }
+  .figure-flow .figure-plates img { max-height: 340px; }
+  .flow-arrow svg { transform: rotate(90deg); }
+}
+
 /* ---------- projection lab ---------- */
 
 .proj-panel {

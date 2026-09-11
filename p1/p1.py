@@ -4,7 +4,7 @@ from pathlib import Path
 
 # consts
 
-window_sz = 12
+window_sz = 2
 
 # for placing the 3 shifted images on top of each other
 
@@ -22,8 +22,8 @@ def pad(im):
 # for removing the frame around the images before alignment
 
 
-def crop(im):
-    p = im.shape[0] // 15
+def crop(im, p=15):
+    p = im.shape[0] // p
     return im[p:-p, p:-p]
 
 
@@ -64,6 +64,13 @@ def apply_shift(img1, img2, shift):
     img2 = img2[max(0, -dy):min(h, h - dy), max(0, -dx):min(w, w - dx)]
     return img1, img2
 
+
+def apply_sobel(u):
+    sx = cv2.Sobel(u, cv2.CV_64F, 1, 0, ksize=3)
+    sy = cv2.Sobel(u, cv2.CV_64F, 0, 1, ksize=3)
+    up = np.sqrt(sx**2 + sy**2)
+    return up
+
 # (y, x) is the current best alignment vector for u
 
 
@@ -86,8 +93,11 @@ def find_shift(u, v, y=0, x=0):
             # Rolling wraps the image weirdly messing up results
             # up = np.roll(u, shift=(dy, dx), axis=(0, 1))
             up, vp = apply_shift(u, v, (y+try_dy, x+try_dx))
+            up = apply_sobel(up)
+            vp = apply_sobel(vp)
             # print(up.shape, vp.shape)
             # score = ed(up, vp)
+
             score = ncc(up, vp)
             # print(dy, dx, score)
             if top_score is None or score > top_score:
@@ -109,7 +119,7 @@ def main(IN_PATH, OUT_PATH):
 
     im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
 
-    im = cv2.resize(im, (400, 1200), interpolation=cv2.INTER_AREA)
+    # im = cv2.resize(im, (400, 1200), interpolation=cv2.INTER_AREA)
     print("input image:", IN_PATH, im.shape, im.dtype)
     im = im.astype(np.float32)/255
     height = np.floor(im.shape[0] / 3.0).astype(np.uint)
@@ -126,9 +136,9 @@ def main(IN_PATH, OUT_PATH):
     # np.roll, np.sum, sk.transform.rescale (for multiscale)
     ag = align(g, b)
     ar = align(r, b)
+    b = pad(b)
     # create a color image
-
-    im_out = np.dstack([pad(b), ag, ar])
+    im_out = np.dstack([b, ag, ar])
     im_out = (im_out * 255).astype(np.uint8)
 
     # save the image
@@ -142,8 +152,42 @@ def main(IN_PATH, OUT_PATH):
 DIR = Path(__file__).resolve().parent
 IN_DIR = DIR / "in"
 OUT_DIR = DIR / "out"
-for IN_PATH in IN_DIR.iterdir():
-    # if IN_PATH.suffix != ".jpg" and IN_PATH.name != "emir.tif":
-    #     continue
-    OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
-    main(IN_PATH, OUT_PATH)
+# Final product. Try sample_id = 1, 2, 3 for different sample sets.
+if False:
+    sample_id = 3
+    IN_DIR = IN_DIR / f"sample{sample_id}"
+    OUT_DIR = OUT_DIR / f"sample{sample_id}"
+    for IN_PATH in IN_DIR.iterdir():
+        # if IN_PATH.suffix != ".jpg" and IN_PATH.name != "emir.tif":
+        #     continue
+        OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
+        main(IN_PATH, OUT_PATH)
+
+# Intermediate product to help me make my website.
+if False:
+    IN_PATH = IN_DIR / "sample1" / "monastery.jpg"
+    OUT_PATH = OUT_DIR / "test" / "no_align.jpg"
+    im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
+    height = np.floor(im.shape[0] / 3.0).astype(np.uint)
+    b = im[:height]
+    g = im[height: 2*height]
+    r = im[2*height: 3*height]
+    im_out = np.dstack([b, g, r])
+    cv2.imwrite(OUT_PATH, im_out)
+
+if False:
+    IN_PATH = IN_DIR / "sample2" / "emir.tif"
+    OUT_PATH = OUT_DIR / "test" / "sobel.jpg"
+    im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
+    height = np.floor(im.shape[0] / 3.0).astype(np.uint)
+    b = im[:height]
+    g = im[height: 2*height]
+    r = im[2*height: 3*height]
+    b = crop(b)
+    g = crop(g)
+    r = crop(r)
+    b = apply_sobel(b)
+    g = apply_sobel(g)
+    r = apply_sobel(r)
+    im_out = np.hstack([b, g, r])
+    cv2.imwrite(OUT_PATH, im_out)

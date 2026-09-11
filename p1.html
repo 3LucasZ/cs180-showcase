@@ -1,59 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS 180 · P1 — Images of the Russian Empire</title>
-  <meta name="description" content="Colorizing the Prokudin-Gorskii glass plates with automatic registration.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
-</head>
-<body class="project-page">
-  <div class="aperture" aria-hidden="true">
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-  </div>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="sprockets" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS 180 · P1 — Images of the Russian Empire</title>
+    <meta
+      name="description"
+      content="Colorizing the Prokudin-Gorskii glass plates with automatic registration."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body class="project-page">
+    <div class="aperture" aria-hidden="true">
+      <span class="blade"></span><span class="blade"></span
+      ><span class="blade"></span> <span class="blade"></span
+      ><span class="blade"></span><span class="blade"></span>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="sprockets" aria-hidden="true"></div>
 
-  <header class="site-head">
-    <a class="home-link" href="index.html" title="Back to the prints"><span class="home-arrow">←</span> home</a>
-    <button class="light-switch" type="button" aria-pressed="false" aria-label="Flip the room light" title="Flip the room light">
-      <span class="light-switch-icon" aria-hidden="true">
-        <span class="switch-plate"></span>
-        <span class="switch-toggle">
-          <span class="switch-toggle-knob"></span>
+    <header class="site-head">
+      <a class="home-link" href="index.html" title="Back to the prints"
+        ><span class="home-arrow">←</span> home</a
+      >
+      <button
+        class="light-switch"
+        type="button"
+        aria-pressed="false"
+        aria-label="Flip the room light"
+        title="Flip the room light"
+      >
+        <span class="light-switch-icon" aria-hidden="true">
+          <span class="switch-plate"></span>
+          <span class="switch-toggle">
+            <span class="switch-toggle-knob"></span>
+          </span>
         </span>
-      </span>
-    </button>
-  </header>
+      </button>
+    </header>
 
-  <main>
-    <section class="project-hero">
-      <p class="project-kicker mono">CS 180 · project 01</p>
-      <h1 class="project-title">Images of the <em>Russian Empire</em></h1>
-      <p class="project-pitch">Colorizing the Prokudin-Gorskii glass-plate collection — three exposures, one photograph, a century apart.</p>
-      <p class="print-tags"><span class="tag">colorization</span><span class="tag">registration</span><span class="tag">glass plates</span></p>
-      <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+    <main>
+      <section class="project-hero">
+        <p class="project-kicker mono">CS 180 · project 01</p>
+        <h1 class="project-title">The Russian Empire in Color</h1>
+        <p class="project-pitch">
+          Colorizing the Prokudin-Gorskii glass-plate collection via alignment.
+        </p>
+        <!-- <p class="print-tags"><span class="tag">colorization</span><span class="tag">registration</span><span class="tag">glass plates</span></p> -->
+        <p class="hero-credit">
+          lucas zheng ·
+          <a href="https://github.com/3LucasZ/cs180-showcase"
+            >github.com/3LucasZ/cs180-showcase</a
+          >
+          ·
+          <a href="https://github.com/3LucasZ/cs180-showcase/tree/main/p1"
+            >P1 source code</a
+          >
+        </p>
+      </section>
+      <section class="prose">
+        <h2 class="prose-h">Problem</h2>
+        <p>
+          I am very thankful to Prokudin-Gorskii for taking these glass plate
+          images. We can realize what the Russian Empire looked like in the
+          past. The glass plates correspond to Blue, Green, and Red. However, if
+          you try to place the plates on top of each other, it looks really off.
+        </p>
+        <div class="figure-flow">
+          <figure class="figure figure-plates">
+            <img
+              src="p1/in/sample1/cathedral.jpg"
+              alt="The glass plate: three exposures of the cathedral, taken through blue, green, and red filters, stacked in one tall image."
+              loading="lazy"
+            />
+            <figcaption>Glass plates</figcaption>
+          </figure>
+          <span class="flow-arrow" aria-hidden="true">
+            <svg viewBox="0 0 60 24" width="60" height="24">
+              <line x1="2" y1="12" x2="52" y2="12" />
+              <polyline points="44,4 54,12 44,20" />
+            </svg>
+          </span>
+          <figure class="figure figure-stacked">
+            <img
+              src="p1/out/test/no_align.jpg"
+              alt="The three plates laid on top of each other without aligning them — the picture comes out muddy, with colored edges where the exposures don't line up."
+              loading="lazy"
+            />
+            <figcaption>Placed on top of each other</figcaption>
+          </figure>
+        </div>
+        <p>
+          We need an algorithm to align them. This will take some
+          experimentation. They seem to be rotated correctly, so we will shift
+          each image x, y to align.
+        </p>
+        <h2>Naiive idea</h2>
+        <p>
+          We perform our alignment algorithm twice: align green to blue first,
+          then align red to blue. Then, all 3 glass plates will be aligned as a
+          single image. The most natural, naiive idea is to align an image with
+          another image via brute force search over every single possible (x,y)
+          shift alignment. This will take very long if we try every single
+          shift. Luckily, it doesn't seem like we have to shift too much, from
+          our example above. For a small image with a small shift like our
+          example above, it suffices to just check shifts in the x and y
+          direction within [-32, 32] pixels.
+        </p>
+        <h2>Pyramids</h2>
+        <h2>Downsampling</h2>
+        <p>
+          Start with naiive downsampling from discussion handout: [1 1 1 1] / 4.
+        </p>
+        <h2>The Sobel Prize</h2>
+        <figure class="figure">
+          <img
+            src="p1/out/test/sobel.jpg"
+            alt="Outline of the Emir"
+            loading="lazy"
+          />
+          <figcaption>Outline of the Emir</figcaption>
+        </figure>
+        <p>
+          We could probably do better: smooth first to remove noise before doing
+          edge (partial derivative) detection. There are also other techniques:
+          Canny edge detection, laplacian edge detection.
+        </p>
+        <h2>Nature is Beautiful</h2>
+        <p>
+          This isn't good enough for me though. I'm feeling greedy. I want a
+          beautiful nat geo type high-res nature image. I love nature. Compare
+          the very mediocre lake image we have with an actual professional
+          photography image:
+        </p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p1/out/sample3/lake.jpg"
+              alt="Beautiful high-res nature"
+              loading="lazy"
+            />
+            <figcaption>Mehhh</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p1/out/test/ex.jpg"
+              alt="Beautiful high-res nature"
+              loading="lazy"
+            />
+            <figcaption>Beautiful high-res nature</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p>
+            Normalize each color channel: R, G, B to take up the entire range.
+            E.g if Red took up [63, 128], we stretch the colors to take on the
+            entire [0, 255] intensity range.
+          </p>
+          <figure class="figure">
+            <img src="p1/out/test/expand_ch.jpg" alt="meh" loading="lazy" />
+            <figcaption>meh</figcaption>
+          </figure>
+        </div>
+      </section>
+    </main>
+
+    <section class="reel" aria-label="Other projects">
+      <a class="reel-card" href="p0.html"
+        ><span class="mono">← previous</span
+        ><span class="reel-name">P0 · Camera</span></a
+      >
+      <a class="reel-card is-next" href="p2.html"
+        ><span class="mono">next →</span
+        ><span class="reel-name">P2 · Filters &amp; Frequencies</span></a
+      >
     </section>
 
-    <section class="wip reveal">
-      <p class="wip-kicker mono">under the enlarger</p>
-      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
-    </section>
-  </main>
+    <div class="sprockets" aria-hidden="true"></div>
+    <div class="exposure" aria-hidden="true">
+      <div class="exposure-fill"></div>
+    </div>
 
-  <section class="reel" aria-label="Other projects">
-    <a class="reel-card" href="p0.html"><span class="mono">← previous</span><span class="reel-name">P0 · Camera</span></a>
-    <a class="reel-card is-next" href="p2.html"><span class="mono">next →</span><span class="reel-name">P2 · Filters &amp; Frequencies</span></a>
-  </section>
-
-  <div class="sprockets" aria-hidden="true"></div>
-  <div class="exposure" aria-hidden="true"><div class="exposure-fill"></div></div>
-
-  <script src="assets/js/main.js"></script>
-</body>
+    <script src="assets/js/main.js"></script>
+  </body>
 </html>
