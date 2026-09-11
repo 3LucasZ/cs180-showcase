@@ -9,8 +9,8 @@ window_sz = 2
 # for placing the 3 shifted images on top of each other
 
 
-def pad(im):
-    p = im.shape[0] // 15
+def pad(im, p=15):
+    p = im.shape[0] // p
     return cv2.copyMakeBorder(
         im,
         p, p,
@@ -108,14 +108,17 @@ def find_shift(u, v, y=0, x=0):
     return y+new_dy, x+new_dx
 
 
-def align(u, v):
-    # crop before finding shift to remove borders
-    shift = find_shift_pyramid(crop(u), crop(v))
+def align(u, v, single_scale):
+    if (single_scale):
+        shift = find_shift(u, v)
+    else:
+        # crop before finding shift to remove borders
+        shift = find_shift_pyramid(crop(u), crop(v))
     # roll on a pad to simulate a padded shift
-    return np.roll(pad(u), shift=shift, axis=(0, 1))
+    return shift, np.roll(pad(u), shift=shift, axis=(0, 1))
 
 
-def main(IN_PATH, OUT_PATH):
+def main(IN_PATH, OUT_PATH, single_scale):
 
     im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
 
@@ -134,9 +137,14 @@ def main(IN_PATH, OUT_PATH):
     # align the images
     # functions that might be useful for aligning the images include:
     # np.roll, np.sum, sk.transform.rescale (for multiscale)
-    ag = align(g, b)
-    ar = align(r, b)
+    gshift, ag = align(g, b, single_scale)
+    rshift, ar = align(r, b, single_scale)
+    print("green offset:", gshift)
+    print("red offset:", rshift)
     b = pad(b)
+    ag = crop(ag)
+    ar = crop(ar)
+    b = crop(b)
     # create a color image
     im_out = np.dstack([b, ag, ar])
     im_out = (im_out * 255).astype(np.uint8)
@@ -152,16 +160,29 @@ def main(IN_PATH, OUT_PATH):
 DIR = Path(__file__).resolve().parent
 IN_DIR = DIR / "in"
 OUT_DIR = DIR / "out"
-# Final product. Try sample_id = 1, 2, 3 for different sample sets.
+
+# single scale naiive
 if False:
+    IN_DIR = IN_DIR / f"sample{1}"
+    OUT_DIR = OUT_DIR / f"single-scale"
+    for IN_PATH in IN_DIR.iterdir():
+        OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
+        main(IN_PATH, OUT_PATH, single_scale=True)
+
+if False:
+    IN_PATH = IN_DIR / f"sample{2}" / "emir.tif"
+    OUT_PATH = OUT_DIR / f"test" / "bademir.jpg"
+    main(IN_PATH, OUT_PATH, False)
+# Final product. Try sample_id = 1, 2, 3 for different sample sets.
+if True:
     sample_id = 3
     IN_DIR = IN_DIR / f"sample{sample_id}"
     OUT_DIR = OUT_DIR / f"sample{sample_id}"
-    for IN_PATH in IN_DIR.iterdir():
+    for IN_PATH in sorted(IN_DIR.iterdir()):
         # if IN_PATH.suffix != ".jpg" and IN_PATH.name != "emir.tif":
         #     continue
         OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
-        main(IN_PATH, OUT_PATH)
+        main(IN_PATH, OUT_PATH, single_scale=False)
 
 # Intermediate product to help me make my website.
 if False:

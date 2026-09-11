@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CS 180 · P1 — Images of the Russian Empire</title>
+    <title>CS 180 P1: Russian Empire Color</title>
     <meta
       name="description"
       content="Colorizing the Prokudin-Gorskii glass plates with automatic registration."
@@ -67,22 +67,22 @@
             >P1 source code</a
           >
         </p>
+        <figure class="figure">
+          <img src="p1/out/test/transfer5.jpg" loading="lazy" />
+        </figure>
       </section>
       <section class="prose">
         <h2 class="prose-h">Problem</h2>
         <p>
           I am very thankful to Prokudin-Gorskii for taking these glass plate
           images. We can realize what the Russian Empire looked like in the
-          past. The glass plates correspond to Blue, Green, and Red. However, if
-          you try to place the plates on top of each other, it looks really off.
+          past. The glass plates (we assume) correspond to Blue, Green, and Red.
+          However, if you try to place the plates on top of each other, it looks
+          really off.
         </p>
         <div class="figure-flow">
           <figure class="figure figure-plates">
-            <img
-              src="p1/in/sample1/cathedral.jpg"
-              alt="The glass plate: three exposures of the cathedral, taken through blue, green, and red filters, stacked in one tall image."
-              loading="lazy"
-            />
+            <img src="p1/in/sample1/cathedral.jpg" loading="lazy" />
             <figcaption>Glass plates</figcaption>
           </figure>
           <span class="flow-arrow" aria-hidden="true">
@@ -92,20 +92,16 @@
             </svg>
           </span>
           <figure class="figure figure-stacked">
-            <img
-              src="p1/out/test/no_align.jpg"
-              alt="The three plates laid on top of each other without aligning them — the picture comes out muddy, with colored edges where the exposures don't line up."
-              loading="lazy"
-            />
+            <img src="p1/out/test/no_align.jpg" loading="lazy" />
             <figcaption>Placed on top of each other</figcaption>
           </figure>
         </div>
         <p>
           We need an algorithm to align them. This will take some
-          experimentation. They seem to be rotated correctly, so we will shift
-          each image x, y to align.
+          experimentation. They seem to be rotated correctly, so we just need to
+          shift each image x, y to align.
         </p>
-        <h2>Naiive idea</h2>
+        <h2>Naiive idea: single-scale alignment</h2>
         <p>
           We perform our alignment algorithm twice: align green to blue first,
           then align red to blue. Then, all 3 glass plates will be aligned as a
@@ -115,27 +111,190 @@
           shift. Luckily, it doesn't seem like we have to shift too much, from
           our example above. For a small image with a small shift like our
           example above, it suffices to just check shifts in the x and y
-          direction within [-32, 32] pixels.
+          direction within [-w, w] pixels. We try a half-width value of w=32. 2
+          of the 3 images align properly from this experiment.
         </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p1/out/single-scale/cathedral.jpg" loading="lazy" />
+            <figcaption>Cathedral</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/single-scale/monastery.jpg" loading="lazy" />
+            <figcaption>Monastery</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/single-scale/tobolsk.jpg" loading="lazy" />
+            <figcaption>Tobolsk</figcaption>
+          </figure>
+        </div>
         <h2>Pyramids</h2>
+        <p>
+          Unfortunately, this did not work on the Cathedral, and will certainly
+          not work on the much larger .tif images (~70MB each!) since shifts of
+          e.g 32 pixels is not enough. We will need a more efficient and
+          powerful algorithm to align them.
+        </p>
+        <p>So here's a really cool recursive algorithm idea!</p>
+        <p>
+          If we take the large images and downsample it really small, our
+          algorithm above would work. However, when upscaling them back to
+          original size, we find that the alignment was very coarse. There are
+          still thousands of possibilities of a more finer alignment after
+          upscaling. However, the number of possibilities has drastically
+          reduced. downsample the 2 images we want to align until really small.
+          Then, we run the same align algorithm for a small half-width of e.g 4
+          pixels. This alignment is very coarse. When we upscale it,
+        </p>
         <h2>Downsampling</h2>
         <p>
-          Start with naiive downsampling from discussion handout: [1 1 1 1] / 4.
+          I wanted to note that I used the naiive downsampling kernel for above:
+          [1 1 | 1 1] / 4. It would have been better to downsample using a
+          Gaussian filter, but this still yielded good results.
         </p>
         <h2>The Sobel Prize</h2>
+        <p>
+          The emir is quite stubborn and not lining up... We need a more clever
+          approach to make it work.
+        </p>
+        <div class="figure-grid figure-flow">
+          <figure class="figure">
+            <img src="p1/out/test/rawemir.png" loading="lazy" />
+            <figcaption>Drastically different</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/test/bademir.jpg" loading="lazy" />
+            <figcaption>Horrible alignment</figcaption>
+          </figure>
+        </div>
+        <p>
+          One observation is that the color intensities are fundamentally way
+          too different in between images, so even though we normalize them,
+          they won't line up via NCC properly. Our idea is to make an outline of
+          the emir instead of the raw image itself. This is doable via image
+          partial derivatives and gradients. The kernel: [-1, 1] can be used to
+          find the horizontal edges. It's transpose can be used to find the
+          vertical edges. Taking the magnitude, gives us the gradient:
+        </p>
         <figure class="figure">
-          <img
-            src="p1/out/test/sobel.jpg"
-            alt="Outline of the Emir"
-            loading="lazy"
-          />
+          <img src="p1/out/test/sobel.jpg" loading="lazy" />
           <figcaption>Outline of the Emir</figcaption>
         </figure>
         <p>
-          We could probably do better: smooth first to remove noise before doing
-          edge (partial derivative) detection. There are also other techniques:
-          Canny edge detection, laplacian edge detection.
+          Each of the 3 glass plates looks much more similar now, and it seems
+          more feasible that they will successfully line up.
         </p>
+        <div class="figure-grid">
+          <p>
+            Note: We could probably do better: smooth first to remove noise
+            before doing edge (partial derivative) detection. There are also
+            other techniques: Canny edge detection, laplacian edge detection.
+            But, the emir is lining up perfectly now!
+          </p>
+          <figure class="figure">
+            <img src="p1/out/sample2/emir.jpg" loading="lazy" />
+          </figure>
+        </div>
+        <p>
+          Here are all the images (with their offsets): the 3 small images, the
+          11 large images, and 3 custom beautiful Russian nature images from the
+          LoC! P.S: please look at:
+          <a
+            href="https://github.com/3LucasZ/cs180-showcase/blob/main/p1/out/sample2/self_portrait.jpg"
+            >here</a
+          >
+
+          for the full-scale beautiful color images! They are quite a few
+          Megabytes large and will lag the browser if I loaded them here.
+        </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p1/out/sample1/cathedral.jpg" loading="lazy" />
+            <figcaption>Cathedral</figcaption>
+            green offset: (5, 2) red offset: (12, 3)
+          </figure>
+
+          <figure class="figure">
+            <img src="p1/out/sample1/monastery.jpg" loading="lazy" />
+            <figcaption>Monastery</figcaption>
+            green offset: (-3, 2) red offset: (3, 2)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample1/tobolsk.jpg" loading="lazy" />
+            <figcaption>Tobolsk</figcaption>
+            green offset: (-3, 2) red offset: (3, 2)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/church.jpg" loading="lazy" />
+            <figcaption>Church</figcaption>
+            green offset: (25, 4) red offset: (58, -4)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/emir.jpg" loading="lazy" />
+            <figcaption>Emir</figcaption>
+            green offset: (49, 23) red offset: (107, 40)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/harvesters.jpg" loading="lazy" />
+            <figcaption>Harvesters</figcaption>
+            green offset: (60, 17) red offset: (123, 13)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/icon.jpg" loading="lazy" />
+            <figcaption>Icon</figcaption>
+            green offset: (42, 17) red offset: (90, 23)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/ilemselga.jpg" loading="lazy" />
+            <figcaption>Ilemselga</figcaption>
+            green offset: (40, 7) red offset: (131, 11)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/melons.jpg" loading="lazy" />
+            <figcaption>Melons</figcaption>
+            green offset: (80, 10) red offset: (177, 13)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/religous_painting.jpg" loading="lazy" />
+            <figcaption>Religious Painting</figcaption>
+            green offset: (30, 7) red offset: (70, 6)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/self_portrait.jpg" loading="lazy" />
+            <figcaption>Self Portrait</figcaption>
+            green offset: (78, 29) red offset: (176, 37)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/siren.jpg" loading="lazy" />
+            <figcaption>Siren</figcaption>
+            green offset: (49, -7) red offset: (96, -24)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/three_generations.jpg" loading="lazy" />
+            <figcaption>Three Generations</figcaption>
+            green offset: (54, 12) red offset: (111, 9)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample2/wharf.jpg" loading="lazy" />
+            <figcaption>Wharf</figcaption>
+            green offset: (15, -7) red offset: (83, -17)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample3/lake.jpg" loading="lazy" />
+            <figcaption>Lake</figcaption>
+            green offset: (22, -17) red offset: (101, -33)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample3/mountain.jpg" loading="lazy" />
+            <figcaption>Mountain</figcaption>
+            green offset: (30, -22) red offset: (131, -46)
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/sample3/nature.jpg" loading="lazy" />
+            <figcaption>Nature</figcaption>
+            green offset: (25, 1) red offset: (63, -7)
+          </figure>
+        </div>
         <h2>Nature is Beautiful</h2>
         <p>
           This isn't good enough for me though. I'm feeling greedy. I want a
@@ -145,33 +304,71 @@
         </p>
         <div class="figure-grid">
           <figure class="figure">
-            <img
-              src="p1/out/sample3/lake.jpg"
-              alt="Beautiful high-res nature"
-              loading="lazy"
-            />
-            <figcaption>Mehhh</figcaption>
+            <img src="p1/out/test/ex.jpg" loading="lazy" />
+            <figcaption>Beautiful high-res nature</figcaption>
           </figure>
           <figure class="figure">
-            <img
-              src="p1/out/test/ex.jpg"
-              alt="Beautiful high-res nature"
-              loading="lazy"
-            />
-            <figcaption>Beautiful high-res nature</figcaption>
+            <img src="p1/out/test/crop.jpg" loading="lazy" />
           </figure>
         </div>
         <div class="figure-grid">
           <p>
-            Normalize each color channel: R, G, B to take up the entire range.
-            E.g if Red took up [63, 128], we stretch the colors to take on the
-            entire [0, 255] intensity range.
+            Normalize each color channel disjointly: make R, G, B each take up
+            the entire range. E.g if Red took up [63, 128], we stretch the
+            colors to take on the entire [0, 255] intensity range. I found that
+            it looked nicer than normalizing all channels together.
           </p>
           <figure class="figure">
-            <img src="p1/out/test/expand_ch.jpg" alt="meh" loading="lazy" />
-            <figcaption>meh</figcaption>
+            <img src="p1/out/test/expand_ch.jpg" loading="lazy" />
+          </figure>
+          <p>
+            Automatic white balance: we take the prior that the brightest
+            objects should be white in the image. To be honest, I don't think
+            this did anything.
+          </p>
+          <figure class="figure">
+            <img src="p1/out/test/awb.jpg" loading="lazy" />
+          </figure>
+          <p>We sharpen the image, to try to bring out more detail.</p>
+          <figure class="figure">
+            <img src="p1/out/test/sharp.jpg" loading="lazy" />
           </figure>
         </div>
+        <p>
+          Finally, we increase the vibrance: increasing saturation / intensity
+          of muted colors and not changing already high-intensity colors. Here
+          is the final product. Although, still looks nothing like modern
+          professional photography, it's better than the original.
+        </p>
+        <image-compare
+          before="p1/out/test/crop.jpg"
+          after="p1/out/test/vibrant.jpg"
+        ></image-compare>
+        <p>
+          Alright, cheers to more fun. I used histogram color transfer to make
+          it look like Lake Tahoe, one of my favorite gems of California:
+        </p>
+        <image-compare
+          before="p1/out/test/crop.jpg"
+          after="p1/out/test/transfer2.jpg"
+        ></image-compare>
+        <image-compare
+          before="p1/out/test/crop.jpg"
+          after="p1/out/test/transfer3.jpg"
+        ></image-compare>
+        <image-compare
+          before="p1/out/test/crop4.jpg"
+          after="p1/out/test/transfer4.jpg"
+        ></image-compare>
+        <image-compare
+          before="p1/out/test/crop5.jpg"
+          after="p1/out/test/transfer5.jpg"
+        ></image-compare>
+
+        <p>
+          Still not what I'm looking for, but I find the water and trees quite
+          beautiful now :-).
+        </p>
       </section>
     </main>
 
@@ -192,5 +389,6 @@
     </div>
 
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/compare.js"></script>
   </body>
 </html>
