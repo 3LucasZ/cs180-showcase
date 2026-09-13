@@ -116,9 +116,9 @@
         <p>
           We need an algorithm to align them. This will take some
           experimentation. They seem to be rotated correctly, so we just need to
-          shift each image x, y to align.
+          shift each image \(x, y\) to align.
         </p>
-        <h2>Naiive idea: single-scale alignment</h2>
+        <h2>Single-scale alignment</h2>
         <p>
           Our first idea to align a grey-scale image with another grey-scale
           image is via brute force search. We search over every single possible
@@ -126,21 +126,21 @@
           long if we try every single shift e.g 350x350. Luckily, it doesn't
           seem like we have to shift too much, as from the image above the error
           margin looks small. For a small image with a small shift, we find that
-          it suffices to just check shifts in the x and y direction within [-w,
-          w] pixels, where we tried a half-width value of w=32.
+          it suffices to just check shifts in the x and y direction within
+          \([-w, w]\) pixels, where we tried a half-width value of \(w = 32\).
         </p>
         <h2>Error metric</h2>
         <p>
           To know a certain alignment is the "best" one, we assign a score to
-          each alignment trial. Score = similarity_function (u, v_i) where we
-          turn the reference image to vector u and image we shifted to vector
-          v_i. There are 2 simple possibilities for a score: euclidean distance
-          and normalized cross correlation. Euclidean distance measures the
-          difference of 2 vectors by:
-          \( \mathrm{ed}(u,v)=\sqrt{\sum_i (u_i-v_i)^2} \). NCC measures the
-          similarity of 2 vectors by:
-          \( \mathrm{ncc}(u,v)=\frac{\sum_i (u_i-\bar{u})(v_i-\bar{v})}
-          {\sqrt{\sum_i (u_i-\bar{u})^2}\,\sqrt{\sum_i (v_i-\bar{v})^2}} \).
+          each alignment trial. \(\text{Score} = \text{similarity\_function}(u,
+          v_i)\) where we turn the reference image to vector \(u\) and image we
+          shifted to vector \(v_i\). There are 2 simple possibilities for a
+          score: euclidean distance and normalized cross correlation. Euclidean
+          distance measures the difference of 2 vectors by: \(
+          \mathrm{ed}(u,v)=\sqrt{\sum_i (u_i-v_i)^2} \). NCC measures the
+          similarity of 2 vectors by: \( \mathrm{ncc}(u,v)=\frac{\sum_i
+          (u_i-\bar{u})(v_i-\bar{v})} {\sqrt{\sum_i
+          (u_i-\bar{u})^2}\,\sqrt{\sum_i (v_i-\bar{v})^2}} \).
         </p>
         <p>
           We perform our alignment algorithm twice: align green to blue first,
@@ -171,23 +171,25 @@
         <p>So here's a really cool recursive algorithm idea!</p>
         <p>
           If we take the large images and downsample it really small to e.g
-          100x100, our algorithm above would work quickly on a small w. However,
-          when upscaling them back to original size e.g 3500x3500, we find that
-          the alignment is very coarse. There are still thousands of
-          possibilities e.g 350x350 of a more finer alignment after upscaling.
-          However, the number of possibilities has drastically reduced.
+          \(100 \times 100\), our algorithm above would work quickly on a small
+          \(w\). However, when upscaling them back to original size e.g \(3500
+          \times 3500\), we find that the alignment is very coarse. There are
+          still thousands of possibilities e.g \(350 \times 350\) of a more
+          finer alignment after upscaling. However, the number of possibilities
+          has drastically reduced.
         </p>
         <p>
           The idea is to downsample the 2 images we want to align until really
-          small. Then, we run the align algorithm for a small half-width (w) of
-          e.g 4 pixels. We upscale the image by 2, and run the align algorithm
-          again. We do this recursively: upscaling the image and making a
-          micro-alignment with a small halfsize. Once we are back to our
-          original sized image, its well aligned!
+          small. Then, we run the align algorithm for a small half-width \((w)\)
+          of e.g 4 pixels. We upscale the image by 2, and run the align
+          algorithm again. We do this recursively: upscaling the image and
+          making a micro-alignment with a small halfsize. Once we are back to
+          our original sized image, its well aligned!
         </p>
         <h2>Downsampling</h2>
         <p>
-          I used the [1 1 | 1 1] / 4 downsampling kernel. It would have been
+          I used the \(\frac{1}{4}\left[\begin{smallmatrix} 1 & 1 \\ 1 & 1
+          \end{smallmatrix}\right]\) downsampling kernel. It would have been
           better to downsample using a Gaussian filter, but this still yielded
           good results.
         </p>
@@ -211,8 +213,8 @@
           too different in between images, so even though we normalize them,
           they won't line up via NCC properly. Our idea is to make an outline of
           the emir instead of the raw image itself. This is doable via image
-          partial derivatives and gradients. The kernel: [-1, 1] can be used to
-          find the horizontal edges. It's transpose can be used to find the
+          partial derivatives and gradients. The kernel: \([-1, 1]\) can be used
+          to find the horizontal edges. It's transpose can be used to find the
           vertical edges. Taking the magnitude, gives us the gradient:
         </p>
         <figure class="figure">
@@ -456,15 +458,15 @@
         </div>
         <h2>Nature is Beautiful</h2>
         <p>
-          This isn't good enough for me though. I'm feeling greedy. I want a
-          beautiful nat geo type high-res nature image. I love nature. Compare
+          This isn't good enough. Some of the images still "look" wrong. I want
+          a beautiful National-Geographic type high-res nature image. Compare
           the very mediocre lake image we have with an actual professional
           photography image:
         </p>
         <div class="figure-grid">
           <figure class="figure">
             <img src="p1/out/test/ex.jpg" loading="lazy" />
-            <figcaption>Beautiful high-res nature</figcaption>
+            <!-- <figcaption>Beautiful high-res nature</figcaption> -->
           </figure>
           <figure class="figure">
             <img src="p1/out/test/crop.jpg" loading="lazy" />
@@ -472,32 +474,33 @@
         </div>
         <div class="figure-grid">
           <p>
-            Normalize each color channel disjointly: make R, G, B each take up
-            the entire range. E.g if Red took up [63, 128], we stretch the
-            colors to take on the entire [0, 255] intensity range. I found that
-            it looked nicer than normalizing all channels together.
+            Step 1. Normalize each color channel disjointly: make R, G, B each
+            take up the entire range. E.g if Red took up \([63, 128]\), we
+            stretch the colors to take on the entire \([0, 255]\) intensity
+            range. I found that it looked nicer than normalizing all channels
+            together.
           </p>
           <figure class="figure">
             <img src="p1/out/test/expand_ch.jpg" loading="lazy" />
           </figure>
           <p>
-            Automatic white balance: we take the prior that the brightest
-            objects should be white in the image. To be honest, I don't think
-            this did anything.
+            Step 2. Automatic white balance: we take the prior that the
+            brightest objects should be white in the image. To be honest, I
+            don't think this did anything.
           </p>
           <figure class="figure">
             <img src="p1/out/test/awb.jpg" loading="lazy" />
           </figure>
-          <p>We sharpen the image, to try to bring out more detail.</p>
+          <p>Step 3. We sharpen the image, to try to bring out more detail.</p>
           <figure class="figure">
             <img src="p1/out/test/sharp.jpg" loading="lazy" />
           </figure>
         </div>
         <p>
-          Finally, we increase the vibrance: increasing saturation / intensity
-          of muted colors and not changing already high-intensity colors. Here
-          is the final product. Although, still looks nothing like modern
-          professional photography, it's better than the original.
+          Step 4. Finally, we increase the vibrance: increasing saturation /
+          intensity of muted colors and not changing already high-intensity
+          colors. Here is the final product. Although, still looks nothing like
+          modern professional photography, it's better than the original.
         </p>
         <image-compare
           before="p1/out/test/crop.jpg"
