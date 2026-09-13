@@ -1264,6 +1264,97 @@ image-compare { display: block; }
   box-shadow: 0 0 12px rgba(232, 155, 60, 0.55);
 }
 
+/* ---------- section rail ---------- */
+
+/* A film edge in the left margin, listing the sections and marking the one you
+   are reading. It only appears when the gutter can actually hold it, which is
+   the honest thing to do: at narrower widths there is no room beside the prose
+   column and a squeezed rail would crowd the text it is meant to help you
+   navigate. */
+.rail {
+  display: none;
+}
+
+/* Below this the 169px of long section names no longer fit in the gutter
+   beside the prose column, and a rail that crowds the text defeats itself. */
+@media (min-width: 1280px) {
+  .rail {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    /* The overlay spans the viewport, so it must not swallow clicks meant for
+       the page. The list takes its own back. */
+    pointer-events: none;
+  }
+}
+
+/* Mirrors .prose's column, so the rail lines up with the text edge at any
+   width instead of being pinned to a magic offset. */
+.rail-in {
+  position: relative;
+  height: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.rail-list {
+  position: absolute;
+  top: 50%;
+  /* Right edge lands on the prose column's left edge, then steps back into the
+     gutter. */
+  right: 100%;
+  margin: 0 6px 0 0;
+  padding: 0 16px 0 0;
+  transform: translateY(-50%);
+  border-right: 1px solid var(--line);
+  list-style: none;
+  text-align: right;
+  pointer-events: auto;
+  /* Without this the box shrinks to its narrowest line and the longer section
+     names break in two, which reads as broken rather than compact. */
+  width: max-content;
+}
+
+.rail-item {
+  position: relative;
+  display: block;
+  padding: 5px 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: var(--dust);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+/* The tick, crossing the film edge like a sprocket mark. Inherits the label's
+   colour so the two can never disagree. */
+.rail-item::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -22px;
+  width: 20px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+/* Behind you, ahead of you, and where you are — the rail reads as progress
+   through the pipeline, not just a list. */
+.rail-item.is-past { color: var(--silver-dim); }
+.rail-item.is-now { color: var(--amber); }
+.rail-item.is-now::after { opacity: 1; }
+
+.rail-item:hover,
+.rail-item:focus-visible { color: var(--silver); }
+
+/* Room to breathe when a rail link jumps you to a heading. */
+.prose h2 { scroll-margin-top: 32px; }
+
 /* ---------- safelight cursor glow ---------- */
 
 .safelight {
