@@ -360,6 +360,20 @@ html.room-lit .switch-toggle {
 
 .hero-credit a:hover { color: var(--amber); }
 
+/* The gallery call to action — the same chip as .pop-link, sized up to carry a
+   line of its own under the hero copy. Uppercase mono to sit with the kicker
+   and credit lines it appears between. */
+.hero-gallery { margin: 26px 0 0; }
+
+.hero-gallery .pop-link {
+  padding: 7px 16px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+
 /* ---------- light table ---------- */
 
 .table {
@@ -701,6 +715,39 @@ figcaption {
   margin: 0 0 1.5em;
 }
 
+/* KaTeX math in the prose. KaTeX ships a 1.21em bump of its own — a lot inside
+   1.18rem body copy — so trim it back to sit with the text rather than over it.
+   KaTeX draws in currentColor, so both room lights are handled for free. */
+.katex {
+  font-size: 1.08em;
+}
+
+/* An inline link that has to be noticed. Only the treatment changes — the link
+   text stays whatever the author wrote. Both tokens flip with the room light,
+   so the chip is amber-on-ink in the dark and its inverse under the lamp. */
+.pop-link {
+  display: inline-block;
+  padding: 1px 9px 2px;
+  border-radius: 3px;
+  background: var(--amber);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.pop-link::after { content: "↗"; margin-left: 5px; }
+.pop-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.45);
+}
+.pop-link:focus-visible {
+  outline: 2px solid var(--silver);
+  outline-offset: 3px;
+}
+
 .figure { margin: 2.4em 0; }
 
 .figure img {
@@ -711,6 +758,26 @@ figcaption {
   display: block;
   margin-inline: auto;
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+
+/* The alignment offsets under a figure. Every cell in the grid shares the same
+   column widths — a fixed 4ch per number, which is the widest value ("+177") —
+   so the digits stack into readable columns straight down the grid. */
+.offsets {
+  display: grid;
+  grid-template-columns: auto 4ch 4ch;
+  justify-content: start;
+  gap: 2px 10px;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dust);
+}
+.offsets dt { letter-spacing: 0.06em; }
+.offsets dt, .offsets dd { margin: 0; }
+.offsets dd {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .figure-grid {

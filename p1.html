@@ -18,6 +18,10 @@
       href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.css"
+    />
     <link rel="stylesheet" href="assets/css/main.css" />
   </head>
   <body class="project-page">
@@ -67,18 +71,31 @@
             >P1 source code</a
           >
         </p>
+        <p class="hero-gallery">
+          <a
+            class="pop-link"
+            href="https://github.com/3LucasZ/cs180-showcase/blob/main/p1/out/sample2/ilemselga.jpg"
+            >full-resolution gallery</a
+          >
+        </p>
         <figure class="figure">
           <img src="p1/out/test/transfer5.jpg" loading="lazy" />
         </figure>
       </section>
       <section class="prose">
-        <h2 class="prose-h">Problem</h2>
+        <h2 class="">Introduction</h2>
+        <p class="">
+          Sergei Mikhailovich Prokudin-Gorskii travelled across Russia taking
+          thousands of amazing photographs. Each scene, he recorded 3 images
+          with different exposures on different glass plates: red, green, and
+          blue filter. I am thankful to the genius of Prokudin-Gorskii for
+          taking these glass plate images. Because of his imagination and
+          efforts, we can realize what the Russian Empire looked like in the
+          past.
+        </p>
         <p>
-          I am very thankful to Prokudin-Gorskii for taking these glass plate
-          images. We can realize what the Russian Empire looked like in the
-          past. The glass plates (we assume) correspond to Blue, Green, and Red.
-          However, if you try to place the plates on top of each other, it looks
-          really off.
+          However, if you simply try to place the plates on top of each other,
+          it looks really off.
         </p>
         <div class="figure-flow">
           <figure class="figure figure-plates">
@@ -103,16 +120,32 @@
         </p>
         <h2>Naiive idea: single-scale alignment</h2>
         <p>
+          Our first idea to align a grey-scale image with another grey-scale
+          image is via brute force search. We search over every single possible
+          (x,y) shift alignment and take the the best one. This will take very
+          long if we try every single shift e.g 350x350. Luckily, it doesn't
+          seem like we have to shift too much, as from the image above the error
+          margin looks small. For a small image with a small shift, we find that
+          it suffices to just check shifts in the x and y direction within [-w,
+          w] pixels, where we tried a half-width value of w=32.
+        </p>
+        <h2>Error metric</h2>
+        <p>
+          To know a certain alignment is the "best" one, we assign a score to
+          each alignment trial. Score = similarity_function (u, v_i) where we
+          turn the reference image to vector u and image we shifted to vector
+          v_i. There are 2 simple possibilities for a score: euclidean distance
+          and normalized cross correlation. Euclidean distance measures the
+          difference of 2 vectors by:
+          \( \mathrm{ed}(u,v)=\sqrt{\sum_i (u_i-v_i)^2} \). NCC measures the
+          similarity of 2 vectors by:
+          \( \mathrm{ncc}(u,v)=\frac{\sum_i (u_i-\bar{u})(v_i-\bar{v})}
+          {\sqrt{\sum_i (u_i-\bar{u})^2}\,\sqrt{\sum_i (v_i-\bar{v})^2}} \).
+        </p>
+        <p>
           We perform our alignment algorithm twice: align green to blue first,
           then align red to blue. Then, all 3 glass plates will be aligned as a
-          single image. The most natural, naiive idea is to align an image with
-          another image via brute force search over every single possible (x,y)
-          shift alignment. This will take very long if we try every single
-          shift. Luckily, it doesn't seem like we have to shift too much, from
-          our example above. For a small image with a small shift like our
-          example above, it suffices to just check shifts in the x and y
-          direction within [-w, w] pixels. We try a half-width value of w=32. 2
-          of the 3 images align properly from this experiment.
+          single image. 2 of the 3 images align properly from this experiment.
         </p>
         <div class="figure-grid three">
           <figure class="figure">
@@ -131,26 +164,32 @@
         <h2>Pyramids</h2>
         <p>
           Unfortunately, this did not work on the Cathedral, and will certainly
-          not work on the much larger .tif images (~70MB each!) since shifts of
-          e.g 32 pixels is not enough. We will need a more efficient and
+          not work on the much larger .tif images (~70MB each!). Shifts of e.g
+          32 pixels is no where near enough. We will need a more efficient and
           powerful algorithm to align them.
         </p>
         <p>So here's a really cool recursive algorithm idea!</p>
         <p>
-          If we take the large images and downsample it really small, our
-          algorithm above would work. However, when upscaling them back to
-          original size, we find that the alignment was very coarse. There are
-          still thousands of possibilities of a more finer alignment after
-          upscaling. However, the number of possibilities has drastically
-          reduced. downsample the 2 images we want to align until really small.
-          Then, we run the same align algorithm for a small half-width of e.g 4
-          pixels. This alignment is very coarse. When we upscale it,
+          If we take the large images and downsample it really small to e.g
+          100x100, our algorithm above would work quickly on a small w. However,
+          when upscaling them back to original size e.g 3500x3500, we find that
+          the alignment is very coarse. There are still thousands of
+          possibilities e.g 350x350 of a more finer alignment after upscaling.
+          However, the number of possibilities has drastically reduced.
+        </p>
+        <p>
+          The idea is to downsample the 2 images we want to align until really
+          small. Then, we run the align algorithm for a small half-width (w) of
+          e.g 4 pixels. We upscale the image by 2, and run the align algorithm
+          again. We do this recursively: upscaling the image and making a
+          micro-alignment with a small halfsize. Once we are back to our
+          original sized image, its well aligned!
         </p>
         <h2>Downsampling</h2>
         <p>
-          I wanted to note that I used the naiive downsampling kernel for above:
-          [1 1 | 1 1] / 4. It would have been better to downsample using a
-          Gaussian filter, but this still yielded good results.
+          I used the [1 1 | 1 1] / 4 downsampling kernel. It would have been
+          better to downsample using a Gaussian filter, but this still yielded
+          good results.
         </p>
         <h2>The Sobel Prize</h2>
         <p>
@@ -200,6 +239,7 @@
           11 large images, and 3 custom beautiful Russian nature images from the
           LoC! P.S: please look at:
           <a
+            class="pop-link"
             href="https://github.com/3LucasZ/cs180-showcase/blob/main/p1/out/sample2/self_portrait.jpg"
             >here</a
           >
@@ -211,88 +251,207 @@
           <figure class="figure">
             <img src="p1/out/sample1/cathedral.jpg" loading="lazy" />
             <figcaption>Cathedral</figcaption>
-            green offset: (5, 2) red offset: (12, 3)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+5</dd>
+              <dd>+2</dd>
+              <dt>red</dt>
+              <dd>+12</dd>
+              <dd>+3</dd>
+            </dl>
           </figure>
 
           <figure class="figure">
             <img src="p1/out/sample1/monastery.jpg" loading="lazy" />
             <figcaption>Monastery</figcaption>
-            green offset: (-3, 2) red offset: (3, 2)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>-3</dd>
+              <dd>+2</dd>
+              <dt>red</dt>
+              <dd>+3</dd>
+              <dd>+2</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample1/tobolsk.jpg" loading="lazy" />
             <figcaption>Tobolsk</figcaption>
-            green offset: (-3, 2) red offset: (3, 2)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>-3</dd>
+              <dd>+2</dd>
+              <dt>red</dt>
+              <dd>+3</dd>
+              <dd>+2</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/church.jpg" loading="lazy" />
             <figcaption>Church</figcaption>
-            green offset: (25, 4) red offset: (58, -4)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+25</dd>
+              <dd>+4</dd>
+              <dt>red</dt>
+              <dd>+58</dd>
+              <dd>-4</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/emir.jpg" loading="lazy" />
             <figcaption>Emir</figcaption>
-            green offset: (49, 23) red offset: (107, 40)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+49</dd>
+              <dd>+23</dd>
+              <dt>red</dt>
+              <dd>+107</dd>
+              <dd>+40</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/harvesters.jpg" loading="lazy" />
             <figcaption>Harvesters</figcaption>
-            green offset: (60, 17) red offset: (123, 13)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+60</dd>
+              <dd>+17</dd>
+              <dt>red</dt>
+              <dd>+123</dd>
+              <dd>+13</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/icon.jpg" loading="lazy" />
             <figcaption>Icon</figcaption>
-            green offset: (42, 17) red offset: (90, 23)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+42</dd>
+              <dd>+17</dd>
+              <dt>red</dt>
+              <dd>+90</dd>
+              <dd>+23</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/ilemselga.jpg" loading="lazy" />
             <figcaption>Ilemselga</figcaption>
-            green offset: (40, 7) red offset: (131, 11)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+40</dd>
+              <dd>+7</dd>
+              <dt>red</dt>
+              <dd>+131</dd>
+              <dd>+11</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/melons.jpg" loading="lazy" />
             <figcaption>Melons</figcaption>
-            green offset: (80, 10) red offset: (177, 13)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+80</dd>
+              <dd>+10</dd>
+              <dt>red</dt>
+              <dd>+177</dd>
+              <dd>+13</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/religous_painting.jpg" loading="lazy" />
             <figcaption>Religious Painting</figcaption>
-            green offset: (30, 7) red offset: (70, 6)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+30</dd>
+              <dd>+7</dd>
+              <dt>red</dt>
+              <dd>+70</dd>
+              <dd>+6</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/self_portrait.jpg" loading="lazy" />
             <figcaption>Self Portrait</figcaption>
-            green offset: (78, 29) red offset: (176, 37)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+78</dd>
+              <dd>+29</dd>
+              <dt>red</dt>
+              <dd>+176</dd>
+              <dd>+37</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/siren.jpg" loading="lazy" />
             <figcaption>Siren</figcaption>
-            green offset: (49, -7) red offset: (96, -24)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+49</dd>
+              <dd>-7</dd>
+              <dt>red</dt>
+              <dd>+96</dd>
+              <dd>-24</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/three_generations.jpg" loading="lazy" />
             <figcaption>Three Generations</figcaption>
-            green offset: (54, 12) red offset: (111, 9)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+54</dd>
+              <dd>+12</dd>
+              <dt>red</dt>
+              <dd>+111</dd>
+              <dd>+9</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample2/wharf.jpg" loading="lazy" />
             <figcaption>Wharf</figcaption>
-            green offset: (15, -7) red offset: (83, -17)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+15</dd>
+              <dd>-7</dd>
+              <dt>red</dt>
+              <dd>+83</dd>
+              <dd>-17</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample3/lake.jpg" loading="lazy" />
             <figcaption>Lake</figcaption>
-            green offset: (22, -17) red offset: (101, -33)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+22</dd>
+              <dd>-17</dd>
+              <dt>red</dt>
+              <dd>+101</dd>
+              <dd>-33</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample3/mountain.jpg" loading="lazy" />
             <figcaption>Mountain</figcaption>
-            green offset: (30, -22) red offset: (131, -46)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+30</dd>
+              <dd>-22</dd>
+              <dt>red</dt>
+              <dd>+131</dd>
+              <dd>-46</dd>
+            </dl>
           </figure>
           <figure class="figure">
             <img src="p1/out/sample3/nature.jpg" loading="lazy" />
             <figcaption>Nature</figcaption>
-            green offset: (25, 1) red offset: (63, -7)
+            <dl class="offsets">
+              <dt>green</dt>
+              <dd>+25</dd>
+              <dd>+1</dd>
+              <dt>red</dt>
+              <dd>+63</dd>
+              <dd>-7</dd>
+            </dl>
           </figure>
         </div>
         <h2>Nature is Beautiful</h2>
@@ -390,5 +549,8 @@
 
     <script src="assets/js/main.js"></script>
     <script src="assets/js/compare.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
+    <script src="assets/js/math.js"></script>
   </body>
 </html>
