@@ -140,7 +140,9 @@
           \mathrm{ed}(u,v)=\sqrt{\sum_i (u_i-v_i)^2} \). NCC measures the
           similarity of 2 vectors by: \( \mathrm{ncc}(u,v)=\frac{\sum_i
           (u_i-\bar{u})(v_i-\bar{v})} {\sqrt{\sum_i
-          (u_i-\bar{u})^2}\,\sqrt{\sum_i (v_i-\bar{v})^2}} \).
+          (u_i-\bar{u})^2}\,\sqrt{\sum_i (v_i-\bar{v})^2}} \). This is the dot
+          product (cosin similarity) between normalized vectors. After some
+          testing, I found NCC to be much more robust due to the normalization.
         </p>
         <p>
           We perform our alignment algorithm twice: align green to blue first,
@@ -172,27 +174,255 @@
         <p>
           If we take the large images and downsample it really small to e.g
           \(100 \times 100\), our algorithm above would work quickly on a small
-          \(w\). However, when upscaling them back to original size e.g \(3500
-          \times 3500\), we find that the alignment is very coarse. There are
-          still thousands of possibilities e.g \(350 \times 350\) of a more
-          finer alignment after upscaling. However, the number of possibilities
-          has drastically reduced.
+          \(w\). However, if applying that shift vector (multiplied by the
+          upscale of 32) on the original size e.g \(3200 \times 3200\), we find
+          that the alignment is very coarse. There are many possibilities e.g
+          \(32 \times 32\) of a finer alignment (x/y +/- 16) after upscaling.
+          However, the number of possibilities has drastically reduced.
         </p>
-        <p>
-          The idea is to downsample the 2 images we want to align until really
-          small. Then, we run the align algorithm for a small half-width \((w)\)
-          of e.g 4 pixels. We upscale the image by 2, and run the align
-          algorithm again. We do this recursively: upscaling the image and
-          making a micro-alignment with a small halfsize. Once we are back to
-          our original sized image, its well aligned!
-        </p>
+        <div class="figure-grid">
+          <img src="p1/out/test/pyramid.png" />
+          <p>
+            The idea is to downsample the 2 images we want to align until really
+            small. Then, we run the align algorithm for a small half-width
+            \((w)\) of e.g 4 pixels. We then go to the next image which is
+            downscaled less and run the align algorithm again. We do this
+            recursively: taking a less downscaled image and adding a new
+            micro-alignment vector with a small halfsize. Once we are back to
+            our original sized image, its well aligned! Nearly all the images
+            align properly at this point.
+          </p>
+        </div>
         <h2>Downsampling</h2>
         <p>
           I used the \(\frac{1}{4}\left[\begin{smallmatrix} 1 & 1 \\ 1 & 1
-          \end{smallmatrix}\right]\) downsampling kernel. It would have been
-          better to downsample using a Gaussian filter, but this still yielded
-          good results.
+          \end{smallmatrix}\right]\) standard box-filter downsampling kernel. It
+          may have been better to downsample using a Gaussian filter, but both
+          worked on the samples.
         </p>
+        <figure class="figure figure-wide">
+          <img src="p1/out/test/cathedral_ds_cmp.jpg" loading="lazy" />
+          <figcaption>Box-filter vs Gaussian-filter</figcaption>
+        </figure>
+        <h2>Pyramid on RGB results</h2>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/cathedral.jpg" loading="lazy" />
+            <figcaption>Cathedral</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+5</dd>
+              <dd>+2</dd>
+              <dt>red</dt>
+              <dd>+12</dd>
+              <dd>+3</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/monastery.jpg" loading="lazy" />
+            <figcaption>Monastery</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>-3</dd>
+              <dd>+2</dd>
+              <dt>red</dt>
+              <dd>+3</dd>
+              <dd>+2</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/tobolsk.jpg" loading="lazy" />
+            <figcaption>Tobolsk</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+3</dd>
+              <dd>+3</dd>
+              <dt>red</dt>
+              <dd>+6</dd>
+              <dd>+3</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/church.jpg" loading="lazy" />
+            <figcaption>Church</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+25</dd>
+              <dd>+4</dd>
+              <dt>red</dt>
+              <dd>+58</dd>
+              <dd>-4</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/emir.jpg" loading="lazy" />
+            <figcaption>Emir</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+49</dd>
+              <dd>+24</dd>
+              <dt>red</dt>
+              <dd>+99</dd>
+              <dd>-205</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/harvesters.jpg" loading="lazy" />
+            <figcaption>Harvesters</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+60</dd>
+              <dd>+17</dd>
+              <dt>red</dt>
+              <dd>+124</dd>
+              <dd>+14</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/icon.jpg" loading="lazy" />
+            <figcaption>Icon</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+41</dd>
+              <dd>+17</dd>
+              <dt>red</dt>
+              <dd>+89</dd>
+              <dd>+23</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/ilemselga.jpg" loading="lazy" />
+            <figcaption>Ilemselga</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+40</dd>
+              <dd>+6</dd>
+              <dt>red</dt>
+              <dd>+130</dd>
+              <dd>+10</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/melons.jpg" loading="lazy" />
+            <figcaption>Melons</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+82</dd>
+              <dd>+10</dd>
+              <dt>red</dt>
+              <dd>+178</dd>
+              <dd>+13</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p1/out/pyramid-rgb/religous_painting.jpg"
+              loading="lazy"
+            />
+            <figcaption>Religious Painting</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+28</dd>
+              <dd>+4</dd>
+              <dt>red</dt>
+              <dd>+68</dd>
+              <dd>+7</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/self_portrait.jpg" loading="lazy" />
+            <figcaption>Self Portrait</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+79</dd>
+              <dd>+29</dd>
+              <dt>red</dt>
+              <dd>+176</dd>
+              <dd>+36</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/siren.jpg" loading="lazy" />
+            <figcaption>Siren</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+49</dd>
+              <dd>-6</dd>
+              <dt>red</dt>
+              <dd>+96</dd>
+              <dd>-25</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p1/out/pyramid-rgb/three_generations.jpg"
+              loading="lazy"
+            />
+            <figcaption>Three Generations</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+53</dd>
+              <dd>+14</dd>
+              <dt>red</dt>
+              <dd>+111</dd>
+              <dd>+11</dd>
+            </dl>
+          </figure>
+          <figure class="figure">
+            <img src="p1/out/pyramid-rgb/wharf.jpg" loading="lazy" />
+            <figcaption>Wharf</figcaption>
+            <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
+              <dt>green</dt>
+              <dd>+15</dd>
+              <dd>-7</dd>
+              <dt>red</dt>
+              <dd>+83</dd>
+              <dd>-17</dd>
+            </dl>
+          </figure>
+        </div>
         <h2>The Sobel Prize</h2>
         <p>
           The emir is quite stubborn and not lining up... We need a more clever
@@ -204,7 +434,7 @@
             <figcaption>Drastically different</figcaption>
           </figure>
           <figure class="figure">
-            <img src="p1/out/test/bademir.jpg" loading="lazy" />
+            <img src="p1/out/pyramid-rgb/emir.jpg" loading="lazy" />
             <figcaption>Horrible alignment</figcaption>
           </figure>
         </div>
@@ -236,10 +466,13 @@
             <img src="p1/out/sample2/emir.jpg" loading="lazy" />
           </figure>
         </div>
+        <h2>Final rendition</h2>
         <p>
-          Here are all the images (with their offsets): the 3 small images, the
+          Below are all the images (with their offsets): the 3 small images, the
           11 large images, and 3 custom beautiful Russian nature images from the
-          LoC! P.S: please look at:
+          LoC! Each image reconstruction uses NCC on gradient magnitude with
+          box-filter downsampling on pyramid recursion for alignment. P.S:
+          please look at:
           <a
             class="pop-link"
             href="https://github.com/3LucasZ/cs180-showcase/blob/main/p1/out/sample2/self_portrait.jpg"
@@ -254,6 +487,9 @@
             <img src="p1/out/sample1/cathedral.jpg" loading="lazy" />
             <figcaption>Cathedral</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+5</dd>
               <dd>+2</dd>
@@ -267,6 +503,9 @@
             <img src="p1/out/sample1/monastery.jpg" loading="lazy" />
             <figcaption>Monastery</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>-3</dd>
               <dd>+2</dd>
@@ -279,6 +518,9 @@
             <img src="p1/out/sample1/tobolsk.jpg" loading="lazy" />
             <figcaption>Tobolsk</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>-3</dd>
               <dd>+2</dd>
@@ -291,6 +533,9 @@
             <img src="p1/out/sample2/church.jpg" loading="lazy" />
             <figcaption>Church</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+25</dd>
               <dd>+4</dd>
@@ -303,6 +548,9 @@
             <img src="p1/out/sample2/emir.jpg" loading="lazy" />
             <figcaption>Emir</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+49</dd>
               <dd>+23</dd>
@@ -315,6 +563,9 @@
             <img src="p1/out/sample2/harvesters.jpg" loading="lazy" />
             <figcaption>Harvesters</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+60</dd>
               <dd>+17</dd>
@@ -327,6 +578,9 @@
             <img src="p1/out/sample2/icon.jpg" loading="lazy" />
             <figcaption>Icon</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+42</dd>
               <dd>+17</dd>
@@ -339,6 +593,9 @@
             <img src="p1/out/sample2/ilemselga.jpg" loading="lazy" />
             <figcaption>Ilemselga</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+40</dd>
               <dd>+7</dd>
@@ -351,6 +608,9 @@
             <img src="p1/out/sample2/melons.jpg" loading="lazy" />
             <figcaption>Melons</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+80</dd>
               <dd>+10</dd>
@@ -363,6 +623,9 @@
             <img src="p1/out/sample2/religous_painting.jpg" loading="lazy" />
             <figcaption>Religious Painting</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+30</dd>
               <dd>+7</dd>
@@ -375,6 +638,9 @@
             <img src="p1/out/sample2/self_portrait.jpg" loading="lazy" />
             <figcaption>Self Portrait</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+78</dd>
               <dd>+29</dd>
@@ -387,6 +653,9 @@
             <img src="p1/out/sample2/siren.jpg" loading="lazy" />
             <figcaption>Siren</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+49</dd>
               <dd>-7</dd>
@@ -399,6 +668,9 @@
             <img src="p1/out/sample2/three_generations.jpg" loading="lazy" />
             <figcaption>Three Generations</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+54</dd>
               <dd>+12</dd>
@@ -411,6 +683,9 @@
             <img src="p1/out/sample2/wharf.jpg" loading="lazy" />
             <figcaption>Wharf</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+15</dd>
               <dd>-7</dd>
@@ -423,6 +698,9 @@
             <img src="p1/out/sample3/lake.jpg" loading="lazy" />
             <figcaption>Lake</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+22</dd>
               <dd>-17</dd>
@@ -435,6 +713,9 @@
             <img src="p1/out/sample3/mountain.jpg" loading="lazy" />
             <figcaption>Mountain</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+30</dd>
               <dd>-22</dd>
@@ -447,6 +728,9 @@
             <img src="p1/out/sample3/nature.jpg" loading="lazy" />
             <figcaption>Nature</figcaption>
             <dl class="offsets">
+              <dt class="offsets-axis"></dt>
+              <dd class="offsets-axis">dy</dd>
+              <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
               <dd>+25</dd>
               <dd>+1</dd>

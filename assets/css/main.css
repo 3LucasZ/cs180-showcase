@@ -760,6 +760,12 @@ figcaption {
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
 }
 
+/* Figures whose source is saved smaller than the text measure — `max-width`
+   alone would leave them at their intrinsic size and short of the column. */
+.figure-wide img {
+  width: 100%;
+}
+
 /* The alignment offsets under a figure. Every cell in the grid shares the same
    column widths — a fixed 4ch per number, which is the widest value ("+177") —
    so the digits stack into readable columns straight down the grid. */
@@ -778,6 +784,14 @@ figcaption {
 .offsets dd {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+/* The header row naming the two axes. Two bare numbers per channel don't say
+   which is which, and dy/dx share the columns with their values, so they line
+   up over them. Smaller than the data rather than dimmer — --dust is already
+   at the floor for contrast. */
+.offsets-axis {
+  font-size: 10px;
+  letter-spacing: 0.06em;
 }
 
 .figure-grid {

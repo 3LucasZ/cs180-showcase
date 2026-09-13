@@ -66,10 +66,12 @@ def apply_shift(img1, img2, shift):
 
 
 def apply_sobel(u):
-    sx = cv2.Sobel(u, cv2.CV_64F, 1, 0, ksize=3)
-    sy = cv2.Sobel(u, cv2.CV_64F, 0, 1, ksize=3)
-    up = np.sqrt(sx**2 + sy**2)
-    return up
+    if False:
+        sx = cv2.Sobel(u, cv2.CV_64F, 1, 0, ksize=3)
+        sy = cv2.Sobel(u, cv2.CV_64F, 0, 1, ksize=3)
+        up = np.sqrt(sx**2 + sy**2)
+        return up
+    return u
 
 # (y, x) is the current best alignment vector for u
 
@@ -169,12 +171,20 @@ if False:
         OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
         main(IN_PATH, OUT_PATH, single_scale=True)
 
+if True:
+    IN_DIR = IN_DIR / f"sample{2}"
+    OUT_DIR = OUT_DIR / "pyramid-rgb"
+    for IN_PATH in sorted(IN_DIR.iterdir()):
+        OUT_PATH = (OUT_DIR / IN_PATH.name).with_suffix(".jpg")
+        print(OUT_PATH)
+        main(IN_PATH, OUT_PATH, single_scale=False)
+
 if False:
     IN_PATH = IN_DIR / f"sample{2}" / "emir.tif"
     OUT_PATH = OUT_DIR / f"test" / "bademir.jpg"
     main(IN_PATH, OUT_PATH, False)
 # Final product. Try sample_id = 1, 2, 3 for different sample sets.
-if True:
+if False:
     sample_id = 3
     IN_DIR = IN_DIR / f"sample{sample_id}"
     OUT_DIR = OUT_DIR / f"sample{sample_id}"
