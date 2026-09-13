@@ -766,6 +766,38 @@ figcaption {
   width: 100%;
 }
 
+/* Code quoted in the writeup. A panel a shade off the page so it reads as an
+   inset, headed by the file and function it came from. Long lines scroll inside
+   the block instead of widening the column. */
+.code {
+  margin: 2.4em 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.code pre {
+  margin: 0;
+  padding: 15px 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--silver-dim);
+  tab-size: 4;
+}
+
+/* Four colours, all of them tokens that hold up in either room light. */
+.tok-com { color: var(--dust); }
+.tok-kw { color: var(--amber); }
+.tok-num { color: var(--silver); }
+.tok-str { color: var(--silver); }
+
+/* A snippet sitting in a figure grid takes both columns — half the measure is
+   too narrow for a line of code. */
+.figure-grid .code { grid-column: 1 / -1; }
+
 /* The alignment offsets under a figure. Every cell in the grid shares the same
    column widths — a fixed 4ch per number, which is the widest value ("+177") —
    so the digits stack into readable columns straight down the grid. */

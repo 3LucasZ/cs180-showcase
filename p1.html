@@ -129,6 +129,33 @@
           it suffices to just check shifts in the x and y direction within
           \([-w, w]\) pixels, where we tried a half-width value of \(w = 32\).
         </p>
+        <div class="code">
+          <pre class="code-src">
+def find_shift(u, v, y=0, x=0):
+    # print("find_shift:", u.shape)
+    top_score = None
+    new_dy = 0
+    new_dx = 0
+    for try_dy in range(-window_sz, window_sz+1):
+        for try_dx in range(-window_sz, window_sz+1):
+            # Rolling wraps the image weirdly messing up results
+            # up = np.roll(u, shift=(dy, dx), axis=(0, 1))
+            up, vp = apply_shift(u, v, (y+try_dy, x+try_dx))
+            up = apply_sobel(up)
+            vp = apply_sobel(vp)
+            # print(up.shape, vp.shape)
+            # score = ed(up, vp)
+
+            score = ncc(up, vp)
+            # print(dy, dx, score)
+            if top_score is None or score > top_score:
+                top_score = score
+                new_dy = try_dy
+                new_dx = try_dx
+    # print(shift, top_score)
+    return y+new_dy, x+new_dx</pre
+          >
+        </div>
         <h2>Error metric</h2>
         <p>
           To know a certain alignment is the "best" one, we assign a score to
@@ -144,6 +171,26 @@
           product (cosin similarity) between normalized vectors. After some
           testing, I found NCC to be much more robust due to the normalization.
         </p>
+        <div class="code">
+          <pre class="code-src">
+def norm(u):
+    u = u.flatten()
+    u = u - np.mean(u)
+    return u/np.linalg.norm(u)
+
+
+# similarity score, higher is better
+def ncc(u, v):
+    return np.dot(norm(u), norm(v))
+
+
+# difference score, lower is better
+def ed(u, v):
+    u = u.flatten()
+    v = v.flatten()
+    return np.sqrt(np.sum((u-v) ** 2))</pre
+          >
+        </div>
         <p>
           We perform our alignment algorithm twice: align green to blue first,
           then align red to blue. Then, all 3 glass plates will be aligned as a
@@ -193,6 +240,17 @@
             align properly at this point.
           </p>
         </div>
+        <div class="code">
+          <pre class="code-src">
+def find_shift_pyramid(u, v):
+    if (u.shape[0] &lt; 64):
+        return find_shift(u, v)
+    # recurse: solve downsampled version first and use that result to shift first
+    y, x = find_shift_pyramid(downsample2(u), downsample2(v))
+    y, x = y * 2, x * 2
+    return find_shift(u, v, y, x)</pre
+          >
+        </div>
         <h2>Downsampling</h2>
         <p>
           I used the \(\frac{1}{4}\left[\begin{smallmatrix} 1 & 1 \\ 1 & 1
@@ -204,6 +262,17 @@
           <img src="p1/out/test/cathedral_ds_cmp.jpg" loading="lazy" />
           <figcaption>Box-filter vs Gaussian-filter</figcaption>
         </figure>
+        <div class="code">
+          <pre class="code-src">
+def downsample2(im):
+    # crop image to be even size before downsampling by 2
+    if (im.shape[0] % 2 == 1):
+        im = im[1:, :]
+    if (im.shape[1] % 2 == 1):
+        im = im[:, 1:]
+    return (im[0::2, 0::2] + im[0::2, 1::2] + im[1::2, 0::2] + im[1::2, 1::2]) / 4.0</pre
+          >
+        </div>
         <h2>Pyramid on RGB results</h2>
         <div class="figure-grid three">
           <figure class="figure">
@@ -447,6 +516,17 @@
           to find the horizontal edges. It's transpose can be used to find the
           vertical edges. Taking the magnitude, gives us the gradient:
         </p>
+        <div class="code">
+          <pre class="code-src">
+def apply_sobel(u):
+    if False:
+        sx = cv2.Sobel(u, cv2.CV_64F, 1, 0, ksize=3)
+        sy = cv2.Sobel(u, cv2.CV_64F, 0, 1, ksize=3)
+        up = np.sqrt(sx**2 + sy**2)
+        return up
+    return u</pre
+          >
+        </div>
         <figure class="figure">
           <img src="p1/out/test/sobel.jpg" loading="lazy" />
           <figcaption>Outline of the Emir</figcaption>
@@ -522,11 +602,11 @@
               <dd class="offsets-axis">dy</dd>
               <dd class="offsets-axis">dx</dd>
               <dt>green</dt>
-              <dd>-3</dd>
-              <dd>+2</dd>
-              <dt>red</dt>
               <dd>+3</dd>
-              <dd>+2</dd>
+              <dd>+3</dd>
+              <dt>red</dt>
+              <dd>+6</dd>
+              <dd>+3</dd>
             </dl>
           </figure>
           <figure class="figure">
@@ -767,6 +847,26 @@
           <figure class="figure">
             <img src="p1/out/test/expand_ch.jpg" loading="lazy" />
           </figure>
+          <div class="code">
+            <pre class="code-src">
+def expand_chs(im, disjoint=True):
+    if disjoint:
+        chs = cv2.split(im)
+        new_chs = []
+        for ch in chs:
+            new_chs.append(expand_ch(ch))
+        return cv2.merge(new_chs)
+    else:
+        return expand_ch(im)
+
+
+def expand_ch(ch):
+    a = np.percentile(ch, 3)
+    b = np.percentile(ch, 97)
+    ch = (ch - a) / (b - a)
+    return np.clip(ch, 0, 1)</pre
+            >
+          </div>
           <p>
             Step 2. Automatic white balance: we take the prior that the
             brightest objects should be white in the image. To be honest, I
@@ -775,10 +875,41 @@
           <figure class="figure">
             <img src="p1/out/test/awb.jpg" loading="lazy" />
           </figure>
+          <div class="code">
+            <pre class="code-src">
+def awb(im, useWhite=True):
+    if useWhite:
+        white = np.percentile(im, 99, axis=(0, 1))
+        scale = white.max() / (white + 1e-8)
+        return np.clip(im * scale, 0, 1)
+    # else, use gray as the norm
+    else:
+        mean_rgb = im.mean(axis=(0, 1))
+        gray = mean_rgb.mean()
+        scale = gray / (mean_rgb + 1e-8)
+        return np.clip(im * scale, 0, 1)</pre
+            >
+          </div>
           <p>Step 3. We sharpen the image, to try to bring out more detail.</p>
           <figure class="figure">
             <img src="p1/out/test/sharp.jpg" loading="lazy" />
           </figure>
+          <div class="code">
+            <pre class="code-src">
+def claher(im, clipLimit=1.2):
+    im = (np.clip(im, 0, 1) * 255).astype(np.uint8)
+    lab = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(
+        clipLimit=clipLimit,
+        tileGridSize=(8, 8)
+    )
+    l = clahe.apply(l)
+    lab = cv2.merge([l, a, b])
+    res = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    return res.astype(np.float32) / 255</pre
+            >
+          </div>
         </div>
         <p>
           Step 4. Finally, we increase the vibrance: increasing saturation /
@@ -790,6 +921,20 @@
           before="p1/out/test/crop.jpg"
           after="p1/out/test/vibrant.jpg"
         ></image-compare>
+        <div class="code">
+          <pre class="code-src">
+def vibrance(im, amount=0.20):
+    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+    s = hsv[:, :, 1]
+    boost = amount * (1.0 - s)
+    s = s * (1.0 + boost)
+    hsv[:, :, 1] = np.clip(s, 0, 1)
+    return cv2.cvtColor(
+        hsv,
+        cv2.COLOR_HSV2BGR
+    )</pre
+          >
+        </div>
         <p>
           Alright, cheers to more fun. I used histogram color transfer to make
           it look like Lake Tahoe, one of my favorite gems of California:
@@ -810,6 +955,57 @@
           before="p1/out/test/crop5.jpg"
           after="p1/out/test/transfer5.jpg"
         ></image-compare>
+        <div class="code">
+          <pre class="code-src">
+def color_transfer(src, ref):
+    def match_channel(src, ref):
+        src_values, src_indices, src_counts = np.unique(
+            src.ravel(),
+            return_inverse=True,
+            return_counts=True
+        )
+        ref_values, ref_counts = np.unique(
+            ref.ravel(),
+            return_counts=True
+        )
+        src_cdf = np.cumsum(src_counts).astype(np.float64)
+        src_cdf /= src_cdf[-1]
+        ref_cdf = np.cumsum(ref_counts).astype(np.float64)
+        ref_cdf /= ref_cdf[-1]
+        matched_values = np.interp(
+            src_cdf,
+            ref_cdf,
+            ref_values
+        )
+        return matched_values[src_indices].reshape(src.shape)
+
+    res = np.zeros_like(src, dtype=np.float32)
+    for c in range(3):
+        res[:, :, c] = match_channel(
+            src[:, :, c],
+            ref[:, :, c]
+        )
+    return np.clip(res, 0, 1)
+
+
+def lab_color_transfer(src, ref):
+    src = (src * 255).astype(np.uint8)
+    ref = (ref * 255).astype(np.uint8)
+    src_lab = cv2.cvtColor(src, cv2.COLOR_BGR2LAB)
+    ref_lab = cv2.cvtColor(ref, cv2.COLOR_BGR2LAB)
+    src_lab = src_lab.astype(np.float32) / 255.0
+    ref_lab = ref_lab.astype(np.float32) / 255.0
+    res = color_transfer(
+        src_lab,
+        ref_lab
+    )
+    res = (res * 255).astype(np.uint8)
+    return (
+        cv2.cvtColor(res, cv2.COLOR_LAB2BGR)
+        .astype(np.float32) / 255.0
+    )</pre
+          >
+        </div>
 
         <p>
           Still not what I'm looking for, but I find the water and trees quite
@@ -817,6 +1013,53 @@
         </p>
       </section>
     </main>
+
+    <footer class="colophon">
+      <h2 class="colophon-title">Credits</h2>
+      <dl class="colophon-credits">
+        <div class="credit">
+          <dt>plates</dt>
+          <dd>
+            <a href="https://www.loc.gov/collections/prokudin-gorskii/?st=grid"
+              >Sergei Prokudin-Gorskii, Library of Congress</a
+            >
+          </dd>
+        </div>
+        <div class="credit">
+          <dt>samples</dt>
+          <dd>
+            <a
+              href="https://drive.google.com/file/d/1gJT5EcsANLwNVEhswTKQ3sR81wTEF0tu/view?usp=sharing"
+              >the three sample sets</a
+            >
+          </dd>
+        </div>
+        <div class="credit">
+          <dt>edges</dt>
+          <dd>
+            <a href="https://opencv.org/edge-detection-using-opencv/"
+              >OpenCV: Sobel, Canny, Laplacian</a
+            >
+          </dd>
+        </div>
+        <div class="credit">
+          <dt>white balance</dt>
+          <dd>
+            <a href="https://vumet3r.github.io/jbledam/White%20Balance.pdf"
+              >the "White Balance" writeup</a
+            >
+          </dd>
+        </div>
+        <div class="credit">
+          <dt>LAB</dt>
+          <dd>
+            <a href="https://en.wikipedia.org/wiki/CIELAB_color_space"
+              >CIELAB color space</a
+            >
+          </dd>
+        </div>
+      </dl>
+    </footer>
 
     <section class="reel" aria-label="Other projects">
       <a class="reel-card" href="p0.html"
@@ -839,5 +1082,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
     <script src="assets/js/math.js"></script>
+    <script src="assets/js/code.js"></script>
   </body>
 </html>
