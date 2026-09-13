@@ -1,2 +1,4 @@
 *.tif
-in/
+in/**
+!in/sample1/
+!in/sample1/cathedral.jpg
