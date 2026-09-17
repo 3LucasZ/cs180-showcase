@@ -1,59 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS 180 · P2 — Filters & Frequencies</title>
-  <meta name="description" content="Sharpening, blending, and the hybrid images that hide in plain sight.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
-</head>
-<body class="project-page">
-  <div class="aperture" aria-hidden="true">
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-  </div>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="sprockets" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS 180 · P2 — Filters & Frequencies</title>
+    <meta
+      name="description"
+      content="Sharpening, blending, and the hybrid images that hide in plain sight."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body class="project-page">
+    <div class="aperture" aria-hidden="true">
+      <span class="blade"></span><span class="blade"></span
+      ><span class="blade"></span> <span class="blade"></span
+      ><span class="blade"></span><span class="blade"></span>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="sprockets" aria-hidden="true"></div>
 
-  <header class="site-head">
-    <a class="home-link" href="index.html" title="Back to the prints"><span class="home-arrow">←</span> home</a>
-    <button class="light-switch" type="button" aria-pressed="false" aria-label="Flip the room light" title="Flip the room light">
-      <span class="light-switch-icon" aria-hidden="true">
-        <span class="switch-plate"></span>
-        <span class="switch-toggle">
-          <span class="switch-toggle-knob"></span>
+    <header class="site-head">
+      <a class="home-link" href="index.html" title="Back to the prints"
+        ><span class="home-arrow">←</span> home</a
+      >
+      <button
+        class="light-switch"
+        type="button"
+        aria-pressed="false"
+        aria-label="Flip the room light"
+        title="Flip the room light"
+      >
+        <span class="light-switch-icon" aria-hidden="true">
+          <span class="switch-plate"></span>
+          <span class="switch-toggle">
+            <span class="switch-toggle-knob"></span>
+          </span>
         </span>
-      </span>
-    </button>
-  </header>
+      </button>
+    </header>
 
-  <main>
-    <section class="project-hero">
-      <p class="project-kicker mono">CS 180 · project 02</p>
-      <h1 class="project-title">Filters &amp; <em>Frequencies</em></h1>
-      <p class="project-pitch">Sharpening, blending, and the hybrid images that hide in plain sight.</p>
-      <p class="print-tags"><span class="tag">hybrid images</span><span class="tag">laplacian stacks</span><span class="tag">frequencies</span></p>
-      <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+    <main>
+      <section class="project-hero">
+        <p class="project-kicker mono">CS 180 · project 02</p>
+        <h1 class="project-title">Filters & Frequencies</h1>
+        <!-- <p class="project-pitch">
+          Sharpening, blending, and the hybrid images that hide in plain sight.
+        </p>
+        <p class="print-tags">
+          <span class="tag">hybrid images</span
+          ><span class="tag">laplacian stacks</span
+          ><span class="tag">frequencies</span>
+        </p> -->
+        <p class="hero-credit">
+          lucas zheng ·
+          <a href="https://github.com/3LucasZ/cs180-showcase"
+            >github.com/3LucasZ/cs180-showcase</a
+          >
+        </p>
+      </section>
+
+      <section class="prose">
+        <h2>Convolutions from Scratch</h2>
+        <!-- PROSE: what a convolution is, and why it is worth writing by hand
+             before reaching for a library. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+def conv4(im, kern):
+    # heights, widths
+    H, W = im.shape
+    KH, KW = kern.shape
+    # paddings; "same" pad
+    PT = (KH-1)//2
+    PB = KH-1-PT
+    PL = (KW-1)//2
+    PR = KW-1-PL
+    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
+    out = np.zeros_like(im, dtype=float)
+    # conv flips cross-correlation
+    kern = np.flip(np.flip(kern, axis=0), axis=1)
+    for y in range(H):
+        for x in range(W):
+            for ky in range(KH):
+                for kx in range(KW):
+                    out[y, x] += pim[y+ky, x+kx] * kern[ky, kx]
+    return out</pre
+          >
+        </div>
+        <!-- PROSE: pad the input by half the kernel so the output keeps the
+             input's size, and flip the kernel so this is convolution and not
+             cross-correlation. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+def conv2(im, kern):
+    # heights, widths
+    H, W = im.shape
+    KH, KW = kern.shape
+    # paddings; "same" pad
+    PT = (KH-1)//2
+    PB = KH-1-PT
+    PL = (KW-1)//2
+    PR = KW-1-PL
+    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
+    out = np.zeros_like(im, dtype=float)
+    # conv flips cross-correlation
+    kern = np.flip(np.flip(kern, axis=0), axis=1)
+    for y in range(H):
+        for x in range(W):
+            # parallelize dot product with 0 loops instead of 2
+            out[y, x] = np.sum(pim[y:y+KH, x:x+KW] * kern)
+    return out</pre
+          >
+        </div>
+        <!-- PROSE: the two inner loops are a dot product, so numpy can do them
+             in one call. Same result, far fewer Python-level iterations. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+test_im = np.random.random((50, 50))*100
+test_kern = np.random.random((9, 9))*100
+test_2 = conv2(test_im, test_kern)
+test_4 = conv4(test_im, test_kern)
+test_sol = convolve2d(test_im, test_kern, mode="same",
+                      boundary="fill", fillvalue=0)
+print("Error on conv2:", np.sum(np.abs(test_sol - test_2)))
+print("Runtime on conv2:")
+print("Error on conv4:", np.sum(np.abs(test_sol - test_4)))
+print("Runtime on conv4:")</pre
+          >
+        </div>
+        <div class="code">
+          <pre>
+Error on conv2: 5.721813067793846e-08
+Error on conv4: 1.0582880349829793e-07</pre
+          >
+        </div>
+        <!-- PROSE: the scipy check. Required by the spec: what those error
+             values say about correctness, how the two implementations compare
+             on runtime, and how boundaries are handled (zero fill, matching
+             scipy's boundary="fill", fillvalue=0). -->
+        <p>TODO prose</p>
+        <h2>Blur and Derivatives</h2>
+        <!-- PROSE: reading the selfie in as grayscale and scaling to [0, 1]. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/1.1/in/selfie.png" loading="lazy" />
+            <figcaption>Input</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.1/out/selfie.box.png" loading="lazy" />
+            <figcaption>9 × 9 box filter</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: what the 9x9 box filter does to the image, and why it comes
+             back dimmer. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/1.1/out/selfie.dx.png" loading="lazy" />
+            <figcaption>\(D_x\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.1/out/selfie.dy.png" loading="lazy" />
+            <figcaption>\(D_y\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: what Dx and Dy pick out, and why a derivative has to be
+             rectified and rescaled before it can be shown as an image. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+def post(im):
+    # post process
+    im = np.abs(im)
+    im = im / np.max(im) * 255
+    im = im.astype(np.uint8)
+    return im
+
+
+box_kern = np.ones((9, 9)) / 81
+out_box = post(conv2(im, box_kern))
+cv2.imwrite(OUT_PATH / "selfie.box.png", out_box)
+
+dx_kern = np.array([[1, 0, -1]])
+dy_kern = np.array([[1], [0], [-1]])
+out_dx = post(conv2(im, dx_kern))
+out_dy = post(conv2(im, dy_kern))
+cv2.imwrite(OUT_PATH / "selfie.dx.png", out_dx)
+cv2.imwrite(OUT_PATH / "selfie.dy.png", out_dy)</pre
+          >
+        </div>
+        <h2>Finite Difference Operator</h2>
+        <!-- PROSE: the finite difference operator is the same machinery as 1.1
+             with a 1x3 or 3x1 kernel — no new idea, just a different kernel. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+dx_kern = np.array([[1, 0, -1]])
+dy_kern = np.array([[1], [0], [-1]])
+out_dx = convolve2d(im, dx_kern, mode="same",
+                    boundary="fill", fillvalue=0)
+out_dy = convolve2d(im, dy_kern, mode="same",
+                    boundary="fill", fillvalue=0)</pre
+          >
+        </div>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/1.2/in/cameraman.png" loading="lazy" />
+            <figcaption>Cameraman</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.2/out/cameraman.dx.png" loading="lazy" />
+            <figcaption>\(D_x\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.2/out/cameraman.dy.png" loading="lazy" />
+            <figcaption>\(D_y\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: which structures each derivative answers to — Dx picks out
+             vertical edges, Dy horizontal ones. -->
+        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+out_g = np.sqrt(out_dy**2 + out_dx**2)
+# elbow plot?
+plt.hist(out_g.flatten(), bins=30, cumulative=True,
+         density=True, linewidth=4, histtype='step')
+plt.title('Elbow Plot')
+plt.xlabel('Gradients')
+plt.ylabel('Cumulative Probability')
+plt.savefig(OUT_PATH / "cameraman.elbow.png")
+
+# seems to be the elbow
+thresh = 0.3
+out_g = (out_g > thresh) * np.ones(out_g.shape)</pre
+          >
+        </div>
+        <div class="figure-grid">
+          <!-- The gradient magnitude image belongs in this grid, before the
+               threshold is applied. 1.2.py reuses out_g for the binarized
+               result, so the magnitude is never written to disk — add a write
+               for it, then move this figure out of the comment:
+
+          <figure class="figure">
+            <img src="p2/1.2/out/cameraman.mag.png" loading="lazy" />
+            <figcaption>Gradient magnitude</figcaption>
+          </figure>
+          -->
+          <figure class="figure">
+            <img src="p2/1.2/out/cameraman.g.png" loading="lazy" />
+            <figcaption>Binarized edges</figcaption>
+          </figure>
+          <figure class="figure figure-plot">
+            <img src="p2/1.2/out/cameraman.elbow.png" loading="lazy" />
+            <figcaption>Elbow plot</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — justify the threshold. Read it off
+             the elbow: below the knee you are keeping noise, past it you start
+             dropping real edges. -->
+        <p>TODO prose</p>
+      </section>
+    </main>
+
+    <section class="reel" aria-label="Other projects">
+      <a class="reel-card" href="p1.html"
+        ><span class="mono">← previous</span
+        ><span class="reel-name">P1 · Russian Empire</span></a
+      >
+      <a class="reel-card is-next" href="p3.html"
+        ><span class="mono">next →</span
+        ><span class="reel-name">P3 · Warping &amp; Mosaics</span></a
+      >
     </section>
 
-    <section class="wip reveal">
-      <p class="wip-kicker mono">under the enlarger</p>
-      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
-    </section>
-  </main>
+    <div class="sprockets" aria-hidden="true"></div>
+    <div class="exposure" aria-hidden="true">
+      <div class="exposure-fill"></div>
+    </div>
 
-  <section class="reel" aria-label="Other projects">
-    <a class="reel-card" href="p1.html"><span class="mono">← previous</span><span class="reel-name">P1 · Russian Empire</span></a>
-    <a class="reel-card is-next" href="p3.html"><span class="mono">next →</span><span class="reel-name">P3 · Warping &amp; Mosaics</span></a>
-  </section>
-
-  <div class="sprockets" aria-hidden="true"></div>
-  <div class="exposure" aria-hidden="true"><div class="exposure-fill"></div></div>
-
-  <script src="assets/js/main.js"></script>
-</body>
+    <script src="assets/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
+    <script src="assets/js/math.js"></script>
+    <script src="assets/js/code.js"></script>
+    <script src="assets/js/rail.js"></script>
+  </body>
 </html>

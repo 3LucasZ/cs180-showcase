@@ -766,6 +766,19 @@ figcaption {
   width: 100%;
 }
 
+/* A plotted figure — a matplotlib chart — arrives on its own white ground,
+   which on the darkroom page reads as a hole punched through it. Inverting it
+   lands it in the same room; the hue rotation is what keeps the series the
+   colour it was drawn in, since a plain invert would hand blue back as orange.
+   In room light the white ground is already what paper looks like. */
+.figure-plot img {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.room-lit .figure-plot img {
+  filter: none;
+}
+
 /* Code quoted in the writeup. A panel a shade off the page so it reads as an
    inset, headed by the file and function it came from. Long lines scroll inside
    the block instead of widening the column. */
@@ -1275,8 +1288,8 @@ image-compare { display: block; }
   display: none;
 }
 
-/* Below this the 169px of long section names no longer fit in the gutter
-   beside the prose column, and a rail that crowds the text defeats itself. */
+/* Below this there is no room beside the prose column for even a wrapped rail,
+   and one that crowds the text defeats itself. */
 @media (min-width: 1280px) {
   .rail {
     display: block;
@@ -1312,9 +1325,11 @@ image-compare { display: block; }
   list-style: none;
   text-align: right;
   pointer-events: auto;
-  /* Without this the box shrinks to its narrowest line and the longer section
-     names break in two, which reads as broken rather than compact. */
+  /* Sizes to its longest section name, but never wider than the gutter it sits
+     in: past that a long name would run off the left of the screen, since the
+     box is anchored to its right edge. Capping it lets the name wrap instead. */
   width: max-content;
+  max-width: calc((100vw - 900px) / 2 - 18px);
 }
 
 .rail-item {
