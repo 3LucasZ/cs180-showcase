@@ -773,10 +773,15 @@ figcaption {
    In room light the white ground is already what paper looks like. */
 .figure-plot img {
   filter: invert(1) hue-rotate(180deg);
+  /* A filter paints the element's own box-shadow too, so the black shadow every
+     other figure casts would come back as a white halo around this one. Author
+     it white here and the invert hands back the standard shadow. */
+  box-shadow: 0 22px 55px rgba(255, 255, 255, 0.55);
 }
 
 html.room-lit .figure-plot img {
   filter: none;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
 }
 
 /* Code quoted in the writeup. A panel a shade off the page so it reads as an
@@ -867,6 +872,59 @@ html.room-lit .figure-plot img {
 
 @media (max-width: 640px) {
   .figure-grid, .figure-grid.three { grid-template-columns: 1fr; }
+}
+
+/* The scale demonstration. A hybrid image is a trick of viewing distance, so the
+   honest way to show it on a page is to draw the same frame at three sizes and let
+   the reader's own eye do the blurring that distance would have done. Halving each
+   step, so the sizes are 100 / 50 / 25 and read as one picture receding rather than
+   as three pictures. Bottom aligned, to hold them on a common baseline. */
+.figure-scales {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1.4em;
+  margin: 2.4em 0;
+}
+.figure-scales .figure { flex: 0 0 auto; margin: 0; }
+.figure-scales img { width: 100%; max-height: none; }
+/* 52 / 26 / 13 keeps the halving while leaving room for both gaps inside the
+   measure — with 38% as the base the row overflows and wraps. */
+.figure-scales .s100 { width: 52%; }
+.figure-scales .s50 { width: 26%; }
+.figure-scales .s25 { width: 13%; }
+
+@media (max-width: 640px) {
+  .figure-scales { gap: 0.6em; }
+}
+
+/* The Fourier plates. matplotlib composed these on a 4:3 canvas, but each
+   spectrum inside it is portrait, so `tight_layout` left a white band down both
+   sides and a title strip across the top — better than half of every frame is
+   paper rather than data. The frame below is the plot's own rectangle, measured
+   off the files (x 146-493, y 36-463 of 640x480, held a pixel inside the antialiased
+   edge so no white survives the crop), which makes the plate the plot and no more.
+   Deliberately not run through .figure-plot. Inverting a spectrum hands back the
+   energy as a hole, because the quiet background is what carries the black; these
+   are already dark-ground images, which is what the darkroom page wants. */
+.fft-plate {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 348 / 428;
+  max-width: 420px;
+  margin-inline: auto;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+.fft-plate img {
+  position: absolute;
+  left: -41.95%;
+  top: -8.41%;
+  width: 183.91%;
+  max-width: none;
+  max-height: none;
+  box-shadow: none;
 }
 
 /* A small diagram: a plate, an arrow, and the result it feeds into. The
@@ -1007,6 +1065,12 @@ image-compare { display: block; }
   outline: 2px solid var(--amber);
   outline-offset: 3px;
 }
+
+/* A comparator whose source is small. The Taj Mahal is 300px square, so the
+   default 720px frame would stretch it past 2× — and softness from upscaling is
+   the last thing you want between a reader and a sharpening result, since it
+   competes with the very thing being judged. */
+.compare-narrow .compare { max-width: 460px; }
 
 /* ---------- projection lab ---------- */
 

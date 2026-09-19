@@ -78,82 +78,20 @@
         <!-- PROSE: what a convolution is, and why it is worth writing by hand
              before reaching for a library. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-def conv4(im, kern):
-    # heights, widths
-    H, W = im.shape
-    KH, KW = kern.shape
-    # paddings; "same" pad
-    PT = (KH-1)//2
-    PB = KH-1-PT
-    PL = (KW-1)//2
-    PR = KW-1-PL
-    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
-    out = np.zeros_like(im, dtype=float)
-    # conv flips cross-correlation
-    kern = np.flip(np.flip(kern, axis=0), axis=1)
-    for y in range(H):
-        for x in range(W):
-            for ky in range(KH):
-                for kx in range(KW):
-                    out[y, x] += pim[y+ky, x+kx] * kern[ky, kx]
-    return out</pre
-          >
-        </div>
         <!-- PROSE: pad the input by half the kernel so the output keeps the
              input's size, and flip the kernel so this is convolution and not
              cross-correlation. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-def conv2(im, kern):
-    # heights, widths
-    H, W = im.shape
-    KH, KW = kern.shape
-    # paddings; "same" pad
-    PT = (KH-1)//2
-    PB = KH-1-PT
-    PL = (KW-1)//2
-    PR = KW-1-PL
-    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
-    out = np.zeros_like(im, dtype=float)
-    # conv flips cross-correlation
-    kern = np.flip(np.flip(kern, axis=0), axis=1)
-    for y in range(H):
-        for x in range(W):
-            # parallelize dot product with 0 loops instead of 2
-            out[y, x] = np.sum(pim[y:y+KH, x:x+KW] * kern)
-    return out</pre
-          >
-        </div>
         <!-- PROSE: the two inner loops are a dot product, so numpy can do them
              in one call. Same result, far fewer Python-level iterations. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-test_im = np.random.random((50, 50))*100
-test_kern = np.random.random((9, 9))*100
-test_2 = conv2(test_im, test_kern)
-test_4 = conv4(test_im, test_kern)
-test_sol = convolve2d(test_im, test_kern, mode="same",
-                      boundary="fill", fillvalue=0)
-print("Error on conv2:", np.sum(np.abs(test_sol - test_2)))
-print("Runtime on conv2:")
-print("Error on conv4:", np.sum(np.abs(test_sol - test_4)))
-print("Runtime on conv4:")</pre
-          >
-        </div>
-        <div class="code">
-          <pre>
-Error on conv2: 5.721813067793846e-08
-Error on conv4: 1.0582880349829793e-07</pre
-          >
-        </div>
         <!-- PROSE: the scipy check. Required by the spec: what those error
              values say about correctness, how the two implementations compare
              on runtime, and how boundaries are handled (zero fill, matching
-             scipy's boundary="fill", fillvalue=0). -->
+             scipy's boundary="fill", fillvalue=0). Measured against
+             scipy.signal.convolve2d on a 50x50 random image and a 9x9 random
+             kernel: conv2 5.721813067793846e-08, conv4 1.0582880349829793e-07
+             — both at float round-off, so the hand-written loops are correct. -->
         <p>TODO prose</p>
         <h2>Blur and Derivatives</h2>
         <!-- PROSE: reading the selfie in as grayscale and scaling to [0, 1]. -->
@@ -184,42 +122,10 @@ Error on conv4: 1.0582880349829793e-07</pre
         <!-- PROSE: what Dx and Dy pick out, and why a derivative has to be
              rectified and rescaled before it can be shown as an image. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-def post(im):
-    # post process
-    im = np.abs(im)
-    im = im / np.max(im) * 255
-    im = im.astype(np.uint8)
-    return im
-
-
-box_kern = np.ones((9, 9)) / 81
-out_box = post(conv2(im, box_kern))
-cv2.imwrite(OUT_PATH / "selfie.box.png", out_box)
-
-dx_kern = np.array([[1, 0, -1]])
-dy_kern = np.array([[1], [0], [-1]])
-out_dx = post(conv2(im, dx_kern))
-out_dy = post(conv2(im, dy_kern))
-cv2.imwrite(OUT_PATH / "selfie.dx.png", out_dx)
-cv2.imwrite(OUT_PATH / "selfie.dy.png", out_dy)</pre
-          >
-        </div>
         <h2>Finite Difference Operator</h2>
         <!-- PROSE: the finite difference operator is the same machinery as 1.1
              with a 1x3 or 3x1 kernel — no new idea, just a different kernel. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-dx_kern = np.array([[1, 0, -1]])
-dy_kern = np.array([[1], [0], [-1]])
-out_dx = convolve2d(im, dx_kern, mode="same",
-                    boundary="fill", fillvalue=0)
-out_dy = convolve2d(im, dy_kern, mode="same",
-                    boundary="fill", fillvalue=0)</pre
-          >
-        </div>
         <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/1.2/in/cameraman.png" loading="lazy" />
@@ -237,35 +143,13 @@ out_dy = convolve2d(im, dy_kern, mode="same",
         <!-- PROSE: which structures each derivative answers to — Dx picks out
              vertical edges, Dy horizontal ones. -->
         <p>TODO prose</p>
-        <div class="code">
-          <pre class="code-src">
-out_g = np.sqrt(out_dy**2 + out_dx**2)
-# elbow plot?
-plt.hist(out_g.flatten(), bins=30, cumulative=True,
-         density=True, linewidth=4, histtype='step')
-plt.title('Elbow Plot')
-plt.xlabel('Gradients')
-plt.ylabel('Cumulative Probability')
-plt.savefig(OUT_PATH / "cameraman.elbow.png")
-
-# seems to be the elbow
-thresh = 0.3
-out_g = (out_g > thresh) * np.ones(out_g.shape)</pre
-          >
-        </div>
-        <div class="figure-grid">
-          <!-- The gradient magnitude image belongs in this grid, before the
-               threshold is applied. 1.2.py reuses out_g for the binarized
-               result, so the magnitude is never written to disk — add a write
-               for it, then move this figure out of the comment:
-
-          <figure class="figure">
-            <img src="p2/1.2/out/cameraman.mag.png" loading="lazy" />
-            <figcaption>Gradient magnitude</figcaption>
-          </figure>
-          -->
+        <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/1.2/out/cameraman.g.png" loading="lazy" />
+            <figcaption>Gradient magnitude</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.2/out/cameraman.gt.png" loading="lazy" />
             <figcaption>Binarized edges</figcaption>
           </figure>
           <figure class="figure figure-plot">
@@ -276,6 +160,333 @@ out_g = (out_g > thresh) * np.ones(out_g.shape)</pre
         <!-- PROSE: REQUIRED by the spec — justify the threshold. Read it off
              the elbow: below the knee you are keeping noise, past it you start
              dropping real edges. -->
+        <p>TODO prose</p>
+        <h2>Derivative of Gaussian</h2>
+        <!-- PROSE: differentiating raw pixels amplifies noise, so smooth first.
+             This section does the same two operations in both orders and shows
+             they land in the same place. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure figure-plot">
+            <img src="p2/1.3/out/dxog.png" loading="lazy" />
+            <figcaption>DoG in \(x\)</figcaption>
+          </figure>
+          <figure class="figure figure-plot">
+            <img src="p2/1.3/out/dyog.png" loading="lazy" />
+            <figcaption>DoG in \(y\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: what these kernels are — the derivative of a Gaussian is an
+             odd function, so a positive lobe sits right beside a negative one. -->
+        <p>TODO prose</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dx.png" loading="lazy" />
+            <figcaption>\(D_x\), blurred first</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dy.png" loading="lazy" />
+            <figcaption>\(D_y\), blurred first</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.g.png" loading="lazy" />
+            <figcaption>Gradient magnitude</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: these are far smoother than 1.2's — the blur has taken out
+             the pixel-level noise the raw finite difference was picking up. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dxog.png" loading="lazy" />
+            <figcaption>\(D_x\) of Gaussian, applied to the image</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dyog.png" loading="lazy" />
+            <figcaption>\(D_y\) of Gaussian, applied to the image</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — compare Result 1 against Result 2.
+             They are the same picture because convolution is associative:
+             (im * G) * D = im * (G * D). So blurring first and then
+             differentiating costs two convolutions where differentiating the
+             Gaussian first costs one. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.gt.png" loading="lazy" />
+            <figcaption>Binarized edges</figcaption>
+          </figure>
+          <figure class="figure figure-plot">
+            <img src="p2/1.3/out/cameraman.elbow.png" loading="lazy" />
+            <figcaption>Elbow plot</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — justify the threshold, and account
+             for it sitting far below 1.2's 0.3. The blur shrinks the derivative
+             magnitudes, so the same share of edges now falls at a smaller
+             number — the elbow has moved, not the rule for reading it. -->
+        <p>TODO prose</p>
+        <h2>Unsharp Mask</h2>
+        <!-- PROSE: derive it. Blur the image to get its low frequencies,
+             subtract that from the original to isolate what the blur threw
+             away, then add a multiple of it back. -->
+        <p>TODO prose</p>
+        <!-- PROSE: REQUIRED by the spec — the relationship to blur filters and
+             high frequencies. G is a low-pass, so the blurred copy is what
+             survives it; im minus that is exactly the high-frequency content
+             the blur discarded; sharpening is adding that band back, scaled.
+             It is one convolution rather than three steps because
+             (1 + a)·e − a·G is itself just a kernel. -->
+        <p>TODO prose</p>
+        <image-compare
+          class="compare-narrow"
+          before="p2/2.1/in/taj.jpg"
+          after="p2/2.1/out/taj2.jpg"
+          caption="Input vs. \(a = 3\)"
+          label="Wipe between the original and the sharpened Taj Mahal"
+        ></image-compare>
+        <!-- PROSE: the wipe. Both prints are the same photograph registered on
+             top of each other, so the eye reads the difference directly
+             instead of comparing two pictures that sit apart. -->
+        <p>TODO prose</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.1/out/taj1.jpg" loading="lazy" />
+            <figcaption>\(a = 1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj2.jpg" loading="lazy" />
+            <figcaption>\(a = 3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj3.jpg" loading="lazy" />
+            <figcaption>\(a = 10\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — how varying a changes the result.
+             a = 1 is barely a change, a = 3 is the setting that reads as
+             "fixed", and a = 10 has overshot into ringing — bright halos
+             along the minarets and domes and a dark rim where the zero-filled
+             boundary starves the kernel. Note too that the output is written
+             with no clipping, so anything over 1.0 just saturates. -->
+        <p>TODO prose</p>
+        <!-- NOT YET PRODUCED: the spec also asks for the *blurred* and the
+             *high-frequency* image, not just the sharpened one. 2.1.py writes
+             only the sharpened output, so there is no asset for either yet.
+             When the script writes them, uncomment this and point at the
+             real filenames.
+
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/2.1/out/taj.blur.jpg" loading="lazy" />
+            <figcaption>Blurred</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj.hf.jpg" loading="lazy" />
+            <figcaption>High frequencies</figcaption>
+          </figure>
+        </div>
+        -->
+        <!-- PROSE: the second image, this one in colour and at full size —
+             the same filter and the same a = 3, so the change is the picture
+             rather than the setting. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img src="p2/2.1/in/falls.jpg" loading="lazy" />
+            <figcaption>Input</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/falls.jpg" loading="lazy" />
+            <figcaption>Sharpened, \(a = 3\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the evaluation task, and it is not
+             written up yet. Take a sharp image, blur it, sharpen it again,
+             then compare the result against the original and say what came
+             back and what did not: a sharpen can restore the contrast the
+             blur took off the edges, but it cannot recover detail the blur
+             destroyed, because that information is genuinely gone. -->
+        <p>TODO prose</p>
+        <h2>Hybrid Images</h2>
+        <!-- PROSE: introduce the two-band idea — one frame carrying a picture in
+             its low frequencies and a second picture in its high, so which of
+             them you see depends on how far away you are standing. -->
+        <p>TODO prose</p>
+        <!-- PROSE: sigma is the cutoff, and the two are independent — one sets how
+             much survives the blur, the other how wide a band the high-pass hands
+             back. The high-pass is defined by subtraction, so it is exactly and
+             only what the low-pass threw away. Note this is a sum, not an average:
+             halving both bands costs contrast for nothing. -->
+        <p>TODO prose</p>
+        <!-- PROSE: the pair — a low band from a portrait of Theodore Roosevelt, a
+             high band from one of Abraham Lincoln. Both are scaled to 30% first,
+             and the alignment is the provided interactive step: two clicked points
+             per image, matched for centre, scale and rotation. It works by padding
+             rather than warping, so the pair is squared up by adding empty frame,
+             which is where the black border around these results comes from. -->
+        <p>TODO prose</p>
+        <!-- PROSE: how to look at every hybrid on this page. The trick is a trick
+             of distance, so draw the same frame at three sizes and let the reader's
+             eye supply the blur. Large, the high band wins and you read Lincoln;
+             small enough and only the low band survives the trip to your eye, and
+             you read Roosevelt. -->
+        <p>TODO prose</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/lincoln.jpg" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/lincoln.jpg" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/lincoln.jpg" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: same frame, different pair — the low band is an Alaska range,
+             the high band a night skyline. Nothing here is mixed: the frame holds
+             both photographs at full strength the whole time, and the only thing
+             that changed is how much of the high band survived the trip to the
+             reader's eye. -->
+        <p>TODO prose</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/alaska.jpg" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/alaska.jpg" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/alaska.jpg" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: worth a sentence of its own, because the skyline's high band is
+             nothing but lit windows against a dark facade — all edge, no surface —
+             and that is exactly the band a high-pass keeps. It lands as a lighting
+             effect rather than as two pictures fighting. -->
+        <p>TODO prose</p>
+        <!-- PROSE: and a pair chosen for the opposite reason: a giant panda and a
+             red panda are the same animal in two colourings, same silhouette, so
+             both bands read as "a panda" and the switch between them is easy to
+             miss until you shrink it. -->
+        <p>TODO prose</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/panda.jpg" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/panda.jpg" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/panda.jpg" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the favourite result. Say why this pair
+             and not another. Both halves are the same photograph, split down the
+             middle, so the two "inputs" are already registered and there is nothing
+             to click; the forest is the left half and the city the right, and the
+             city half is the one that gets blurred. -->
+        <p>TODO prose</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/forestcity.png" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/forestcity.png" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/forestcity.png" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: the claim is entirely a claim about which frequencies are
+             present, so the honest way to check it is to stop looking at the
+             picture and look at the frequencies instead. Two things the plates
+             need to be readable at all: the spectrum is log-scaled, because raw
+             magnitudes span too many decades, and one vmin/vmax pair is taken
+             from all five spectra pooled — by percentile, not min and max, so a
+             single bright pixel can't flatten everything else — which puts the
+             five plates on one scale and lets them be compared with each other. -->
+        <p>TODO prose</p>
+        <!-- PROSE: REQUIRED by the spec — the frequency-domain check, and the
+             argument has to be made in words. In a spectrum the centre is the low
+             frequencies and the edges are the high ones. The low-pass empties
+             everything but the centre; the high-pass does the opposite and punches
+             the centre out, which is the same statement as "im minus its blur".
+             The hybrid's spectrum is both at once, which is the whole point: it is
+             not a blend, it is a union. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <span class="fft-plate"
+              ><img src="p2/2.2/Image_1.jpg" loading="lazy"
+            /></span>
+            <figcaption>City half, before</figcaption>
+          </figure>
+          <figure class="figure">
+            <span class="fft-plate"
+              ><img src="p2/2.2/Image_1_lowpass.jpg" loading="lazy"
+            /></span>
+            <figcaption>City half, after the low-pass</figcaption>
+          </figure>
+          <figure class="figure">
+            <span class="fft-plate"
+              ><img src="p2/2.2/Image_2.jpg" loading="lazy"
+            /></span>
+            <figcaption>Forest half, before</figcaption>
+          </figure>
+          <figure class="figure">
+            <span class="fft-plate"
+              ><img src="p2/2.2/Image_2_highpass.jpg" loading="lazy"
+            /></span>
+            <figcaption>Forest half, after the high-pass</figcaption>
+          </figure>
+        </div>
+        <figure class="figure">
+          <span class="fft-plate"
+            ><img src="p2/2.2/Hybrid.jpg" loading="lazy"
+          /></span>
+          <figcaption>The hybrid, both bands at once</figcaption>
+        </figure>
+        <!-- PROSE: when the single frame holds both pictures stacked instead of
+             side by side, so there is nothing left to align at all. -->
+        <p>TODO prose</p>
+        <!-- PROSE: the source was a pair of views of the same island stacked top
+             and bottom — the forested Mannahatta the Dutch found, and the skyline
+             on it now. Which half feeds which band is a single choice, and that is
+             what decides whether the island reads as wilderness or as city. -->
+        <p>TODO prose</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the evaluation. What worked, what
+             didn't, where the result falls short of the effect, and how much of
+             the alignment step was doing the work. Also worth saying plainly that
+             a hybrid image is not a composite: neither picture is ever drawn on
+             top of the other. -->
         <p>TODO prose</p>
       </section>
     </main>
@@ -297,10 +508,13 @@ out_g = (out_g > thresh) * np.ones(out_g.shape)</pre
     </div>
 
     <script src="assets/js/main.js"></script>
+    <!-- compare.js builds its figure from the attributes, so it has to run
+         before math.js walks the page — otherwise the caption it generates is
+         not there yet when the \( \) in it would be rendered. -->
+    <script src="assets/js/compare.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
     <script src="assets/js/math.js"></script>
-    <script src="assets/js/code.js"></script>
     <script src="assets/js/rail.js"></script>
   </body>
 </html>
