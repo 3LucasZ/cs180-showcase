@@ -927,6 +927,71 @@ html.room-lit .figure-plot img {
   box-shadow: none;
 }
 
+/* Two spectra in, one out. The hybrid sits to the right of the four component
+   plates, centred between the two rows, with an arrow leaving each row — the pair
+   of arrows is the whole claim of this figure: the hybrid's spectrum is the sum of
+   the low band and the high band, not a blend of the two. They are angled inward
+   so they read as a sum rather than as two separate hand-offs. */
+.figure-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 2.4em 0;
+}
+.figure-add-plates {
+  flex: 1 1 auto;
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: a plate has no definite width of its own, so a bare
+     1fr would let each track grow to its content and the two columns would come
+     out different widths. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.figure-add-plates .figure { margin: 0; }
+.figure-add .fft-plate { width: 100%; max-width: 220px; }
+.figure-add-arrows {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  /* space-around puts the two arrows on the centres of the two rows, so each one
+     leaves the plate it belongs to rather than floating between them. */
+  justify-content: space-around;
+}
+.figure-add-arrows .is-up { transform: rotate(24deg); }
+.figure-add-arrows .is-down { transform: rotate(-24deg); }
+/* No shrink: with a shrinkable basis both this and the plate grid are compressed by
+   the same deficit, and between 760 and 900 that leaves the hybrid a little SMALLER
+   than a single component plate — the one reading this figure must not produce. */
+.figure-add-out { flex: 0 0 34%; min-width: 0; margin: 0; }
+.figure-add-out .fft-plate { max-width: 300px; }
+
+@media (max-width: 760px) {
+  /* Stacked, the two rows no longer sit side by side, so the arrows turn to
+     point down at the hybrid instead of inward. */
+  .figure-add {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .figure-add-plates { width: 100%; }
+  /* Stacked, the hybrid loses the percentage basis it had in the row, so give it a
+     real width — otherwise it falls back to its intrinsic size and stops reading as
+     the result of the two rows above it. */
+  .figure-add-out { width: 100%; }
+  .figure-add-out .fft-plate { width: min(300px, 68vw); max-width: none; }
+  .figure-add-arrows {
+    flex-direction: row;
+    align-self: auto;
+    justify-content: center;
+    gap: 16px;
+  }
+  /* The shared .flow-arrow svg rule already turns the glyph to point down at this
+     width, so the spans must not add a rotation of their own — the two stack. */
+  .figure-add-arrows .is-up,
+  .figure-add-arrows .is-down { transform: none; }
+}
+
 /* A small diagram: a plate, an arrow, and the result it feeds into. The
    result carries the weight, so it takes the rest of the row while the
    plate stays a fixed, subordinate size. */
