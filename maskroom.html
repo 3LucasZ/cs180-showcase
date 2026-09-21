@@ -640,8 +640,11 @@
             They are written as one set so the sizes cannot drift apart.
             <code>object</code> keeps the whole image rather than just the part inside
             the mask: a cropped object puts a black edge at the seam, which the blend
-            smears into a dark ring. <code>composite</code> is a plain alpha preview,
-            not the multiresolution result.
+            smears into a dark ring. Whatever the object does not reach is filled with
+            the object's own colours carried outward rather than left black, since the
+            mask's blur reaches past the object's edge at the coarse levels.
+            <code>composite</code> is a plain alpha preview, not the multiresolution
+            result.
           </p>
         </div>
 

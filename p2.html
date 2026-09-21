@@ -512,6 +512,155 @@
              a hybrid image is not a composite: neither picture is ever drawn on
              top of the other. -->
         <p>TODO prose</p>
+        <h2>Gaussian and Laplacian Stacks</h2>
+        <!-- PROSE: what a Gaussian stack is — one image blurred again and again,
+             each level holding the last one's low frequencies and nothing else.
+             This ladder is sigma = 0, 2, 4, 8, 16, 32, and the image is the split
+             mask rather than a photograph, because a hard edge is the clearest
+             thing to watch come apart. -->
+        <p>TODO prose</p>
+        <div class="figure-grid three">
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask0.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 0\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask1.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 2\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask2.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 4\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask3.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 8\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask4.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 16\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/mask5.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 32\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: the Laplacian stack takes the difference between neighbouring
+             Gaussian levels, so each level holds one band of scales and nothing
+             else — the finest grain at the top, the flat colour of the picture at
+             the bottom. These are the levels of the left-hand source, rescaled to
+             be visible; the mask has already zeroed the other half. -->
+        <p>TODO prose</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack0.jpg" loading="lazy" />
+            <figcaption>\(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack1.jpg" loading="lazy" />
+            <figcaption>\(G_1 - G_2\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack2.jpg" loading="lazy" />
+            <figcaption>\(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack3.jpg" loading="lazy" />
+            <figcaption>\(G_3 - G_4\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack4.jpg" loading="lazy" />
+            <figcaption>\(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack5.jpg" loading="lazy" />
+            <figcaption>\(G_5\)</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the reconstruction. Adding every level
+             back up returns the source, which is the check that the decomposition
+             threw nothing away. Worth being straight about what the mask did to
+             this figure: the sum recovers the masked source, not the whole frame,
+             because the other half was multiplied out before the levels were
+             written. -->
+        <p>TODO prose</p>
+        <figure class="figure figure-framed">
+          <img src="p2/2.3and4/out/lstack.jpg" loading="lazy" />
+          <figcaption>All six levels summed</figcaption>
+        </figure>
+        <h2>Multiresolution Blending</h2>
+        <!-- PROSE: now the two stacks are combined through the mask, one level at
+             a time. Each source hands over its own bands, so the seam is built
+             once per scale instead of once for the picture. The split here is a
+             straight one — the case a plain alpha blend would already handle — so
+             the point of the figure is the machinery, not the result. -->
+        <p>TODO prose</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack0.jpg" loading="lazy" />
+            <figcaption>\(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack1.jpg" loading="lazy" />
+            <figcaption>\(G_1 - G_2\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack2.jpg" loading="lazy" />
+            <figcaption>\(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack3.jpg" loading="lazy" />
+            <figcaption>\(G_3 - G_4\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack4.jpg" loading="lazy" />
+            <figcaption>\(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack5.jpg" loading="lazy" />
+            <figcaption>\(G_5\)</figcaption>
+          </figure>
+        </div>
+        <figure class="figure">
+          <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
+          <figcaption>All six levels summed</figcaption>
+        </figure>
+        <!-- PROSE: the case that actually needs the pyramid — an irregular mask.
+             An outline has high frequencies all along its edge, so handing the
+             whole picture over at once leaves a rim you can see. Blending per
+             level leaves the edge only at the scales where the mask itself has
+             detail, and the coarse levels cross over slowly enough to hide it. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p2/2.3and4/work3/reyes-campanile-scene.jpg"
+              loading="lazy"
+            />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p2/2.3and4/work3/reyes-campanile-object.jpg"
+              loading="lazy"
+            />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/work3/reyes-campanile-mask.png" loading="lazy" />
+            <figcaption>Mask, drawn in maskroom</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/work3/reyes-campanile.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the evaluation. Where the irregular
+             mask holds up and where it does not: what the tower's outline did at
+             the coarse levels, whether any halo survives along the base, and how
+             much of the result is the mask being well drawn versus the blend being
+             well computed. -->
+        <p>TODO prose</p>
       </section>
 
       Mistake 1: black padded masked image doesn't work Mistake 2: fix image

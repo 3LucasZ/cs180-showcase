@@ -89,7 +89,7 @@ def main2(scene, object, mask, out):
     object = cv2.imread(object).astype(np.float32) / 255.0
 
     # scene = colornorm(scene, object)
-    object = colornorm2(object, scene)
+    # object = colornorm2(object, scene)
 
     mask = cv2.imread(mask).astype(np.float32) / 255.0
 
@@ -113,10 +113,10 @@ def main2(scene, object, mask, out):
     cv2.imwrite(out, (answer*255).astype(np.uint8))
 
 
-# main2(DIR / "work3" / "reyes-campanile-scene.png",
-#       DIR / "work3" / "reyes-campanile-object.png",
-#       DIR / "work3" / "reyes-campanile-mask.png",
-#       DIR / "work3" / "reyes-campanile.png")
+main2(DIR / "work3" / "reyes-campanile-scene.jpg",
+      DIR / "work3" / "reyes-campanile-object.jpg",
+      DIR / "work3" / "reyes-campanile-mask.png",
+      DIR / "work3" / "reyes-campanile.jpg")
 
 # main2(DIR / "work4" / "reflection1-reflection3-scene.jpg",
 #       DIR / "work4" / "reflection1-reflection3-object.jpg",
@@ -134,7 +134,12 @@ def main2(scene, object, mask, out):
 #       DIR / "work6" / "glacier-volcano-mask.jpg",
 #       DIR / "work6" / "glacier-volcano.jpg")
 
-main2(DIR / "work7" / "utah-milky-scene.jpg",
-      DIR / "work7" / "utah-milky-object.jpg",
-      DIR / "work7" / "utah-milky-mask.png",  # lossless
-      DIR / "work7" / "utah-milky.jpg")
+# main2(DIR / "work7" / "utah-milky-scene.jpg",
+#       DIR / "work7" / "utah-milky-object.jpg",
+#       DIR / "work7" / "utah-milky-mask.png",  # lossless
+#       DIR / "work7" / "utah-milky.jpg")
+
+# main2(DIR / "work8" / "glacier-volcano-scene.jpg",
+#       DIR / "work8" / "glacier-volcano-object.jpg",
+#       DIR / "work8" / "glacier-volcano-mask.png",
+#       DIR / "work8" / "glacier-volcano.jpg")

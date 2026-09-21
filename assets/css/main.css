@@ -840,6 +840,14 @@ html.room-lit .figure-plot img {
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
 }
 
+/* A figure that is flat black over part of its area — a mask, mostly. The dark
+   half is the same value as the darkroom page, so the plate loses that edge and
+   reads as an unclosed shape. A hairline puts the rectangle back, and costs
+   nothing in room light, where the black half already reads against the paper. */
+.figure-framed img {
+  border: 1px solid var(--line);
+}
+
 /* Code quoted in the writeup. A panel a shade off the page so it reads as an
    inset, headed by the file and function it came from. Long lines scroll inside
    the block instead of widening the column. */
