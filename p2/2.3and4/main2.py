@@ -25,9 +25,9 @@ def lopass(im, sigma):
 def stack(im, mask=False):
     sigmas = np.array([0, 2, 4, 8, 16, 32, 64])
     if (mask):
-        sigmas = sigmas[1:]
-        sigmas = np.append(sigmas, 128)
-        sigmas *= 2
+        # sigmas = sigmas[1:]
+        # sigmas = np.append(sigmas, 128)
+        sigmas *= 1
     Gstack = []
     for i, sigma in enumerate(sigmas):
         Gstack.append(lopass(im, sigma))
@@ -41,12 +41,20 @@ def stack(im, mask=False):
 def colornorm(src, ref):
     out = src.copy()
     for ch in range(3):
-        src_u = src[:, :, ch].mean()
-        src_s = src[:, :, ch].std()
-        ref_u = ref[:, :, ch].mean()
-        ref_s = ref[:, :, ch].std()
+        src_u = np.ma.masked_less(src[:, :, ch], 0.001).mean()
+        src_s = np.ma.masked_less(src[:, :, ch], 0.001).std()
+        ref_u = np.ma.masked_less(ref[:, :, ch], 0.001).mean()
+        ref_s = np.ma.masked_less(ref[:, :, ch], 0.001).std()
         out[:, :, ch] = ((src[:, :, ch] - src_u) / (src_s) * ref_s + ref_u)
     return out
+
+
+def colornorm2(src, ref):
+    src_gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+    ref_gray = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY)
+    diff = np.ma.masked_less(ref_gray, 0.001).mean(
+    ) - np.ma.masked_less(src_gray, 0.001).mean()
+    return np.clip(src + diff, 0, 1)
 
 
 def main(name1, name2, name3):
@@ -73,3 +81,60 @@ def main(name1, name2, name3):
 
 
 # main("orange.png", "apple.png", "oraple.png")
+
+
+def main2(scene, object, mask, out):
+    scene = cv2.imread(scene).astype(np.float32) / 255.0
+    H, W, C = scene.shape
+    object = cv2.imread(object).astype(np.float32) / 255.0
+
+    # scene = colornorm(scene, object)
+    object = colornorm2(object, scene)
+
+    mask = cv2.imread(mask).astype(np.float32) / 255.0
+
+    # Possible mistake: black outside the extracted object affects filtering?
+    # object = object * mask + scene * (1 - mask)
+
+    print("scene.shape", scene.shape)
+    print("objedct.shape", object.shape)
+    print("mask.shape", mask.shape)
+
+    _, scene_stack = stack(scene)
+    _, object_stack = stack(object)
+
+    mask_stack, _ = stack(mask, True)
+    # mask_gstack = mask_gstack[..., None]
+    scene = scene_stack * (1-mask_stack)
+    object = object_stack * mask_stack
+    answer = scene + object
+    answer = np.sum(answer, axis=0)
+    answer = np.clip(answer, 0, 1)
+    cv2.imwrite(out, (answer*255).astype(np.uint8))
+
+
+# main2(DIR / "work3" / "reyes-campanile-scene.png",
+#       DIR / "work3" / "reyes-campanile-object.png",
+#       DIR / "work3" / "reyes-campanile-mask.png",
+#       DIR / "work3" / "reyes-campanile.png")
+
+# main2(DIR / "work4" / "reflection1-reflection3-scene.jpg",
+#       DIR / "work4" / "reflection1-reflection3-object.jpg",
+#       DIR / "work4" / "reflection1-reflection3-mask.jpg",
+#       DIR / "work4" / "reflection1-reflection3.jpg")
+
+# main2(DIR / "work5" / "glacier-volcano-scene.jpg",
+#       DIR / "work5" / "glacier-volcano-object.jpg",
+#       DIR / "work5" / "glacier-volcano-mask.jpg",
+#       DIR / "work5" / "glacier-volcano.jpg")
+
+
+# main2(DIR / "work6" / "glacier-volcano-scene.jpg",
+#       DIR / "work6" / "glacier-volcano-object.jpg",
+#       DIR / "work6" / "glacier-volcano-mask.jpg",
+#       DIR / "work6" / "glacier-volcano.jpg")
+
+main2(DIR / "work7" / "utah-milky-scene.jpg",
+      DIR / "work7" / "utah-milky-object.jpg",
+      DIR / "work7" / "utah-milky-mask.png",  # lossless
+      DIR / "work7" / "utah-milky.jpg")

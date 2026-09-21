@@ -1,0 +1,2595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>maskroom — irregular masks for multiresolution blending</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%230B0A09'/%3E%3Cpath d='M16 5c6 3 8 8 8 12a8 8 0 0 1-16 0c0-4 2-9 8-12z' fill='%23F1EAE0'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0b0a09;
+        --panel: #141210;
+        --panel-2: #1b1815;
+        --rule: #2c2823;
+        --paper: #f1eae0;
+        --muted: #8b8073;
+        --seam: #e89b3c;
+        --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --serif: "Fraunces", Georgia, serif;
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --rail: 302px;
+      }
+
+      * { box-sizing: border-box; }
+
+      [hidden] { display: none !important; }
+
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--sans);
+        font-size: 14px;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+
+      .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+      /* ---------- shell ---------- */
+
+      .shell {
+        height: 100dvh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--rail);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+          "top   top"
+          "stage rail"
+          "strip rail";
+      }
+
+      /* ---------- top rail ---------- */
+
+      .top {
+        grid-area: top;
+        position: relative;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 0 18px;
+        height: 56px;
+        border-bottom: 1px solid var(--rule);
+        background: var(--panel);
+      }
+
+      .mark {
+        font-family: var(--serif);
+        font-size: 21px;
+        font-weight: 420;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+      .mark em { font-style: italic; color: var(--muted); }
+
+      .stages { display: flex; gap: 2px; }
+
+      .stages button {
+        appearance: none;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        font: 500 13px/1 var(--sans);
+        padding: 8px 13px;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      .stages button:hover:not(:disabled) { color: var(--paper); }
+      .stages button[aria-current="true"] {
+        color: var(--paper);
+        background: var(--panel-2);
+        border-color: var(--rule);
+      }
+      .stages button:disabled { opacity: 0.35; cursor: default; }
+
+      .top-end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+      /* ---------- work-folder chip and its file list ---------- */
+
+      .work-chip { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); }
+      .work-chip .dot {
+        width: 6px;
+        height: 6px;
+        flex: none;
+        border-radius: 50%;
+        background: #4a4238;
+      }
+      .work-chip[data-linked="true"] { color: var(--paper); }
+      .work-chip[data-linked="true"] .dot { background: var(--seam); }
+
+      .picker {
+        position: absolute;
+        top: calc(100% + 1px);
+        right: 18px;
+        z-index: 40;
+        width: min(442px, calc(100vw - 36px));
+        max-height: min(62vh, 442px);
+        overflow-y: auto;
+        background: var(--panel-2);
+        border: 1px solid var(--rule);
+        border-radius: 3px;
+        box-shadow: 0 20px 46px rgba(0, 0, 0, 0.58);
+        padding: 6px;
+      }
+      .pick-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 8px 9px 10px;
+        border-bottom: 1px solid var(--rule);
+        margin-bottom: 5px;
+      }
+      .pick-head b { font: 600 12.5px/1 var(--sans); }
+      .pick-head span {
+        font: 400 11.5px/1 var(--mono);
+        color: var(--seam);
+        margin-left: auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pick-note { margin: 0; padding: 11px 9px 13px; color: var(--muted); font-size: 12.5px; }
+      .pick-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 6px 7px;
+        background: transparent;
+        border: 0;
+        border-radius: 2px;
+        color: var(--paper);
+        font: 500 13px/1.2 var(--sans);
+        text-align: left;
+        cursor: pointer;
+      }
+      .pick-row:hover, .pick-row:focus-visible { background: #241f1b; }
+      .pick-row img {
+        width: 40px;
+        height: 40px;
+        flex: none;
+        object-fit: cover;
+        border-radius: 2px;
+        border: 1px solid var(--rule);
+        background: #000;
+      }
+      .pick-row img:not([src]) { opacity: 0; }
+      .pick-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pick-meta {
+        flex: none;
+        font: 400 11px/1 var(--mono);
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .pick-foot {
+        margin-top: 4px;
+        padding-top: 5px;
+        border-top: 1px solid var(--rule);
+      }
+      .pick-alt {
+        color: var(--muted);
+      }
+
+      /* ---------- buttons ---------- */
+
+      .btn {
+        appearance: none;
+        font: 500 12.5px/1 var(--sans);
+        color: var(--paper);
+        background: var(--panel-2);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 9px 13px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn:hover:not(:disabled) { border-color: #453e35; background: #221e1a; }
+      .btn:disabled { opacity: 0.35; cursor: default; }
+      .btn-primary {
+        background: var(--paper);
+        color: var(--ink);
+        border-color: var(--paper);
+        font-weight: 600;
+      }
+      .btn-primary:hover:not(:disabled) { background: #fff; border-color: #fff; }
+      .btn-quiet {
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted);
+        padding: 7px 8px;
+      }
+      .btn-quiet:hover:not(:disabled) { color: var(--paper); background: var(--panel-2); border-color: transparent; }
+
+      :focus-visible { outline: 2px solid var(--seam); outline-offset: 2px; }
+
+      /* ---------- stage ---------- */
+
+      .stage-wrap {
+        grid-area: stage;
+        position: relative;
+        min-height: 0;
+        background:
+          linear-gradient(var(--ink), var(--ink)) padding-box,
+          var(--ink);
+        overflow: hidden;
+      }
+
+      #stage { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+      #stage.tool-place { cursor: default; }
+      #stage.panning { cursor: grabbing; }
+
+      .stage-id {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        font: 400 11px/1 var(--mono);
+        color: var(--muted);
+        pointer-events: none;
+        letter-spacing: 0.01em;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0, 0, 0, 0.8);
+      }
+      .stage-hint {
+        position: absolute;
+        bottom: 12px;
+        left: 14px;
+        max-width: 46ch;
+        font: 400 11.5px/1.5 var(--sans);
+        color: var(--muted);
+        pointer-events: none;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0, 0, 0, 0.8);
+      }
+      .stage-hint b { color: var(--paper); font-weight: 500; }
+
+      /* ---------- empty state ---------- */
+
+      .empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        text-align: center;
+        padding: 24px;
+        background: var(--ink);
+      }
+      .empty[hidden] { display: none; }
+      .empty h2 {
+        font-family: var(--serif);
+        font-weight: 380;
+        font-size: 27px;
+        margin: 0;
+        letter-spacing: -0.015em;
+      }
+      .empty p { margin: 0; color: var(--muted); max-width: 44ch; }
+      .empty-row { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; }
+
+      /* ---------- rail ---------- */
+
+      .rail {
+        grid-area: rail;
+        border-left: 1px solid var(--rule);
+        background: var(--panel);
+        overflow-y: auto;
+        padding-bottom: 18px;
+      }
+
+      .block { padding: 15px 16px; border-bottom: 1px solid var(--rule); }
+      .block:last-child { border-bottom: 0; }
+
+      .block h3 {
+        font: 500 12px/1 var(--sans);
+        color: var(--muted);
+        margin: 0 0 11px;
+      }
+
+      .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+      .seg button {
+        appearance: none;
+        font: 500 12px/1 var(--sans);
+        color: var(--muted);
+        background: var(--panel-2);
+        border: 1px solid transparent;
+        border-radius: 2px;
+        padding: 9px 4px;
+        cursor: pointer;
+      }
+      .seg button:hover { color: var(--paper); }
+      .seg button[aria-pressed="true"] {
+        color: var(--ink);
+        background: var(--paper);
+        font-weight: 600;
+      }
+
+      .field { margin-top: 13px; }
+      .field:first-child { margin-top: 0; }
+
+      .field-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 7px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field-head output { font-family: var(--mono); font-size: 11.5px; color: var(--paper); }
+
+      input[type="range"] {
+        appearance: none;
+        width: 100%;
+        height: 18px;
+        background: transparent;
+        cursor: pointer;
+        margin: 0;
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        height: 2px;
+        background: var(--rule);
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 13px;
+        height: 13px;
+        margin-top: -5.5px;
+        border-radius: 50%;
+        background: var(--paper);
+        border: 0;
+      }
+      input[type="range"]:disabled::-webkit-slider-thumb { background: var(--muted); }
+      input[type="range"]::-moz-range-track { height: 2px; background: var(--rule); }
+      input[type="range"]::-moz-range-thumb {
+        width: 13px; height: 13px; border-radius: 50%; background: var(--paper); border: 0;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12.5px;
+        color: var(--paper);
+        cursor: pointer;
+        padding: 5px 0;
+      }
+      .check input { accent-color: var(--seam); width: 14px; height: 14px; margin: 0; }
+      .check span small { display: block; color: var(--muted); font-size: 11.5px; }
+
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .grid2 .field { margin-top: 0; }
+
+      input[type="number"], input[type="text"] {
+        width: 100%;
+        font: 400 12px/1 var(--mono);
+        color: var(--paper);
+        background: var(--ink);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 7px 8px;
+      }
+      input[type="number"]:focus, input[type="text"]:focus { border-color: var(--seam); outline: none; }
+      input[type="number"]:disabled { color: var(--muted); }
+
+      .stack { display: grid; gap: 6px; }
+      .row { display: flex; gap: 6px; flex-wrap: wrap; }
+      .row .btn { flex: 1 1 auto; text-align: center; }
+
+      .note {
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--muted);
+        margin: 10px 0 0;
+      }
+      .note code { font-family: var(--mono); font-size: 11px; color: var(--paper); }
+
+      .keys { display: grid; gap: 5px; font-size: 11.5px; color: var(--muted); }
+      .keys div { display: flex; justify-content: space-between; gap: 10px; }
+      .keys kbd {
+        font: 400 10.5px/1 var(--mono);
+        color: var(--paper);
+        background: var(--panel-2);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 3px 5px;
+      }
+
+      /* ---------- filmstrip ---------- */
+
+      .strip {
+        grid-area: strip;
+        display: flex;
+        align-items: stretch;
+        gap: 1px;
+        background: var(--rule);
+        border-top: 1px solid var(--rule);
+        height: 126px;
+      }
+
+      .frame {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0; /* figure carries a 40px inline margin by default */
+        background: var(--panel);
+        padding: 9px 11px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      /* the box owns the size, so the drawing buffer never feeds back into layout */
+      .frame .pv-box { flex: 1 1 auto; min-height: 0; position: relative; }
+      .frame .pv-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .frame figcaption {
+        font: 400 10.5px/1 var(--mono);
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 0;
+        min-width: 0;
+      }
+      .frame figcaption span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .frame figcaption b { font-weight: 400; color: var(--paper); }
+      .frame.hot figcaption b { color: var(--seam); }
+
+      /* ---------- reveal ---------- */
+
+      @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+      body.ready .rail, body.ready .strip { animation: rise 0.4s ease-out both; }
+      body.ready .strip { animation-delay: 0.05s; }
+
+      @media (prefers-reduced-motion: reduce) {
+        body.ready .rail, body.ready .strip { animation: none; }
+      }
+
+      /* ---------- narrow ---------- */
+
+      @media (max-width: 880px) {
+        body { overflow: auto; }
+        .shell {
+          height: auto;
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: auto 62vh auto auto;
+          grid-template-areas: "top" "stage" "strip" "rail";
+        }
+        .rail { border-left: 0; border-top: 1px solid var(--rule); overflow: visible; }
+        .strip { height: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+        .frame { height: 92px; }
+        .top { flex-wrap: wrap; height: auto; padding: 10px 14px; gap: 12px; }
+        .top-end { margin-left: 0; width: 100%; flex-wrap: wrap; }
+        .top-end .btn { flex: 1 1 auto; }
+        .picker { right: 14px; left: 14px; width: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <h1 class="mark">mask<em>room</em></h1>
+        <nav class="stages" aria-label="Stage">
+          <button type="button" id="tab-cut" aria-current="true">1 · Cut out</button>
+          <button type="button" id="tab-place" disabled>2 · Place</button>
+        </nav>
+        <div class="top-end">
+          <button type="button" class="btn btn-quiet work-chip" id="work-btn" data-linked="false">
+            <span class="dot"></span><span id="work-label">work folder</span>
+          </button>
+          <button type="button" class="btn" id="load-scene">Load scene</button>
+          <button type="button" class="btn" id="load-object">Load object</button>
+          <button type="button" class="btn btn-primary" id="dl-all" disabled>Download all four</button>
+          <button type="button" class="btn btn-quiet" id="dl-menu" aria-expanded="false" disabled>one at a time</button>
+        </div>
+        <div class="picker" id="picker" hidden aria-label="Images in the linked folder"></div>
+      </header>
+
+      <div class="stage-wrap">
+        <canvas id="stage"></canvas>
+        <p class="stage-id mono" id="stage-id"></p>
+        <p class="stage-hint" id="stage-hint"></p>
+
+        <div class="empty" id="empty">
+          <h2 id="empty-title">Load two images</h2>
+          <p id="empty-body">
+            A <b>scene</b> to blend into, and an <b>object</b> to cut out of. Then draw
+            the mask, drop the object into the scene, and take the files.
+          </p>
+          <div class="empty-row">
+            <button type="button" class="btn btn-primary" id="empty-scene">Choose scene</button>
+            <button type="button" class="btn" id="empty-object">Choose object</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="strip" aria-label="Output previews">
+        <figure class="frame">
+          <div class="pv-box"><canvas id="pv-scene"></canvas></div>
+          <figcaption><b>scene</b><span id="pv-scene-d"></span></figcaption>
+        </figure>
+        <figure class="frame">
+          <div class="pv-box"><canvas id="pv-object"></canvas></div>
+          <figcaption><b>object</b><span id="pv-object-d"></span></figcaption>
+        </figure>
+        <figure class="frame">
+          <div class="pv-box"><canvas id="pv-mask"></canvas></div>
+          <figcaption><b>mask</b><span id="pv-mask-d"></span></figcaption>
+        </figure>
+        <figure class="frame">
+          <div class="pv-box"><canvas id="pv-comp"></canvas></div>
+          <figcaption><b>composite</b><span id="pv-comp-d"></span></figcaption>
+        </figure>
+      </section>
+
+      <aside class="rail">
+        <!-- cut stage -->
+        <div class="block" id="rail-cut">
+          <h3>Mask tool</h3>
+          <div class="seg" role="group" aria-label="Mask tool">
+            <button type="button" data-tool="lasso" aria-pressed="true">Lasso</button>
+            <button type="button" data-tool="brush" aria-pressed="false">Brush</button>
+            <button type="button" data-tool="erase" aria-pressed="false">Erase</button>
+          </div>
+
+          <div class="field" id="field-brush">
+            <div class="field-head"><label for="brush">Brush size</label><output id="brush-out" class="mono">48 px</output></div>
+            <input type="range" id="brush" min="6" max="300" step="2" value="48" />
+          </div>
+
+          <div class="field">
+            <div class="field-head"><label for="feather">Feather edge</label><output id="feather-out" class="mono">0 px</output></div>
+            <input type="range" id="feather" min="0" max="40" step="0.5" value="0" />
+          </div>
+
+          <div class="field">
+            <label class="check"><input type="checkbox" id="invert" /><span>Invert mask</span></label>
+            <label class="check"><input type="checkbox" id="maskview" /><span>Show mask only</span></label>
+          </div>
+
+          <div class="row" style="margin-top: 13px">
+            <button type="button" class="btn" id="undo">Undo</button>
+            <button type="button" class="btn" id="clear">Clear mask</button>
+          </div>
+
+          <p class="note">
+            The object is cut out where the mask is <b>white</b>. Feather softens that
+            edge — the multiresolution blend can handle a hard edge, but a few pixels
+            of softness kills the seam halo.
+          </p>
+        </div>
+
+        <!-- place stage -->
+        <div class="block" id="rail-place" hidden>
+          <h3>Placed object</h3>
+          <div class="grid2">
+            <div class="field">
+              <div class="field-head"><label for="tx">x</label></div>
+              <input type="number" id="tx" step="1" />
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="ty">y</label></div>
+              <input type="number" id="ty" step="1" />
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="tscale">width</label></div>
+              <input type="number" id="tscale" step="1" />
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="trot">angle</label></div>
+              <input type="number" id="trot" step="1" />
+            </div>
+          </div>
+          <p class="note" id="tsize"></p>
+
+          <div class="row" style="margin-top: 12px">
+            <button type="button" class="btn" id="fit">Fit to scene</button>
+            <button type="button" class="btn" id="centre">Centre</button>
+          </div>
+          <div class="row" style="margin-top: 6px">
+            <button type="button" class="btn" id="dup">Add a copy</button>
+            <button type="button" class="btn" id="del">Remove this one</button>
+          </div>
+          <p class="note">
+            Drag the object to move it, corners to size it, the stem to turn it.
+            Hold <b>shift</b> on a corner to keep the proportions.
+          </p>
+        </div>
+
+        <!-- output -->
+        <div class="block">
+          <h3>Output files</h3>
+          <div class="field">
+            <div class="field-head"><label for="outw">Width</label><output id="outh-out" class="mono">—</output></div>
+            <input type="number" id="outw" step="10" value="1200" />
+          </div>
+          <div class="stack" id="dl-list" style="margin-top: 11px"></div>
+          <p class="note">
+            <code>scene</code>, <code>object</code>, <code>mask</code> and
+            <code>composite</code> come out at one size, so they line straight up in
+            your blend — the picture to blend into, the object image whole, the mask
+            white exactly where it sits, and the object already placed on the scene.
+            They are written as one set so the sizes cannot drift apart.
+            <code>object</code> keeps the whole image rather than just the part inside
+            the mask: a cropped object puts a black edge at the seam, which the blend
+            smears into a dark ring. <code>composite</code> is a plain alpha preview,
+            not the multiresolution result.
+          </p>
+        </div>
+
+        <div class="block">
+          <h3>Keys</h3>
+          <div class="keys">
+            <div><span>lasso / brush / erase</span><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span></div>
+            <div><span>brush size</span><span><kbd>[</kbd> <kbd>]</kbd></span></div>
+            <div><span>undo</span><span><kbd>⌘Z</kbd></span></div>
+            <div><span>switch stage</span><span><kbd>tab</kbd></span></div>
+            <div><span>nudge object</span><span><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd></span></div>
+            <div><span>delete a vertex</span><span><kbd>⌥</kbd> click</span></div>
+            <div><span>zoom / pan</span><span><kbd>scroll</kbd> <kbd>space</kbd></span></div>
+          </div>
+          <p class="note"><button type="button" class="btn btn-quiet" id="forget" style="padding-left: 0">Start over</button></p>
+        </div>
+      </aside>
+    </div>
+
+    <input type="file" id="file-scene" accept="image/*" hidden />
+    <input type="file" id="file-object" accept="image/*" hidden />
+
+    <script>
+      "use strict";
+
+      /* ============================================================
+         state
+         ============================================================ */
+
+      const S = {
+        scene: null, // {img, name, w, h}
+        object: null,
+        stage: "cut",
+        tool: "lasso",
+        brush: 48,
+        feather: 0,
+        invert: false,
+        maskView: false,
+        poly: [],
+        strokes: [], // {layer:'brush'|'erase', r, pts:[{x,y}...]}
+        ops: [],
+        redo: [],
+        stamps: [], // {cx,cy,sx,sy,rot}
+        sel: 0,
+        outW: 1200,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+      };
+
+      let LAYERS = null; // {w,h,poly,brush,erase,mask} canvases at object res
+      let MASKV = 0; // bumped whenever the mask or feather changes
+      const cache = { pm: null, pmKey: "", cut: null, cutKey: "", dim: null, dimKey: "" };
+      // the filmstrip rescales the full-res scene, so it only redraws when
+      // something actually changed — not on every pointer move
+      let previewsDirty = true;
+
+      const $ = (id) => document.getElementById(id);
+      const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+
+      function mkCanvas(w, h) {
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(w));
+        c.height = Math.max(1, Math.round(h));
+        const x = c.getContext("2d");
+        x.imageSmoothingQuality = "high";
+        return { c, x };
+      }
+
+      /* ============================================================
+         image loading
+         ============================================================ */
+
+      function readImage(file) {
+        return new Promise((resolve, reject) => {
+          if (!file || !file.type.startsWith("image/")) {
+            reject(new Error("That is not an image file."));
+            return;
+          }
+          const fr = new FileReader();
+          fr.onerror = () => reject(new Error("Could not read that file."));
+          fr.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error("Could not decode that image."));
+            img.onload = () =>
+              resolve({
+                img,
+                name: file.name.replace(/\.[^.]+$/, ""),
+                dataUrl: fr.result,
+                w: img.naturalWidth,
+                h: img.naturalHeight,
+              });
+            img.src = fr.result;
+          };
+          fr.readAsDataURL(file);
+        });
+      }
+
+      async function loadScene(file) {
+        let rec;
+        try {
+          rec = await readImage(file);
+        } catch (err) {
+          return flash(err.message);
+        }
+        S.scene = rec;
+        S.outW = clamp(Math.min(rec.w, 1200), 64, 4000);
+        $("outw").value = String(Math.round(S.outW));
+        S.zoom = 1;
+        S.panX = S.panY = 0;
+        if (!S.stamps.length) addStamp();
+        else realiseStamps();
+        saveImage("scene", rec);
+        syncAll();
+      }
+
+      async function loadObject(file) {
+        let rec;
+        try {
+          rec = await readImage(file);
+        } catch (err) {
+          return flash(err.message);
+        }
+        S.object = rec;
+        S.poly = [];
+        S.strokes = [];
+        S.ops = [];
+        S.redo = [];
+        S.stamps = [];
+        S.sel = 0;
+        buildLayers();
+        addStamp();
+        S.zoom = 1;
+        S.panX = S.panY = 0;
+        saveImage("object", rec);
+        syncAll();
+      }
+
+      /* ============================================================
+         mask layers
+         ============================================================ */
+
+      function buildLayers() {
+        if (!S.object) return (LAYERS = null);
+        const w = S.object.w,
+          h = S.object.h;
+        LAYERS = { w, h, poly: mkCanvas(w, h), brush: mkCanvas(w, h), erase: mkCanvas(w, h), mask: mkCanvas(w, h) };
+        redrawLayers();
+      }
+
+      function redrawLayers() {
+        if (!LAYERS) return;
+        const { w, h } = LAYERS;
+
+        const p = LAYERS.poly.x;
+        p.setTransform(1, 0, 0, 1, 0, 0);
+        p.clearRect(0, 0, w, h);
+        if (S.poly.length >= 3) {
+          p.fillStyle = "#fff";
+          p.beginPath();
+          p.moveTo(S.poly[0].x, S.poly[0].y);
+          for (let i = 1; i < S.poly.length; i++) p.lineTo(S.poly[i].x, S.poly[i].y);
+          p.closePath();
+          p.fill();
+        }
+
+        for (const layer of ["brush", "erase"]) {
+          const x = LAYERS[layer].x;
+          x.setTransform(1, 0, 0, 1, 0, 0);
+          x.clearRect(0, 0, w, h);
+          x.lineCap = "round";
+          x.lineJoin = "round";
+          x.strokeStyle = "#fff";
+          for (const s of S.strokes) {
+            if (s.layer !== layer) continue;
+            drawStroke(x, s);
+          }
+        }
+
+        rebuildMask();
+      }
+
+      function drawStroke(x, s) {
+        x.lineWidth = s.r * 2;
+        const pts = s.pts;
+        if (pts.length === 1) {
+          x.beginPath();
+          x.arc(pts[0].x, pts[0].y, s.r, 0, Math.PI * 2);
+          x.fillStyle = "#fff";
+          x.fill();
+          return;
+        }
+        x.beginPath();
+        x.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) x.lineTo(pts[i].x, pts[i].y);
+        x.stroke();
+      }
+
+      function rebuildMask() {
+        if (!LAYERS) return;
+        const { w, h } = LAYERS;
+        const m = LAYERS.mask.x;
+        m.setTransform(1, 0, 0, 1, 0, 0);
+        m.globalCompositeOperation = "source-over";
+        m.clearRect(0, 0, w, h);
+        m.drawImage(LAYERS.poly.c, 0, 0);
+        m.drawImage(LAYERS.brush.c, 0, 0);
+        m.globalCompositeOperation = "destination-out";
+        m.drawImage(LAYERS.erase.c, 0, 0);
+        m.globalCompositeOperation = "source-over";
+
+        if (S.invert) {
+          const d = m.getImageData(0, 0, w, h);
+          const a = d.data;
+          for (let i = 0; i < a.length; i += 4) {
+            a[i] = a[i + 1] = a[i + 2] = 255;
+            a[i + 3] = 255 - a[i + 3];
+          }
+          m.putImageData(d, 0, 0);
+        }
+        MASKV++;
+        previewsDirty = true;
+      }
+
+      // the mask with the feather baked in, padded so the soft edge is not
+      // clipped at the object's border
+      function paddedMask() {
+        const key = MASKV + ":" + S.feather;
+        if (cache.pmKey === key) return cache.pm;
+        const pad = Math.ceil(S.feather * 3) + 1;
+        const o = mkCanvas(LAYERS.w + pad * 2, LAYERS.h + pad * 2);
+        o.x.filter = S.feather > 0 ? "blur(" + S.feather + "px)" : "none";
+        o.x.drawImage(LAYERS.mask.c, pad, pad);
+        o.x.filter = "none";
+        cache.pm = { c: o.c, x: o.x, pad };
+        cache.pmKey = key;
+        return cache.pm;
+      }
+
+      // object pixels with the mask as their alpha
+      function cutout() {
+        const key = MASKV + ":" + S.feather;
+        if (cache.cutKey === key) return cache.cut;
+        const pm = paddedMask();
+        const o = mkCanvas(LAYERS.w, LAYERS.h);
+        o.x.drawImage(S.object.img, 0, 0);
+        o.x.globalCompositeOperation = "destination-in";
+        o.x.drawImage(pm.c, -pm.pad, -pm.pad);
+        o.x.globalCompositeOperation = "source-over";
+        cache.cut = o.c;
+        cache.cutKey = key;
+        return o.c;
+      }
+
+      // darkening laid over the unselected part of the object, so the selection
+      // is the thing that stays lit
+      function dimLayer() {
+        const key = MASKV + ":" + S.feather;
+        if (cache.dimKey === key) return cache.dim;
+        const pm = paddedMask();
+        const o = mkCanvas(LAYERS.w, LAYERS.h);
+        o.x.fillStyle = "rgba(11, 10, 9, 0.80)";
+        o.x.fillRect(0, 0, LAYERS.w, LAYERS.h);
+        o.x.globalCompositeOperation = "destination-out";
+        o.x.drawImage(pm.c, -pm.pad, -pm.pad);
+        o.x.globalCompositeOperation = "source-over";
+        cache.dim = o.c;
+        cache.dimKey = key;
+        return o.c;
+      }
+
+      /* ============================================================
+         placement
+         ============================================================ */
+
+      function addStamp() {
+        if (!S.object || !S.scene) {
+          // no scene yet — park it in the middle of its own frame
+          S.stamps.push({ cx: 0, cy: 0, sx: 1, sy: 1, rot: 0, pending: true });
+          S.sel = S.stamps.length - 1;
+          return;
+        }
+        const st = freshStamp();
+        S.stamps.push(st);
+        S.sel = S.stamps.length - 1;
+      }
+
+      function freshStamp() {
+        const s = (S.scene.w * 0.38) / S.object.w;
+        return { cx: S.scene.w / 2, cy: S.scene.h / 2, sx: s, sy: s, rot: 0 };
+      }
+
+      // parked stamps get realised the moment a scene appears
+      function realiseStamps() {
+        for (const st of S.stamps) {
+          if (!st.pending) continue;
+          const f = freshStamp();
+          Object.assign(st, f);
+          delete st.pending;
+        }
+      }
+
+      function fitStamp() {
+        const st = cur();
+        if (!st || !S.scene || !S.object) return;
+        const s = Math.min((S.scene.w * 0.9) / S.object.w, (S.scene.h * 0.9) / S.object.h);
+        st.sx = st.sy = s;
+        st.cx = S.scene.w / 2;
+        st.cy = S.scene.h / 2;
+        syncAll();
+      }
+
+      const cur = () => S.stamps[S.sel] || null;
+
+      function localToWorld(st, lx, ly) {
+        const c = Math.cos(st.rot),
+          s = Math.sin(st.rot);
+        const x = st.sx * lx,
+          y = st.sy * ly;
+        return { x: st.cx + c * x - s * y, y: st.cy + s * x + c * y };
+      }
+
+      function worldToLocal(st, p) {
+        const c = Math.cos(st.rot),
+          s = Math.sin(st.rot);
+        const dx = p.x - st.cx,
+          dy = p.y - st.cy;
+        return { x: c * dx + s * dy, y: -s * dx + c * dy };
+      }
+
+      function corners(st) {
+        if (!S.object) return [];
+        const hw = S.object.w / 2,
+          hh = S.object.h / 2;
+        return [
+          localToWorld(st, -hw, -hh),
+          localToWorld(st, hw, -hh),
+          localToWorld(st, hw, hh),
+          localToWorld(st, -hw, hh),
+        ];
+      }
+
+      function rotateHandle(st, scalePx) {
+        if (!S.object) return null;
+        const top = localToWorld(st, 0, -S.object.h / 2);
+        const d = 30 / scalePx;
+        const c = Math.cos(st.rot),
+          s = Math.sin(st.rot);
+        return { x: top.x + s * d, y: top.y - c * d };
+      }
+
+      /* ============================================================
+         view
+         ============================================================ */
+
+      const stage = $("stage");
+      const sx2 = stage.getContext("2d");
+      let BOX = { w: 1, h: 1 };
+      let DPR = 1;
+
+      function activeImage() {
+        if (S.stage === "cut") return S.object;
+        return S.scene;
+      }
+
+      function fitScale() {
+        const im = activeImage();
+        if (!im) return 1;
+        return Math.min(BOX.w / im.w, BOX.h / im.h) * 0.92;
+      }
+
+      function view() {
+        const im = activeImage();
+        const s = fitScale() * S.zoom;
+        const cx = (BOX.w - (im ? im.w : 0) * s) / 2 + S.panX;
+        const cy = (BOX.h - (im ? im.h : 0) * s) / 2 + S.panY;
+        return { s, cx, cy };
+      }
+
+      function toImage(clientX, clientY) {
+        const r = stage.getBoundingClientRect();
+        const v = view();
+        return { x: (clientX - r.left - v.cx) / v.s, y: (clientY - r.top - v.cy) / v.s };
+      }
+
+      function toScreen(p) {
+        const v = view();
+        return { x: v.cx + p.x * v.s, y: v.cy + p.y * v.s };
+      }
+
+      function resize() {
+        const r = stage.parentElement.getBoundingClientRect();
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        BOX = { w: Math.max(1, r.width), h: Math.max(1, r.height) };
+        stage.width = Math.round(BOX.w * DPR);
+        stage.height = Math.round(BOX.h * DPR);
+        previewsDirty = true;
+        draw();
+      }
+
+      /* ============================================================
+         draw
+         ============================================================ */
+
+      let raf = 0;
+      function draw() {
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          render();
+        });
+      }
+
+      function render() {
+        sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+        sx2.fillStyle = "#0b0a09";
+        sx2.fillRect(0, 0, BOX.w, BOX.h);
+        if (S.stage === "cut" && S.object) renderCut();
+        else if (S.stage === "place" && S.scene) renderPlace();
+        updateChrome();
+      }
+
+      function renderCut() {
+        const v = view();
+        sx2.save();
+        sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+        sx2.translate(v.cx, v.cy);
+        sx2.scale(v.s, v.s);
+        sx2.imageSmoothingEnabled = true;
+        sx2.drawImage(S.object.img, 0, 0);
+        if (S.maskView) {
+          sx2.fillStyle = "#0b0a09";
+          sx2.fillRect(0, 0, LAYERS.w, LAYERS.h);
+          sx2.drawImage(paddedMask().c, -paddedMask().pad, -paddedMask().pad);
+        } else {
+          sx2.drawImage(dimLayer(), 0, 0);
+        }
+        sx2.restore();
+
+        if (!S.maskView) {
+          // the seam: the only colour in the room
+          sx2.save();
+          sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+          const pt = S.poly.map(toScreen);
+          if (pt.length >= 2) {
+            sx2.strokeStyle = "#e89b3c";
+            sx2.lineWidth = 1.5;
+            sx2.setLineDash([6, 4]);
+            sx2.beginPath();
+            sx2.moveTo(pt[0].x, pt[0].y);
+            for (let i = 1; i < pt.length; i++) sx2.lineTo(pt[i].x, pt[i].y);
+            if (pt.length >= 3) sx2.closePath();
+            sx2.stroke();
+            sx2.setLineDash([]);
+          }
+          for (const p of pt) handleSquare(sx2, p, false);
+          sx2.restore();
+        }
+
+        if (S.tool !== "lasso" && pointer.in) brushCursor();
+      }
+
+      function renderPlace() {
+        const v = view();
+        sx2.save();
+        sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+        sx2.translate(v.cx, v.cy);
+        sx2.scale(v.s, v.s);
+        sx2.imageSmoothingEnabled = true;
+        sx2.drawImage(S.scene.img, 0, 0);
+        const cut = cutout();
+        for (const st of S.stamps) {
+          sx2.save();
+          sx2.translate(st.cx, st.cy);
+          sx2.rotate(st.rot);
+          sx2.scale(st.sx, st.sy);
+          sx2.drawImage(cut, -S.object.w / 2, -S.object.h / 2);
+          sx2.restore();
+        }
+        sx2.restore();
+
+        const st = cur();
+        if (st) {
+          const cs = corners(st).map(toScreen);
+          sx2.save();
+          sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+          sx2.strokeStyle = "#e89b3c";
+          sx2.lineWidth = 1.5;
+          sx2.beginPath();
+          sx2.moveTo(cs[0].x, cs[0].y);
+          for (let i = 1; i < 4; i++) sx2.lineTo(cs[i].x, cs[i].y);
+          sx2.closePath();
+          sx2.stroke();
+
+          const rh = rotateHandle(st, v.s);
+          const top = toScreen(localToWorld(st, 0, -S.object.h / 2));
+          const rp = toScreen(rh);
+          sx2.beginPath();
+          sx2.moveTo(top.x, top.y);
+          sx2.lineTo(rp.x, rp.y);
+          sx2.stroke();
+          sx2.beginPath();
+          sx2.arc(rp.x, rp.y, 5, 0, Math.PI * 2);
+          sx2.fillStyle = "#e89b3c";
+          sx2.fill();
+          for (const p of cs) handleSquare(sx2, p, false);
+          sx2.restore();
+        }
+      }
+
+      function handleSquare(ctx, p, hollow) {
+        ctx.beginPath();
+        ctx.rect(p.x - 4, p.y - 4, 8, 8);
+        ctx.fillStyle = hollow ? "#0b0a09" : "#f1eae0";
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "#e89b3c";
+        ctx.stroke();
+      }
+
+      function brushCursor() {
+        const v = view();
+        sx2.save();
+        sx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+        sx2.beginPath();
+        sx2.arc(pointer.cx, pointer.cy, S.brush * v.s, 0, Math.PI * 2);
+        sx2.strokeStyle = "rgba(241,234,224,0.85)";
+        sx2.lineWidth = 1;
+        sx2.stroke();
+        sx2.beginPath();
+        sx2.arc(pointer.cx, pointer.cy, S.brush * v.s, 0, Math.PI * 2);
+        sx2.strokeStyle = "rgba(11,10,9,0.6)";
+        sx2.lineWidth = 1;
+        sx2.setLineDash([3, 3]);
+        sx2.stroke();
+        sx2.restore();
+      }
+
+      /* ============================================================
+         chrome / readouts
+         ============================================================ */
+
+      function updateChrome() {
+        const im = activeImage();
+        const v = view();
+        $("stage-id").textContent = im
+          ? (S.stage === "cut" ? "object · " : "scene · ") +
+            im.name +
+            ".png" +
+            "  " +
+            im.w +
+            " × " +
+            im.h +
+            "   " +
+            Math.round(v.s * 100) +
+            "%"
+          : "";
+
+        const flashing = Date.now() < flashUntil;
+        if (!flashing) {
+          $("stage-hint").innerHTML =
+            S.stage === "cut"
+              ? S.tool === "lasso"
+                ? "Click to drop points around the object. Drag a point to move it, <b>⌥ click</b> to delete one. Three points and the shape fills."
+                : S.tool === "brush"
+                  ? "Paint over the part you want. The rest of the frame goes dark."
+                  : "Paint to take the mask back off."
+              : "Drag to move · corners to size · the stem to turn.";
+        }
+        $("stage-id").style.opacity = im ? "" : "0";
+        $("stage-hint").style.opacity = flashing || im ? "" : "0";
+
+        const cut = S.stage === "cut";
+        $("rail-cut").hidden = !cut;
+        $("rail-place").hidden = cut;
+        $("field-brush").style.display = S.tool === "lasso" ? "none" : "";
+        $("tab-cut").setAttribute("aria-current", String(cut));
+        $("tab-place").setAttribute("aria-current", String(!cut));
+
+        $("empty").hidden = !!(S.scene && S.object);
+        if (!S.scene || !S.object) {
+          $("empty-title").textContent = !S.scene && !S.object ? "Load two images" : !S.scene ? "Now pick a scene" : "Now pick an object";
+          $("empty-body").innerHTML = !S.scene
+            ? "The scene is the picture you blend <b>into</b>. The object gets cut out of its own image and dropped on top."
+            : "The object is the thing you cut out — loaded in its own image, so you have room to draw the mask around it.";
+        }
+
+        document.body.classList.toggle("ready", !!(S.scene && S.object));
+
+        $("tab-place").disabled = !(S.object && S.scene);
+        $("dl-all").disabled = !(S.object && S.scene);
+        $("dl-menu").disabled = !(S.object && S.scene);
+        $("empty-scene").textContent = S.scene ? "Replace scene" : "Choose scene";
+        $("empty-object").textContent = S.object ? "Replace object" : "Choose object";
+        $("load-scene").textContent = S.scene ? "Replace scene" : "Load scene";
+        $("load-object").textContent = S.object ? "Replace object" : "Load object";
+
+        $("undo").disabled = !S.ops.length;
+        $("clear").disabled = !(S.poly.length || S.strokes.length);
+        stage.classList.toggle("tool-place", S.stage === "place");
+
+        if (S.scene && S.object) {
+          const ow = clamp(Math.round(S.outW) || 1200, 32, MAX_OUT);
+          const oh = Math.round((ow * S.scene.h) / S.scene.w);
+          $("outh-out").textContent = ow + " × " + oh;
+        } else {
+          $("outh-out").textContent = "—";
+        }
+
+        syncStampFields();
+        if (previewsDirty) {
+          previewsDirty = false;
+          drawPreviews();
+        }
+      }
+
+      function syncStampFields() {
+        const st = cur();
+        const on = !!st && S.stage === "place";
+        for (const id of ["tx", "ty", "tscale", "trot"]) $(id).disabled = !on;
+        if (!st || !S.object) {
+          $("tsize").textContent = "";
+          return;
+        }
+        if (document.activeElement !== $("tx")) $("tx").value = Math.round(st.cx);
+        if (document.activeElement !== $("ty")) $("ty").value = Math.round(st.cy);
+        if (document.activeElement !== $("tscale"))
+          $("tscale").value = Math.round((st.sx * S.object.w * 100) / (S.scene ? S.scene.w : 1));
+        if (document.activeElement !== $("trot"))
+          $("trot").value = Math.round((((st.rot * 180) / Math.PI) % 360 + 360) % 360);
+        const w = Math.round(S.object.w * st.sx),
+          h = Math.round(S.object.h * st.sy);
+        $("tsize").textContent =
+          S.stamps.length > 1
+            ? S.stamps.length + " copies · this one is " + w + " × " + h + " px in the scene"
+            : "Lands at " + w + " × " + h + " px in the scene";
+        $("del").disabled = S.stamps.length < 2;
+      }
+
+      /* ============================================================
+         previews
+         ============================================================ */
+
+      function preview(cv, drawFn) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const r = cv.parentElement.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return;
+        const w = Math.round(r.width * dpr),
+          h = Math.round(r.height * dpr);
+        if (cv.width !== w || cv.height !== h) {
+          cv.width = w;
+          cv.height = h;
+        }
+        drawFn(cv.getContext("2d"), w, h);
+      }
+
+      function fitInto(cw, ch, iw, ih) {
+        const s = Math.min(cw / iw, ch / ih);
+        return { s, x: (cw - iw * s) / 2, y: (ch - ih * s) / 2 };
+      }
+
+      function drawPreviews() {
+        const pvA = $("pv-scene"),
+          pvB = $("pv-object"),
+          pvM = $("pv-mask"),
+          pvC = $("pv-comp");
+        const has = !!(S.scene && S.object);
+        // once both are in, the tiles report the size the files are written at,
+        // not the source size — they have to agree, and that is the thing to see
+        const od = has ? outDims() : null;
+        const dim = od ? od.ow + "×" + od.oh : null;
+
+        if (S.scene) {
+          $("pv-scene-d").textContent = dim || S.scene.w + "×" + S.scene.h;
+          preview(pvA, (x, w, h) => {
+            x.clearRect(0, 0, w, h);
+            const f = fitInto(w, h, S.scene.w, S.scene.h);
+            x.drawImage(S.scene.img, f.x, f.y, S.scene.w * f.s, S.scene.h * f.s);
+          });
+        } else {
+          $("pv-scene-d").textContent = "";
+          blank(pvA, "no scene");
+        }
+
+        if (S.object) {
+          $("pv-object-d").textContent = dim || S.object.w + "×" + S.object.h;
+          const cut = cutout();
+          preview(pvB, (x, w, h) => {
+            x.clearRect(0, 0, w, h);
+            const f = fitInto(w, h, LAYERS.w, LAYERS.h);
+            x.drawImage(cut, f.x, f.y, LAYERS.w * f.s, LAYERS.h * f.s);
+          });
+          // the feather value already sits beside the slider; the size does not
+          // appear anywhere else, so the mask tile carries it
+          $("pv-mask-d").textContent = dim || Math.round(S.feather) + "px feather";
+          preview(pvM, (x, w, h) => {
+            x.fillStyle = "#000";
+            x.fillRect(0, 0, w, h);
+            const pm = paddedMask();
+            const f = fitInto(w, h, LAYERS.w, LAYERS.h);
+            x.drawImage(pm.c, f.x - pm.pad * f.s, f.y - pm.pad * f.s, pm.c.width * f.s, pm.c.height * f.s);
+          });
+        } else {
+          $("pv-object-d").textContent = "";
+          $("pv-mask-d").textContent = "";
+          blank(pvB, "no object");
+          blank(pvM, "no object");
+        }
+
+        if (has) {
+          $("pv-comp-d").textContent = "plain alpha";
+          preview(pvC, (x, w, h) => {
+            x.fillStyle = "#000";
+            x.fillRect(0, 0, w, h);
+            const f = fitInto(w, h, S.scene.w, S.scene.h);
+            x.drawImage(S.scene.img, f.x, f.y, S.scene.w * f.s, S.scene.h * f.s);
+            const cut = cutout();
+            for (const st of S.stamps) {
+              x.save();
+              x.translate(f.x + st.cx * f.s, f.y + st.cy * f.s);
+              x.rotate(st.rot);
+              x.scale(st.sx * f.s, st.sy * f.s);
+              x.drawImage(cut, -S.object.w / 2, -S.object.h / 2);
+              x.restore();
+            }
+          });
+        } else {
+          $("pv-comp-d").textContent = "";
+          blank(pvC, "waiting");
+        }
+      }
+
+      function blank(cv, text) {
+        preview(cv, (x, w, h) => {
+          x.clearRect(0, 0, w, h);
+          x.fillStyle = "#141210";
+          x.fillRect(0, 0, w, h);
+          x.fillStyle = "#8b8073";
+          x.font = Math.round(11 * Math.min(window.devicePixelRatio || 1, 2)) + "px " + '"IBM Plex Mono", monospace';
+          x.textAlign = "center";
+          x.textBaseline = "middle";
+          x.fillText(text, w / 2, h / 2);
+        });
+      }
+
+      /* ============================================================
+         pointer
+         ============================================================ */
+
+      const pointer = { down: false, in: false, cx: 0, cy: 0, mode: null, i: -1, from: null, grab: null };
+      let spaceDown = false;
+
+      stage.addEventListener("pointerenter", (e) => {
+        pointer.in = true;
+        pointer.cx = e.offsetX;
+        pointer.cy = e.offsetY;
+        draw();
+      });
+      stage.addEventListener("pointerleave", () => {
+        pointer.in = false;
+        draw();
+      });
+      stage.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      stage.addEventListener("pointerdown", (e) => {
+        if (!activeImage()) return;
+        stage.setPointerCapture(e.pointerId);
+        const p = toImage(e.clientX, e.clientY);
+        pointer.down = true;
+        pointer.from = p;
+
+        if (spaceDown || e.button === 1) {
+          pointer.mode = "pan";
+          pointer.grab = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY };
+          stage.classList.add("panning");
+          return;
+        }
+        if (e.button !== 0 && e.button !== 2) return;
+
+        if (S.stage === "cut") cutDown(e, p);
+        else placeDown(e, p);
+        draw();
+      });
+
+      stage.addEventListener("pointermove", (e) => {
+        pointer.cx = e.offsetX;
+        pointer.cy = e.offsetY;
+        if (!pointer.down) {
+          if (S.stage === "place") hoverPlace(e);
+          draw();
+          return;
+        }
+        const p = toImage(e.clientX, e.clientY);
+        if (pointer.mode === "pan") {
+          S.panX = pointer.grab.px + (e.clientX - pointer.grab.x);
+          S.panY = pointer.grab.py + (e.clientY - pointer.grab.y);
+        } else if (S.stage === "cut") cutMove(e, p);
+        else placeMove(e, p);
+        draw();
+      });
+
+      stage.addEventListener("pointerup", (e) => {
+        if (pointer.mode === "pan") stage.classList.remove("panning");
+        else if (S.stage === "cut") cutUp(e);
+        else placeUp(e);
+        pointer.down = false;
+        pointer.mode = null;
+        pointer.grab = null;
+        stage.releasePointerCapture?.(e.pointerId);
+        syncAll();
+      });
+
+      stage.addEventListener(
+        "wheel",
+        (e) => {
+          if (!activeImage()) return;
+          e.preventDefault();
+          const before = toImage(e.clientX, e.clientY);
+          const k = Math.exp(-e.deltaY * 0.0016);
+          S.zoom = clamp(S.zoom * k, 0.25, 14);
+          const after = toScreen(before);
+          const r = stage.getBoundingClientRect();
+          S.panX += e.clientX - r.left - after.x;
+          S.panY += e.clientY - r.top - after.y;
+          draw();
+        },
+        { passive: false }
+      );
+
+      /* ---------- cut stage ---------- */
+
+      function cutDown(e, p) {
+        const rad = 9 / view().s;
+        const hit = nearestVertex(p, rad);
+
+        if (S.tool === "lasso") {
+          if (hit >= 0 && (e.altKey || e.button === 2)) {
+            push({ t: "pdel", i: hit, pt: { ...S.poly[hit] } });
+            S.poly.splice(hit, 1);
+            redrawLayers();
+            return;
+          }
+          if (hit >= 0) {
+            pointer.mode = "vertex";
+            pointer.i = hit;
+            pointer.from = { ...S.poly[hit] };
+            return;
+          }
+          S.poly.push({ x: p.x, y: p.y });
+          redrawLayers();
+          pointer.mode = "newvertex";
+          pointer.i = S.poly.length - 1;
+          pointer.from = { ...p };
+          return;
+        }
+
+        const layer = S.tool === "brush" ? "brush" : "erase";
+        pointer.mode = "stroke";
+        pointer.i = -1;
+        const stroke = { layer, r: S.brush, pts: [{ x: p.x, y: p.y }] };
+        S.strokes.push(stroke);
+        pointer.grab = stroke;
+        redrawLayers();
+      }
+
+      function cutMove(e, p) {
+        if (pointer.mode === "vertex" || pointer.mode === "newvertex") {
+          const v = S.poly[pointer.i];
+          if (!v) return;
+          v.x = clamp(p.x, 0, LAYERS.w);
+          v.y = clamp(p.y, 0, LAYERS.h);
+          redrawLayers();
+          return;
+        }
+        if (pointer.mode === "stroke") {
+          const s = pointer.grab;
+          const last = s.pts[s.pts.length - 1];
+          if (Math.hypot(p.x - last.x, p.y - last.y) < Math.max(1, S.brush * 0.18)) return;
+          s.pts.push({ x: p.x, y: p.y });
+          const x = LAYERS[s.layer].x;
+          x.lineCap = "round";
+          x.lineJoin = "round";
+          x.strokeStyle = "#fff";
+          x.lineWidth = s.r * 2;
+          x.beginPath();
+          x.moveTo(last.x, last.y);
+          x.lineTo(p.x, p.y);
+          x.stroke();
+          rebuildMask();
+        }
+      }
+
+      function cutUp() {
+        if (pointer.mode === "newvertex") {
+          const v = S.poly[pointer.i];
+          if (v) push({ t: "padd", i: pointer.i, pt: { ...v } });
+        } else if (pointer.mode === "vertex") {
+          const v = S.poly[pointer.i];
+          if (v && (v.x !== pointer.from.x || v.y !== pointer.from.y))
+            push({ t: "pmove", i: pointer.i, from: pointer.from, to: { ...v } });
+        } else if (pointer.mode === "stroke") {
+          push({ t: "stroke", stroke: pointer.grab });
+        }
+      }
+
+      function nearestVertex(p, rad) {
+        let best = -1,
+          bd = rad;
+        for (let i = 0; i < S.poly.length; i++) {
+          const d = Math.hypot(S.poly[i].x - p.x, S.poly[i].y - p.y);
+          if (d < bd) {
+            bd = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      /* ---------- place stage ---------- */
+
+      function hitTest(p) {
+        const vis = S.stamps.map((_, i) => i).reverse();
+        for (const i of vis) {
+          const st = S.stamps[i];
+          const l = worldToLocal(st, p);
+          if (Math.abs(l.x) <= S.object.w / 2 && Math.abs(l.y) <= S.object.h / 2) return i;
+        }
+        return -1;
+      }
+
+      function placeDown(e, p) {
+        const st = cur();
+        const v = view();
+        const rad = 10 / v.s;
+
+        // handles of the selected stamp win over everything
+        if (st) {
+          const rh = rotateHandle(st, v.s);
+          if (rh && Math.hypot(rh.x - p.x, rh.y - p.y) < rad * 1.4) {
+            pointer.mode = "rotate";
+            return;
+          }
+          const cs = corners(st);
+          for (let i = 0; i < 4; i++) {
+            if (Math.hypot(cs[i].x - p.x, cs[i].y - p.y) < rad * 1.4) {
+              pointer.mode = "scale";
+              pointer.i = i;
+              return;
+            }
+          }
+        }
+
+        const hit = hitTest(p);
+        if (hit >= 0) {
+          S.sel = hit;
+          pointer.mode = "move";
+          const s2 = S.stamps[hit];
+          pointer.grab = { dx: s2.cx - p.x, dy: s2.cy - p.y };
+        }
+      }
+
+      function placeMove(e, p) {
+        const st = cur();
+        if (!st) return;
+
+        if (pointer.mode === "move") {
+          st.cx = p.x + pointer.grab.dx;
+          st.cy = p.y + pointer.grab.dy;
+          return;
+        }
+
+        if (pointer.mode === "rotate") {
+          let rot = Math.atan2(p.y - st.cy, p.x - st.cx) + Math.PI / 2;
+          if (e.shiftKey) rot = Math.round(rot / (Math.PI / 12)) * (Math.PI / 12);
+          st.rot = rot;
+          return;
+        }
+
+        if (pointer.mode === "scale") {
+          const hw = S.object.w / 2,
+            hh = S.object.h / 2;
+          const signs = [
+            [-1, -1],
+            [1, -1],
+            [1, 1],
+            [-1, 1],
+          ];
+          const [ax, ay] = signs[pointer.i];
+          const fixed = localToWorld(st, -ax * hw, -ay * hh);
+          const c = Math.cos(st.rot),
+            s = Math.sin(st.rot);
+          const dx = p.x - fixed.x,
+            dy = p.y - fixed.y;
+          const lx = c * dx + s * dy;
+          const ly = -s * dx + c * dy;
+
+          let nsx = Math.max(Math.abs(lx) / (2 * hw), 0.02);
+          let nsy = Math.max(Math.abs(ly) / (2 * hh), 0.02);
+          if (e.shiftKey) {
+            const s0 = Math.max(nsx, nsy);
+            nsx = nsy = s0;
+          }
+          const ddx = (lx < 0 ? -1 : 1) * 2 * hw * nsx;
+          const ddy = (ly < 0 ? -1 : 1) * 2 * hh * nsy;
+          const wx = fixed.x + c * ddx - s * ddy;
+          const wy = fixed.y + s * ddx + c * ddy;
+          st.sx = nsx;
+          st.sy = nsy;
+          st.cx = (fixed.x + wx) / 2;
+          st.cy = (fixed.y + wy) / 2;
+        }
+      }
+
+      function placeUp() {
+        pointer.i = -1;
+      }
+
+      function hoverPlace(e) {
+        const p = toImage(e.clientX, e.clientY);
+        const st = cur();
+        const v = view();
+        const rad = 10 / v.s;
+        let cursor = "default";
+        if (st) {
+          const rh = rotateHandle(st, v.s);
+          const cs = corners(st);
+          if (rh && Math.hypot(rh.x - p.x, rh.y - p.y) < rad * 1.4) cursor = "grab";
+          else if (cs.some((c) => Math.hypot(c.x - p.x, c.y - p.y) < rad * 1.4)) cursor = "nwse-resize";
+        }
+        if (cursor === "default" && hitTest(p) >= 0) cursor = "move";
+        stage.style.cursor = cursor;
+      }
+
+      const snap = (r) => Math.round(r / (Math.PI / 12)) * (Math.PI / 12);
+
+      /* ============================================================
+         ops / undo
+         ============================================================ */
+
+      function push(op) {
+        S.ops.push(op);
+        S.redo.length = 0;
+      }
+
+      function undo() {
+        const op = S.ops.pop();
+        if (!op) return;
+        S.redo.push(op);
+        invertOp(op);
+        redrawLayers();
+        syncAll();
+      }
+
+      function redoOp() {
+        const op = S.redo.pop();
+        if (!op) return;
+        S.ops.push(op);
+        applyOp(op);
+        redrawLayers();
+        syncAll();
+      }
+
+      function invertOp(op) {
+        if (op.t === "padd") S.poly.splice(op.i, 1);
+        else if (op.t === "pmove") S.poly[op.i] = { ...op.from };
+        else if (op.t === "pdel") S.poly.splice(op.i, 0, { ...op.pt });
+        else if (op.t === "stroke") {
+          const i = S.strokes.indexOf(op.stroke);
+          if (i >= 0) S.strokes.splice(i, 1);
+        }
+      }
+
+      function applyOp(op) {
+        if (op.t === "padd") S.poly.splice(op.i, 0, { ...op.pt });
+        else if (op.t === "pmove") S.poly[op.i] = { ...op.to };
+        else if (op.t === "pdel") S.poly.splice(op.i, 1);
+        else if (op.t === "stroke" && !S.strokes.includes(op.stroke)) S.strokes.push(op.stroke);
+      }
+
+      function clearMask() {
+        S.poly = [];
+        S.strokes = [];
+        S.ops = [];
+        S.redo = [];
+        redrawLayers();
+        syncAll();
+      }
+
+      /* ============================================================
+         export
+         ============================================================ */
+
+      // four full-size canvases at once, so the width is capped well below
+      // anything that would exhaust the tab
+      const MAX_OUT = 3000;
+
+      // the one size every written file shares — scene, object and mask all come
+      // off this, so anything that reports a size reads it from here
+      function outDims() {
+        const ow = clamp(Math.round(S.outW) || 1200, 32, MAX_OUT);
+        const oh = Math.max(1, Math.round((ow * S.scene.h) / S.scene.w));
+        return { ow, oh };
+      }
+
+      // The part of the frame the object does not reach is filled with the
+      // object's own edge colours carried outward, not with black. Blurring the
+      // stamped object and reading the result back does the work: a canvas
+      // holds its pixels premultiplied, so getImageData un-premultiplies on the
+      // way out and hands back blur(colour·alpha) / blur(alpha) — the edge
+      // extrapolated smoothly instead of smeared. Black out there is a cliff,
+      // and the mask's Gaussian pyramid is blurred at every level, so the coarse
+      // levels still weigh whatever sits just past the object's frame. Where the
+      // blur has run out of object to extrapolate from, the value eases into the
+      // object's average colour so that no band shows.
+      function surround(raw, ow, oh) {
+        const r = Math.min(64, Math.max(8, Math.round(ow / 48)));
+        const b = mkCanvas(ow, oh);
+        b.x.filter = "blur(" + r + "px)";
+        b.x.drawImage(raw.c, 0, 0);
+        b.x.filter = "none";
+        const d = b.x.getImageData(0, 0, ow, oh);
+        const a = d.data;
+        let cr = 0,
+          cg = 0,
+          cb = 0,
+          n = 0;
+        for (let i = 0; i < a.length; i += 4) {
+          if (a[i + 3] > 200) {
+            cr += a[i];
+            cg += a[i + 1];
+            cb += a[i + 2];
+            n++;
+          }
+        }
+        n = n || 1;
+        cr /= n;
+        cg /= n;
+        cb /= n;
+        for (let i = 0; i < a.length; i += 4) {
+          const w = Math.min(1, a[i + 3] / 64);
+          if (w < 1) {
+            a[i] = cr * (1 - w) + a[i] * w;
+            a[i + 1] = cg * (1 - w) + a[i + 1] * w;
+            a[i + 2] = cb * (1 - w) + a[i + 2] * w;
+          }
+          a[i + 3] = 255;
+        }
+        b.x.putImageData(d, 0, 0);
+        return b;
+      }
+
+      function outputs() {
+        const sw = S.scene.w,
+          sh = S.scene.h;
+        const { ow, oh } = outDims();
+        const k = ow / sw;
+
+        const scene = mkCanvas(ow, oh);
+        scene.x.drawImage(S.scene.img, 0, 0, ow, oh);
+
+        // the object goes down whole, not cropped to the mask. Cropping left a
+        // false black edge at the mask boundary that the mask's own pyramid
+        // cannot suppress, so the blend drew a dark ring around the object —
+        // worst at a tight feather. The object's real surroundings carry on
+        // smoothly across the edge instead, which measures clean at every
+        // feather. The mask still says which pixels count, so nothing here leaks
+        // into the blend. It is stamped onto nothing first so that whatever it
+        // does not cover can be filled from the object itself.
+        const raw = mkCanvas(ow, oh);
+        const mask = mkCanvas(ow, oh);
+        const composite = mkCanvas(ow, oh);
+        mask.x.fillStyle = "#000";
+        mask.x.fillRect(0, 0, ow, oh);
+        composite.x.drawImage(scene.c, 0, 0);
+
+        const pm = paddedMask();
+        const cut = cutout();
+        const hw = S.object.w / 2,
+          hh = S.object.h / 2;
+
+        for (const st of S.stamps) {
+          const place = (ctx, fn) => {
+            ctx.save();
+            ctx.translate(st.cx * k, st.cy * k);
+            ctx.rotate(st.rot);
+            ctx.scale(st.sx * k, st.sy * k);
+            fn(ctx);
+            ctx.restore();
+          };
+          place(raw.x, (c) => c.drawImage(S.object.img, -hw, -hh));
+          place(mask.x, (c) => c.drawImage(pm.c, -hw - pm.pad, -hh - pm.pad));
+          place(composite.x, (c) => c.drawImage(cut, -hw, -hh));
+        }
+
+        // filled from the object, then the object laid back over it, so its own
+        // pixels stay sharp instead of taking the blur
+        const object = surround(raw, ow, oh);
+        object.x.drawImage(raw.c, 0, 0);
+
+        return { scene: scene.c, object: object.c, mask: mask.c, composite: composite.c, ow, oh };
+      }
+
+      /* ============================================================
+         work folder — link a directory once and both halves of the
+         round trip skip the file dialogs: pick from a list of what's
+         actually in there, and write the output files straight back into it.
+         ============================================================ */
+
+      const WORK = { handle: null, name: "", ready: false };
+      const IMG_RE = /\.(png|jpe?g|webp|gif|bmp|avif)$/i;
+
+      const idb = () =>
+        new Promise((res, rej) => {
+          let r;
+          try {
+            r = indexedDB.open("maskroom", 1);
+          } catch (e) {
+            return rej(e);
+          }
+          r.onupgradeneeded = () => r.result.createObjectStore("h");
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+
+      async function idbPut(k, v) {
+        const db = await idb();
+        return new Promise((res, rej) => {
+          const tx = db.transaction("h", "readwrite");
+          tx.objectStore("h").put(v, k);
+          tx.oncomplete = () => res();
+          tx.onerror = () => rej(tx.error);
+        });
+      }
+
+      async function idbGet(k) {
+        const db = await idb();
+        return new Promise((res, rej) => {
+          const tx = db.transaction("h", "readonly");
+          const q = tx.objectStore("h").get(k);
+          q.onsuccess = () => res(q.result || null);
+          q.onerror = () => rej(q.error);
+        });
+      }
+
+      function paintWork() {
+        const b = $("work-btn");
+        b.dataset.linked = String(WORK.ready);
+        $("work-label").textContent = WORK.ready ? WORK.name : "work folder";
+        b.title = WORK.ready
+          ? "Linked to " + WORK.name + " — click to link a different folder"
+          : "Link a folder so loading and saving go straight into it";
+        $("dl-all").textContent = WORK.ready ? "Save to " + WORK.name : "Download all four";
+      }
+
+      async function linkWork() {
+        if (!window.showDirectoryPicker) return false;
+        let h;
+        try {
+          h = await window.showDirectoryPicker({
+            id: "maskroom-work",
+            mode: "readwrite",
+            ...(WORK.handle ? { startIn: WORK.handle } : {}),
+          });
+        } catch (e) {
+          return false; /* the user cancelled, or the picker is unavailable here */
+        }
+        WORK.handle = h;
+        WORK.name = h.name;
+        WORK.ready = true;
+        try {
+          await idbPut("work", h);
+        } catch (e) {
+          /* no handle store — the link still holds for this session */
+        }
+        paintWork();
+        return true;
+      }
+
+      async function reuseWork() {
+        if (!WORK.handle) return false;
+        try {
+          let p = await WORK.handle.queryPermission({ mode: "readwrite" });
+          if (p === "prompt") p = await WORK.handle.requestPermission({ mode: "readwrite" });
+          if (p !== "granted") return false;
+          WORK.ready = true;
+          paintWork();
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function ensureWork() {
+        if (WORK.ready) return true;
+        if (await reuseWork()) return true;
+        return linkWork();
+      }
+
+      async function listWork() {
+        const out = [];
+        for await (const [name, h] of WORK.handle.entries()) {
+          if (h.kind === "file" && IMG_RE.test(name)) out.push({ name, handle: h });
+        }
+        return out.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+      }
+
+      let pickSlot = "scene";
+
+      function hidePicker() {
+        $("picker").hidden = true;
+      }
+
+      async function openPicker(which) {
+        if (!window.showDirectoryPicker) return pickFallback(which);
+        /* cancelling the folder link falls through to the plain file dialog */
+        if (!WORK.ready && !(await ensureWork())) return pickFallback(which);
+        pickSlot = which;
+
+        const panel = $("picker");
+        panel.innerHTML = "";
+        panel.hidden = false;
+
+        const head = document.createElement("div");
+        head.className = "pick-head";
+        const t = document.createElement("b");
+        t.textContent = which === "scene" ? "Scene" : "Object";
+        const dir = document.createElement("span");
+        dir.className = "mono";
+        dir.textContent = WORK.name + "/";
+        head.append(t, dir);
+        panel.appendChild(head);
+
+        const foot = () => {
+          const wrap = document.createElement("div");
+          wrap.className = "pick-foot";
+          const row = (label, fn) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "pick-row pick-alt";
+            b.textContent = label;
+            b.addEventListener("click", fn);
+            wrap.appendChild(b);
+          };
+          row("Choose a file from anywhere…", () => {
+            hidePicker();
+            pickFallback(pickSlot);
+          });
+          row("Use a different folder…", async () => {
+            hidePicker();
+            if (await linkWork()) flash("Linked to " + WORK.name + ".");
+          });
+          panel.appendChild(wrap);
+        };
+
+        let files;
+        try {
+          files = await listWork();
+        } catch (e) {
+          // a real bug reads exactly like a lapsed grant from here, so leave the
+          // cause in the console rather than only the "link it again" guess
+          console.error("maskroom: could not list " + WORK.name, e);
+          WORK.ready = false;
+          paintWork();
+          hidePicker();
+          return flash("Lost access to " + WORK.name + " — link it again.");
+        }
+
+        if (!files.length) {
+          const n = document.createElement("p");
+          n.className = "pick-note";
+          n.textContent = "No images in " + WORK.name + "/ yet. Put the ones you want there, then open this list again.";
+          panel.appendChild(n);
+          return foot();
+        }
+
+        for (const f of files) {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "pick-row";
+          const img = document.createElement("img");
+          img.alt = "";
+          const nm = document.createElement("span");
+          nm.className = "pick-name";
+          nm.textContent = f.name;
+          const meta = document.createElement("span");
+          meta.className = "pick-meta";
+          row.append(img, nm, meta);
+          row.addEventListener("click", () => chooseWork(f));
+          panel.appendChild(row);
+          f.handle
+            .getFile()
+            .then((file) => {
+              meta.textContent = Math.max(1, Math.round(file.size / 1024)) + " KB";
+              const url = URL.createObjectURL(file);
+              img.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
+              img.src = url;
+            })
+            .catch(() => {});
+        }
+        foot();
+      }
+
+      async function chooseWork(f) {
+        hidePicker();
+        try {
+          const file = await f.handle.getFile();
+          await (pickSlot === "scene" ? loadScene(file) : loadObject(file));
+        } catch (e) {
+          flash("Could not read " + f.name + ".");
+        }
+      }
+
+      function pickFallback(which) {
+        const f = $(which === "scene" ? "file-scene" : "file-object");
+        f.value = "";
+        f.click();
+      }
+
+      async function writeWork(canvas, name, k) {
+        const fh = await WORK.handle.getFileHandle(name, { create: true });
+        const w = await fh.createWritable();
+        await w.write(await blobOf(canvas, k));
+        await w.close();
+      }
+
+      // the mask stays lossless: it is the thing the blend blurs, so a JPEG edge
+      // would drop blocking exactly where the feather has to come out smooth.
+      // The other two are photographs, where JPEG keeps the full-size scene from
+      // landing at a few megabytes.
+      const FMT = {
+        scene: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
+        object: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
+        mask: { mime: "image/png", ext: ".png" },
+        composite: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
+      };
+      const fmtOf = (k) => FMT[k] || FMT.scene;
+      const outName = (k, base) => base + k + fmtOf(k).ext;
+
+      function blobOf(canvas, k) {
+        const f = fmtOf(k);
+        return new Promise((res, rej) =>
+          canvas.toBlob(
+            (b) => (b ? res(b) : rej(new Error("Could not encode that image."))),
+            f.mime,
+            f.q
+          )
+        );
+      }
+
+      function download(which) {
+        if (!(S.scene && S.object)) return;
+        deliver(which);
+      }
+
+      async function deliver(which) {
+        const o = outputs();
+        const name = outName(which, S.scene.name + "-" + S.object.name + "-");
+        if (WORK.ready) {
+          try {
+            await writeWork(o[which], name, which);
+            return flash("Saved " + name + " into " + WORK.name + "/");
+          } catch (e) {
+            WORK.ready = false;
+            paintWork();
+            flash("Lost access to " + WORK.name + " — downloading " + name + " instead.");
+          }
+        }
+        save(o[which], name, which);
+      }
+
+      function save(canvas, name, k) {
+        const f = fmtOf(k);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return flash("Could not encode that image.");
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+          },
+          f.mime,
+          f.q
+        );
+      }
+
+      // one set, all at one size: the scene to blend into, the cutout, the mask
+      // saying where it sits, and the cutout already sitting on the scene —
+      // that last one is the form with no false edge in it, so it is the safest
+      // thing to hand a Laplacian blend
+      const NEEDED = ["scene", "object", "mask", "composite"];
+
+      async function downloadAll() {
+        if (!(S.scene && S.object)) return;
+        const o = outputs();
+        const base = S.scene.name + "-" + S.object.name + "-";
+        const names = NEEDED.map((k) => outName(k, "")).join(", ");
+        const sizes = o.ow + "×" + o.oh;
+        if (WORK.ready) {
+          try {
+            for (const k of NEEDED) await writeWork(o[k], outName(k, base), k);
+            return flash("Saved " + names + " into " + WORK.name + "/ — all " + sizes + ".");
+          } catch (e) {
+            WORK.ready = false;
+            paintWork();
+            flash("Lost access to " + WORK.name + " — downloading them instead.");
+          }
+        }
+        NEEDED.forEach((k, i) => setTimeout(() => save(o[k], outName(k, base), k), i * 280));
+        flash("Downloading " + names + " — allow them all if your browser asks about multiple downloads.");
+      }
+
+      function buildDownloadList() {
+        const wrap = $("dl-list");
+        wrap.innerHTML = "";
+        for (const [k, label] of [
+          ["scene", outName("scene", "")],
+          ["object", outName("object", "")],
+          ["mask", outName("mask", "")],
+          ["composite", outName("composite", "")],
+        ]) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn";
+          b.textContent = label;
+          b.addEventListener("click", () => download(k));
+          wrap.appendChild(b);
+        }
+        wrap.hidden = true;
+      }
+
+      /* ============================================================
+         settings persistence — a stray reload should not eat your lasso
+         ============================================================ */
+
+      const KEY = "maskroom.v1";
+      let saveTimer = 0;
+
+      function saveSettings() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          try {
+            localStorage.setItem(
+              KEY + ".settings",
+              JSON.stringify({
+                poly: S.poly,
+                strokes: S.strokes,
+                stamps: S.stamps,
+                sel: S.sel,
+                feather: S.feather,
+                brush: S.brush,
+                invert: S.invert,
+                tool: S.tool,
+                outW: S.outW,
+                zoom: S.zoom,
+                panX: S.panX,
+                panY: S.panY,
+                stage: S.stage,
+              })
+            );
+          } catch (e) {
+            /* private mode, or the quota is gone — the work in the tab is still fine */
+          }
+        }, 350);
+      }
+
+      function saveImage(slot, rec) {
+        try {
+          localStorage.setItem(KEY + "." + slot, JSON.stringify({ name: rec.name, dataUrl: rec.dataUrl }));
+        } catch (e) {
+          try {
+            localStorage.removeItem(KEY + "." + slot);
+          } catch (e2) {}
+        }
+      }
+
+      function restore() {
+        let saved = null;
+        try {
+          saved = JSON.parse(localStorage.getItem(KEY + ".settings") || "null");
+        } catch (e) {}
+        if (!saved) return Promise.resolve(false);
+
+        const loadSlot = (slot) => {
+          try {
+            const raw = localStorage.getItem(KEY + "." + slot);
+            if (!raw) return Promise.resolve(null);
+            const { name, dataUrl } = JSON.parse(raw);
+            return new Promise((res) => {
+              const img = new Image();
+              img.onload = () => res({ img, name, dataUrl, w: img.naturalWidth, h: img.naturalHeight });
+              img.onerror = () => res(null);
+              img.src = dataUrl;
+            });
+          } catch (e) {
+            return Promise.resolve(null);
+          }
+        };
+
+        return Promise.all([loadSlot("scene"), loadSlot("object")]).then(([sc, ob]) => {
+          if (!sc || !ob) return false;
+          S.scene = sc;
+          S.object = ob;
+          S.poly = saved.poly || [];
+          S.strokes = saved.strokes || [];
+          S.ops = [];
+          S.redo = [];
+          S.stamps = (saved.stamps || []).filter((s) => !s.pending);
+          S.sel = clamp(saved.sel || 0, 0, Math.max(0, S.stamps.length - 1));
+          S.feather = saved.feather || 0;
+          S.brush = saved.brush || 48;
+          S.invert = !!saved.invert;
+          S.tool = saved.tool || "lasso";
+          S.outW = saved.outW || 1200;
+          S.zoom = saved.zoom || 1;
+          S.panX = saved.panX || 0;
+          S.panY = saved.panY || 0;
+          buildLayers();
+          if (!S.stamps.length) addStamp();
+          syncInputs();
+          resize();
+          return true;
+        });
+      }
+
+      function forget() {
+        try {
+          localStorage.removeItem(KEY + ".settings");
+          localStorage.removeItem(KEY + ".scene");
+          localStorage.removeItem(KEY + ".object");
+        } catch (e) {}
+        S.scene = S.object = null;
+        S.poly = [];
+        S.strokes = [];
+        S.ops = [];
+        S.redo = [];
+        S.stamps = [];
+        S.sel = 0;
+        S.feather = 0;
+        S.invert = false;
+        S.zoom = 1;
+        S.panX = S.panY = 0;
+        buildLayers();
+        syncInputs();
+        resize();
+        syncAll();
+      }
+
+      /* ============================================================
+         messages
+         ============================================================ */
+
+      let flashTimer = 0;
+      let flashUntil = 0;
+
+      function flash(msg) {
+        const h = $("stage-hint");
+        flashUntil = Date.now() + 6000;
+        h.innerHTML = "";
+        const s = document.createElement("span");
+        s.textContent = msg;
+        s.style.color = "#e89b3c";
+        h.appendChild(s);
+        h.style.opacity = "";
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => {
+          flashUntil = 0;
+          h.innerHTML = "";
+          draw();
+        }, 6000);
+      }
+
+      /* ============================================================
+         wiring
+         ============================================================ */
+
+      function syncAll() {
+        previewsDirty = true;
+        render();
+        saveSettings();
+      }
+
+      function syncInputs() {
+        $("brush").value = String(S.brush);
+        $("brush-out").textContent = Math.round(S.brush) + " px";
+        $("feather").value = String(S.feather);
+        $("feather-out").textContent = Math.round(S.feather) + " px";
+        $("invert").checked = S.invert;
+        $("maskview").checked = S.maskView;
+        $("outw").value = String(Math.round(S.outW));
+        for (const b of document.querySelectorAll("[data-tool]"))
+          b.setAttribute("aria-pressed", String(b.dataset.tool === S.tool));
+        S.stage = S.stage === "place" && !(S.object && S.scene) ? "cut" : S.stage;
+      }
+
+      function setTool(t) {
+        S.tool = t;
+        syncInputs();
+        draw();
+        saveSettings();
+      }
+
+      function setStage(s) {
+        if (s === "place" && !(S.object && S.scene)) return;
+        S.stage = s;
+        S.zoom = 1;
+        S.panX = S.panY = 0;
+        syncInputs();
+        draw();
+        saveSettings();
+      }
+
+      $("tab-cut").addEventListener("click", () => setStage("cut"));
+      $("tab-place").addEventListener("click", () => setStage("place"));
+      for (const b of document.querySelectorAll("[data-tool]"))
+        b.addEventListener("click", () => setTool(b.dataset.tool));
+
+      $("brush").addEventListener("input", (e) => {
+        S.brush = +e.target.value;
+        $("brush-out").textContent = Math.round(S.brush) + " px";
+        draw();
+        saveSettings();
+      });
+
+      $("feather").addEventListener("input", (e) => {
+        S.feather = +e.target.value;
+        $("feather-out").textContent = Math.round(S.feather) + " px";
+        rebuildMask();
+        draw();
+        saveSettings();
+      });
+
+      $("invert").addEventListener("change", (e) => {
+        S.invert = e.target.checked;
+        rebuildMask();
+        syncAll();
+      });
+      $("maskview").addEventListener("change", (e) => {
+        S.maskView = e.target.checked;
+        draw();
+      });
+
+      $("undo").addEventListener("click", undo);
+      $("clear").addEventListener("click", clearMask);
+      $("fit").addEventListener("click", fitStamp);
+      $("centre").addEventListener("click", () => {
+        const st = cur();
+        if (!st || !S.scene) return;
+        st.cx = S.scene.w / 2;
+        st.cy = S.scene.h / 2;
+        syncAll();
+      });
+      $("dup").addEventListener("click", () => {
+        const st = cur();
+        if (!st) return;
+        const copy = { ...st, cx: st.cx + st.sx * S.object.w * 0.18 };
+        S.stamps.push(copy);
+        S.sel = S.stamps.length - 1;
+        syncAll();
+      });
+      $("del").addEventListener("click", () => {
+        if (S.stamps.length < 2) return;
+        S.stamps.splice(S.sel, 1);
+        S.sel = clamp(S.sel, 0, S.stamps.length - 1);
+        syncAll();
+      });
+
+      for (const [id, key] of [
+        ["tx", "cx"],
+        ["ty", "cy"],
+      ]) {
+        $(id).addEventListener("input", (e) => {
+          const st = cur();
+          if (!st) return;
+          const v = parseFloat(e.target.value);
+          if (Number.isFinite(v)) st[key] = v;
+          previewsDirty = true;
+          draw();
+          saveSettings();
+        });
+      }
+      $("tscale").addEventListener("input", (e) => {
+        const st = cur();
+        if (!st || !S.scene) return;
+        const pct = parseFloat(e.target.value);
+        if (!Number.isFinite(pct)) return;
+        const s = (pct / 100) * (S.scene.w / S.object.w);
+        st.sx = st.sy = Math.max(0.005, s);
+        previewsDirty = true;
+        draw();
+        saveSettings();
+      });
+      $("trot").addEventListener("input", (e) => {
+        const st = cur();
+        if (!st) return;
+        const d = parseFloat(e.target.value);
+        if (!Number.isFinite(d)) return;
+        st.rot = (d * Math.PI) / 180;
+        previewsDirty = true;
+        draw();
+        saveSettings();
+      });
+
+      $("outw").addEventListener("input", (e) => {
+        S.outW = clamp(parseFloat(e.target.value) || 1200, 32, MAX_OUT);
+        drawPreviews();
+        draw();
+        saveSettings();
+      });
+
+      $("dl-all").addEventListener("click", downloadAll);
+      $("dl-menu").addEventListener("click", (e) => {
+        const list = $("dl-list");
+        list.hidden = !list.hidden;
+        e.currentTarget.setAttribute("aria-expanded", String(!list.hidden));
+      });
+      $("forget").addEventListener("click", forget);
+
+      $("work-btn").addEventListener("click", async () => {
+        // already live, so this click means "use a different folder" — go straight
+        // to the picker; reuseWork would just re-confirm the one we already have
+        if (WORK.ready) {
+          if (await linkWork()) flash("Linked to " + WORK.name + " — loads and saves go straight there.");
+          return;
+        }
+        if (await reuseWork()) return flash("Reconnected to " + WORK.name + ".");
+        if (await linkWork()) flash("Linked to " + WORK.name + " — loads and saves go straight there.");
+      });
+      $("load-scene").addEventListener("click", () => openPicker("scene"));
+      $("empty-scene").addEventListener("click", () => openPicker("scene"));
+      $("load-object").addEventListener("click", () => openPicker("object"));
+      $("empty-object").addEventListener("click", () => openPicker("object"));
+
+      document.addEventListener("pointerdown", (e) => {
+        const panel = $("picker");
+        if (panel.hidden || !(e.target instanceof Element)) return;
+        if (panel.contains(e.target)) return;
+        if (e.target.closest("#work-btn, #load-scene, #load-object, #empty-scene, #empty-object")) return;
+        hidePicker();
+      });
+      $("file-scene").addEventListener("change", (e) => e.target.files[0] && loadScene(e.target.files[0]));
+      $("file-object").addEventListener("change", (e) => e.target.files[0] && loadObject(e.target.files[0]));
+
+      // drag a file anywhere onto the window
+      window.addEventListener("dragover", (e) => e.preventDefault());
+      window.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        const files = [...(e.dataTransfer?.files || [])].filter((f) => f.type.startsWith("image/"));
+        if (!files.length) return;
+        if (files.length === 1) {
+          (!S.scene ? loadScene : !S.object ? loadObject : loadObject)(files[0]);
+        } else {
+          await loadScene(files[0]);
+          await loadObject(files[1]);
+        }
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !$("picker").hidden) return hidePicker();
+        const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "");
+        if (e.code === "Space" && !typing) {
+          spaceDown = true;
+          return;
+        }
+        if (typing) return;
+
+        const meta = e.metaKey || e.ctrlKey;
+        if (meta && e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          e.shiftKey ? redoOp() : undo();
+          return;
+        }
+        if (e.key === "1") return setTool("lasso");
+        if (e.key === "2") return setTool("brush");
+        if (e.key === "3") return setTool("erase");
+        if (e.key === "[") return nudgeBrush(-1);
+        if (e.key === "]") return nudgeBrush(1);
+        if (e.key === "Tab") {
+          e.preventDefault();
+          setStage(S.stage === "cut" ? "place" : "cut");
+          return;
+        }
+        if (e.key === "Backspace" || e.key === "Delete") {
+          if (S.stage === "place" && S.stamps.length > 1) {
+            e.preventDefault();
+            $("del").click();
+          }
+          return;
+        }
+        if (S.stage === "place" && e.key.startsWith("Arrow")) {
+          const st = cur();
+          if (!st) return;
+          e.preventDefault();
+          const d = e.shiftKey ? 10 : 1;
+          if (e.key === "ArrowLeft") st.cx -= d;
+          if (e.key === "ArrowRight") st.cx += d;
+          if (e.key === "ArrowUp") st.cy -= d;
+          if (e.key === "ArrowDown") st.cy += d;
+          syncAll();
+        }
+      });
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "Space") spaceDown = false;
+      });
+
+      function nudgeBrush(dir) {
+        const steps = [6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 300];
+        let i = 0,
+          best = Infinity;
+        steps.forEach((s, k) => {
+          const d = Math.abs(s - S.brush);
+          if (d < best) {
+            best = d;
+            i = k;
+          }
+        });
+        S.brush = steps[clamp(i + dir, 0, steps.length - 1)];
+        $("brush").value = String(S.brush);
+        $("brush-out").textContent = Math.round(S.brush) + " px";
+        draw();
+        saveSettings();
+      }
+
+      /* ============================================================
+         boot
+         ============================================================ */
+
+      buildDownloadList();
+      paintWork();
+      new ResizeObserver(resize).observe(stage.parentElement);
+      syncInputs();
+      resize();
+
+      // a linked folder survives a reload if the browser kept the grant;
+      // otherwise the chip is one click away from re-requesting it
+      idbGet("work")
+        .then(async (h) => {
+          if (!h) return;
+          WORK.handle = h;
+          WORK.name = h.name;
+          await reuseWork();
+        })
+        .catch(() => {});
+
+      restore().then(syncAll).catch(() => syncAll());
+    </script>
+  </body>
+</html>

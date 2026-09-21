@@ -374,6 +374,62 @@ html.room-lit .switch-toggle {
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
 }
 
+/* The tool callout. The one link on the site that points at something the author
+   made rather than at a result, so it gets a card of its own instead of a line in
+   the credit — and the whole card is the anchor, since the point is that a reader
+   notices it. Same hairline-and-panel parts as .reel-card, and the name is set the
+   way maskroom sets its own lockup. */
+.tool-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-width: 600px;
+  margin: 34px auto 0;
+  padding: 24px 28px 22px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  text-align: left;
+  text-decoration: none;
+  transition: border-color 0.25s;
+}
+
+.tool-callout:hover { border-color: var(--amber); }
+
+.tool-callout:focus-visible {
+  outline: 2px solid var(--silver);
+  outline-offset: 3px;
+}
+
+.tool-callout-name {
+  font-family: var(--font-display);
+  font-weight: 420;
+  font-size: clamp(1.7rem, 3.6vw, 2.15rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--silver);
+}
+
+.tool-callout-name em { font-style: italic; color: var(--amber); }
+
+.tool-callout-note {
+  color: var(--silver-dim);
+  font-size: 0.98rem;
+  text-wrap: pretty;
+}
+
+/* Column flex stretches its items, which would flatten the chip into a bar. */
+.tool-callout-go {
+  align-self: flex-start;
+  margin-top: 5px;
+  padding: 7px 16px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+
 /* ---------- light table ---------- */
 
 .table {
