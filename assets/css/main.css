@@ -921,6 +921,18 @@ html.room-lit .figure-plot img {
 }
 .figure-grid .figure { margin: 0; }
 
+/* A label spanning the whole grid, naming the pair the panels below came from.
+   Set inside the grid rather than above it, so it stays attached to the panels
+   it names instead of floating in the gap before them. */
+.figure-grid > .mono {
+  grid-column: 1 / -1;
+  margin: 0;
+  /* The prose measure is 70ch, which the mono face reaches well before the grid
+     does — left at that, a long name would wrap while the panels beside it ran
+     on. A grid item should be as wide as its track. */
+  max-width: none;
+}
+
 .figure-grid.align-bottom {
   align-items: stretch;
 }

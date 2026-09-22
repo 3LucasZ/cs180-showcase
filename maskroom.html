@@ -639,12 +639,10 @@
             white exactly where it sits, and the object already placed on the scene.
             They are written as one set so the sizes cannot drift apart.
             <code>object</code> keeps the whole image rather than just the part inside
-            the mask: a cropped object puts a black edge at the seam, which the blend
-            smears into a dark ring. Whatever the object does not reach is filled with
-            the object's own colours carried outward rather than left black, since the
-            mask's blur reaches past the object's edge at the coarse levels.
-            <code>composite</code> is a plain alpha preview, not the multiresolution
-            result.
+            the mask: a cropped object puts a dark edge at the seam, which the blend
+            smears into a ring. It is a PNG because the space around the object is
+            left transparent, not black. <code>composite</code> is a plain alpha
+            preview, not the multiresolution result.
           </p>
         </div>
 
@@ -1749,53 +1747,6 @@
         return { ow, oh };
       }
 
-      // The part of the frame the object does not reach is filled with the
-      // object's own edge colours carried outward, not with black. Blurring the
-      // stamped object and reading the result back does the work: a canvas
-      // holds its pixels premultiplied, so getImageData un-premultiplies on the
-      // way out and hands back blur(colour·alpha) / blur(alpha) — the edge
-      // extrapolated smoothly instead of smeared. Black out there is a cliff,
-      // and the mask's Gaussian pyramid is blurred at every level, so the coarse
-      // levels still weigh whatever sits just past the object's frame. Where the
-      // blur has run out of object to extrapolate from, the value eases into the
-      // object's average colour so that no band shows.
-      function surround(raw, ow, oh) {
-        const r = Math.min(64, Math.max(8, Math.round(ow / 48)));
-        const b = mkCanvas(ow, oh);
-        b.x.filter = "blur(" + r + "px)";
-        b.x.drawImage(raw.c, 0, 0);
-        b.x.filter = "none";
-        const d = b.x.getImageData(0, 0, ow, oh);
-        const a = d.data;
-        let cr = 0,
-          cg = 0,
-          cb = 0,
-          n = 0;
-        for (let i = 0; i < a.length; i += 4) {
-          if (a[i + 3] > 200) {
-            cr += a[i];
-            cg += a[i + 1];
-            cb += a[i + 2];
-            n++;
-          }
-        }
-        n = n || 1;
-        cr /= n;
-        cg /= n;
-        cb /= n;
-        for (let i = 0; i < a.length; i += 4) {
-          const w = Math.min(1, a[i + 3] / 64);
-          if (w < 1) {
-            a[i] = cr * (1 - w) + a[i] * w;
-            a[i + 1] = cg * (1 - w) + a[i + 1] * w;
-            a[i + 2] = cb * (1 - w) + a[i + 2] * w;
-          }
-          a[i + 3] = 255;
-        }
-        b.x.putImageData(d, 0, 0);
-        return b;
-      }
-
       function outputs() {
         const sw = S.scene.w,
           sh = S.scene.h;
@@ -1803,22 +1754,34 @@
         const k = ow / sw;
 
         const scene = mkCanvas(ow, oh);
+        scene.x.imageSmoothingQuality = "high";
         scene.x.drawImage(S.scene.img, 0, 0, ow, oh);
 
-        // the object goes down whole, not cropped to the mask. Cropping left a
-        // false black edge at the mask boundary that the mask's own pyramid
-        // cannot suppress, so the blend drew a dark ring around the object —
-        // worst at a tight feather. The object's real surroundings carry on
-        // smoothly across the edge instead, which measures clean at every
-        // feather. The mask still says which pixels count, so nothing here leaks
-        // into the blend. It is stamped onto nothing first so that whatever it
-        // does not cover can be filled from the object itself.
-        const raw = mkCanvas(ow, oh);
+        // the object goes down whole, not cropped to the mask, and what is left
+        // around it stays transparent rather than black. Cropping to the mask
+        // left a false dark edge at the seam that the mask's own pyramid cannot
+        // suppress, so the blend drew a ring around the object — worst at a
+        // tight feather. The object's real surroundings carry on smoothly across
+        // the edge instead, which measures clean at every feather. Transparency
+        // beats black for the leftover: that padding sits out past the object's
+        // own frame, where the mask weighs it at nothing, so it should read as
+        // no opinion rather than as a black thing to blend. The mask still says
+        // which pixels count, so nothing here leaks into the blend.
+        const object = mkCanvas(ow, oh);
         const mask = mkCanvas(ow, oh);
         const composite = mkCanvas(ow, oh);
-        mask.x.fillStyle = "#000";
-        mask.x.fillRect(0, 0, ow, oh);
-        composite.x.drawImage(scene.c, 0, 0);
+        for (const [cv, base] of [
+          [mask, "#000"],
+          [composite, null],
+        ]) {
+          cv.x.imageSmoothingQuality = "high";
+          if (base) {
+            cv.x.fillStyle = base;
+            cv.x.fillRect(0, 0, ow, oh);
+          } else {
+            cv.x.drawImage(scene.c, 0, 0);
+          }
+        }
 
         const pm = paddedMask();
         const cut = cutout();
@@ -1834,15 +1797,10 @@
             fn(ctx);
             ctx.restore();
           };
-          place(raw.x, (c) => c.drawImage(S.object.img, -hw, -hh));
+          place(object.x, (c) => c.drawImage(S.object.img, -hw, -hh));
           place(mask.x, (c) => c.drawImage(pm.c, -hw - pm.pad, -hh - pm.pad));
           place(composite.x, (c) => c.drawImage(cut, -hw, -hh));
         }
-
-        // filled from the object, then the object laid back over it, so its own
-        // pixels stay sharp instead of taking the blur
-        const object = surround(raw, ow, oh);
-        object.x.drawImage(raw.c, 0, 0);
 
         return { scene: scene.c, object: object.c, mask: mask.c, composite: composite.c, ow, oh };
       }
@@ -2070,13 +2028,15 @@
         await w.close();
       }
 
-      // the mask stays lossless: it is the thing the blend blurs, so a JPEG edge
-      // would drop blocking exactly where the feather has to come out smooth.
-      // The other two are photographs, where JPEG keeps the full-size scene from
+      // the mask and the object both stay lossless PNGs. The mask is the thing
+      // the blend blurs, so a JPEG edge would drop blocking exactly where the
+      // feather has to come out smooth; the object carries transparent padding
+      // outside its own frame, which JPEG cannot hold at all. The scene and the
+      // composite are photographs, where JPEG keeps a full-size frame from
       // landing at a few megabytes.
       const FMT = {
         scene: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
-        object: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
+        object: { mime: "image/png", ext: ".png" },
         mask: { mime: "image/png", ext: ".png" },
         composite: { mime: "image/jpeg", q: 0.95, ext: ".jpg" },
       };
@@ -2134,10 +2094,11 @@
         );
       }
 
-      // one set, all at one size: the scene to blend into, the cutout, the mask
-      // saying where it sits, and the cutout already sitting on the scene —
-      // that last one is the form with no false edge in it, so it is the safest
-      // thing to hand a Laplacian blend
+      // one set, all at one size: the scene to blend into, the object image
+      // whole with transparency around it, the mask saying which pixels count,
+      // and the cutout already sitting on the scene — that last one is the form
+      // with no false edge in it, so it is the safest thing to hand a Laplacian
+      // blend
       const NEEDED = ["scene", "object", "mask", "composite"];
 
       async function downloadAll() {

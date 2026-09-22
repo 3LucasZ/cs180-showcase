@@ -629,9 +629,121 @@
              An outline has high frequencies all along its edge, so handing the
              whole picture over at once leaves a rim you can see. Blending per
              level leaves the edge only at the scales where the mask itself has
-             detail, and the coarse levels cross over slowly enough to hide it. -->
+             detail, and the coarse levels cross over slowly enough to hide it.
+             Five pairs below, all one code path: a soft sweep for a sky, a lasso
+             down a runoff channel, a vertical wipe across a slope, and two
+             straight splits — one at a waterline, one through a meadow. Only the
+             last of those is a case a plain alpha blend would already handle. -->
         <p>TODO prose</p>
         <div class="figure-grid">
+          <p class="mono">Utah + Milky Way — soft sweep across the sky</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/utah-milky-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/utah-milky/utah-milky-object.png" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/utah-milky/utah-milky-mask.png" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/utah-milky.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p class="mono">Lake + Lava — lasso down the runoff channel</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/lakelava/before-after-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/lakelava/before-after-object.png" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/lakelava/before-after-mask.png" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/lakelava/before-after.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p class="mono">Forest + Fire — vertical wipe across the slope</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/forestfire/before-after-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/forestfire/before-after-object.png" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/forestfire/before-after-mask.png" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/forestfire/before-after.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p class="mono">Reflection 1 + Reflection 3 — straight band at the waterline</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/reflection/reflection1-reflection3-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/reflection/reflection1-reflection3-object.png" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/reflection/reflection1-reflection3-mask.png" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/reflection/reflection1-reflection3.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p class="mono">Seasons — vertical split through the meadow</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/seasons/before-after-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/seasons/before-after-object.png" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/seasons/before-after-mask.png" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/seasons/before-after.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <!-- PROSE: REQUIRED by the spec — the evaluation, and the pairs it turns
+             on are the two that did not work. Both fail the same way: the mask is
+             a loose shape rather than a tight outline, so it takes a strip of the
+             object's own background along with it. The campanile's mask is a
+             straight-sided lozenge, not the tower's silhouette, so the blue sky
+             the tower was shot against comes with it and the coarse levels smear
+             that blue outward along the left edge; its straight right side also
+             cuts the tower off instead of following it. The glacier pair is the
+             same story along the ridge. Say how much of that is the mask being
+             badly drawn versus the blend being badly computed, given the five
+             pairs above run the same code at the same number of levels. -->
+        <p>TODO prose</p>
+        <div class="figure-grid">
+          <p class="mono">Campanile + coastline — where it does not hold up</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/work3/reyes-campanile-scene.jpg"
@@ -646,7 +758,7 @@
             />
             <figcaption>Object</figcaption>
           </figure>
-          <figure class="figure">
+          <figure class="figure figure-framed">
             <img src="p2/2.3and4/work3/reyes-campanile-mask.png" loading="lazy" />
             <figcaption>Mask, drawn in maskroom</figcaption>
           </figure>
@@ -655,12 +767,25 @@
             <figcaption>Blended</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — the evaluation. Where the irregular
-             mask holds up and where it does not: what the tower's outline did at
-             the coarse levels, whether any halo survives along the base, and how
-             much of the result is the mask being well drawn versus the blend being
-             well computed. -->
-        <p>TODO prose</p>
+        <div class="figure-grid">
+          <p class="mono">Glacier + Volcano — the same rim, a second pair</p>
+          <figure class="figure">
+            <img src="p2/2.3and4/work5/glacier-volcano-scene.jpg" loading="lazy" />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/work5/glacier-volcano-object.jpg" loading="lazy" />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/work5/glacier-volcano-mask.jpg" loading="lazy" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/work5/glacier-volcano.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
       </section>
 
       Mistake 1: black padded masked image doesn't work Mistake 2: fix image
