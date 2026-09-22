@@ -1,3 +1,4 @@
+from scipy.ndimage import distance_transform_edt
 from pathlib import Path
 import cv2
 import numpy as np
@@ -23,11 +24,12 @@ def lopass(im, sigma):
 
 
 def stack(im, mask=False):
-    sigmas = np.array([0, 2, 4, 8, 16, 32, 64])
+    sigmas = np.array([0, 1, 2, 4, 8, 16, 32, 64])
     if (mask):
-        # sigmas = sigmas[1:]
-        # sigmas = np.append(sigmas, 128)
-        sigmas *= 1
+        sigmas = sigmas[1:]
+        sigmas = np.append(sigmas, 128)
+        sigmas *= 4
+
     Gstack = []
     for i, sigma in enumerate(sigmas):
         Gstack.append(lopass(im, sigma))
@@ -57,13 +59,25 @@ def colornorm2(src, ref):
     return np.clip(src + diff, 0, 1)
 
 
+def pad_object(object, mask):
+    valid = mask > 0.5
+    # pad missing pixels with the nearest colored pixel
+    _, indices = distance_transform_edt(~valid, return_indices=True)
+    out = object.copy()
+    for ch in range(3):
+        channel = object[:, :, ch]
+        out[:, :, ch] = channel[indices[0], indices[1]]
+    out[valid] = out[valid]
+    return out
+
+
 def main(name1, name2, name3):
     l = cv2.imread(IN_PATH / name1).astype(np.float32) / 255.0
     H, W, C = l.shape
     r = cv2.imread(IN_PATH / name2).astype(np.float32) / 255.0
     r = cv2.resize(r, (W, H))
     # r = colornorm(r, l)
-    l = colornorm(l, r)
+    # l = colornorm(l, r)
 
     mask = np.zeros((H, W), dtype=np.float32)
     mask[:, :W//2] = 1.0
@@ -86,15 +100,24 @@ def main(name1, name2, name3):
 def main2(scene, object, mask, out):
     scene = cv2.imread(scene).astype(np.float32) / 255.0
     H, W, C = scene.shape
-    object = cv2.imread(object).astype(np.float32) / 255.0
+    object_rgba = cv2.imread(object, cv2.IMREAD_UNCHANGED).astype(
+        np.float32) / 255.0
+    object = object_rgba[:, :, :3]
 
+    ### fix colors for better blending ###
     # scene = colornorm(scene, object)
-    # object = colornorm2(object, scene)
+    object = colornorm2(object, scene)
+
+    ### pad empty pixels in object for better blending ###
+    fill_mask = object_rgba[:, :, 3]
+    object = pad_object(object, fill_mask)
 
     mask = cv2.imread(mask).astype(np.float32) / 255.0
 
     # Possible mistake: black outside the extracted object affects filtering?
+    # Didn't work
     # object = object * mask + scene * (1 - mask)
+    # Better (with alpha)
 
     print("scene.shape", scene.shape)
     print("objedct.shape", object.shape)
@@ -113,15 +136,10 @@ def main2(scene, object, mask, out):
     cv2.imwrite(out, (answer*255).astype(np.uint8))
 
 
-main2(DIR / "work3" / "reyes-campanile-scene.jpg",
-      DIR / "work3" / "reyes-campanile-object.jpg",
-      DIR / "work3" / "reyes-campanile-mask.png",
-      DIR / "work3" / "reyes-campanile.jpg")
-
-# main2(DIR / "work4" / "reflection1-reflection3-scene.jpg",
-#       DIR / "work4" / "reflection1-reflection3-object.jpg",
-#       DIR / "work4" / "reflection1-reflection3-mask.jpg",
-#       DIR / "work4" / "reflection1-reflection3.jpg")
+# main2(DIR / "work3" / "reyes-campanile-scene.jpg",
+#       DIR / "work3" / "reyes-campanile-object.jpg",
+#       DIR / "work3" / "reyes-campanile-mask.png",
+#       DIR / "work3" / "reyes-campanile.jpg")
 
 # main2(DIR / "work5" / "glacier-volcano-scene.jpg",
 #       DIR / "work5" / "glacier-volcano-object.jpg",
@@ -134,12 +152,43 @@ main2(DIR / "work3" / "reyes-campanile-scene.jpg",
 #       DIR / "work6" / "glacier-volcano-mask.jpg",
 #       DIR / "work6" / "glacier-volcano.jpg")
 
-# main2(DIR / "work7" / "utah-milky-scene.jpg",
-#       DIR / "work7" / "utah-milky-object.jpg",
-#       DIR / "work7" / "utah-milky-mask.png",  # lossless
-#       DIR / "work7" / "utah-milky.jpg")
-
 # main2(DIR / "work8" / "glacier-volcano-scene.jpg",
 #       DIR / "work8" / "glacier-volcano-object.jpg",
 #       DIR / "work8" / "glacier-volcano-mask.png",
 #       DIR / "work8" / "glacier-volcano.jpg")
+
+# main2(DIR / "utah-milky" / "utah-milky-scene.jpg",
+#       DIR / "utah-milky" / "utah-milky-object.png",  # alpha channel
+#       DIR / "utah-milky" / "utah-milky-mask.png",  # lossless
+#       DIR / "utah-milky" / "utah-milky.jpg")
+
+# main2(DIR / "reflection" / "reflection1-reflection3-scene.jpg",
+#       DIR / "reflection" / "reflection1-reflection3-object.png",
+#       DIR / "reflection" / "reflection1-reflection3-mask.png",
+#       DIR / "reflection" / "reflection1-reflection3.jpg")
+
+# main2(DIR / "sand-waves" / "sand-waves-scene.jpg",
+#       DIR / "sand-waves" / "sand-waves-object.png",
+#       DIR / "sand-waves" / "sand-waves-mask.png",
+#       DIR / "sand-waves" / "sand-waves.jpg")
+
+
+# main2(DIR / "forestfire" / "before-after-scene.jpg",
+#       DIR / "forestfire" / "before-after-object.png",
+#       DIR / "forestfire" / "before-after-mask.png",
+#       DIR / "forestfire" / "before-after.jpg")
+
+# main2(DIR / "lakelava" / "before-after-scene.jpg",
+#       DIR / "lakelava" / "before-after-object.png",
+#       DIR / "lakelava" / "before-after-mask.png",
+#       DIR / "lakelava" / "before-after.jpg")
+
+# main2(DIR / "seasons" / "before-after-scene.jpg",
+#       DIR / "seasons" / "before-after-object.png",
+#       DIR / "seasons" / "before-after-mask.png",
+#       DIR / "seasons" / "before-after.jpg")
+
+main2(DIR / "seasons" / "before-after-winter-scene.jpg",
+      DIR / "seasons" / "before-after-winter-object.png",
+      DIR / "seasons" / "before-after-winter-mask.png",
+      DIR / "seasons" / "before-after-winter.jpg")
