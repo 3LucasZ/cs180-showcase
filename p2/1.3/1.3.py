@@ -55,6 +55,8 @@ plt.close()
 # Result 1: convolve im with G first
 im_blur = convolve2d(im, G, mode="same",
                      boundary="fill", fillvalue=0)
+cv2.imwrite(OUT_PATH / "cameraman.png", np.abs(im_blur) * 255)
+
 out_dx = convolve2d(im_blur, dx_kern, mode="same",
                     boundary="fill", fillvalue=0)
 cv2.imwrite(OUT_PATH / "cameraman.dx.png", np.abs(out_dx) * 255)
@@ -76,7 +78,7 @@ plt.title('Elbow Plot')
 plt.xlabel('Gradients')
 plt.ylabel('Cumulative Probability')
 plt.savefig(OUT_PATH / "cameraman.elbow.png")
-thresh = 0.075
+thresh = 0.1
 out_gt = (out_g > thresh) * np.ones(out_g.shape)
 cv2.imwrite(OUT_PATH / "cameraman.gt.png", out_gt * 255)
 

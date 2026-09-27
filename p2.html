@@ -82,31 +82,87 @@
       </section>
 
       <section class="prose">
-        <h2>Convolutions from Scratch</h2>
-        <!-- PROSE: what a convolution is, and why it is worth writing by hand
-             before reaching for a library. -->
-        <p>TODO prose</p>
-        <!-- PROSE: pad the input by half the kernel so the output keeps the
-             input's size, and flip the kernel so this is convolution and not
-             cross-correlation. -->
-        <p>TODO prose</p>
-        <!-- PROSE: the two inner loops are a dot product, so numpy can do them
-             in one call. Same result, far fewer Python-level iterations. -->
-        <p>TODO prose</p>
-        <!-- PROSE: the scipy check. Required by the spec: what those error
-             values say about correctness, how the two implementations compare
-             on runtime, and how boundaries are handled (zero fill, matching
-             scipy's boundary="fill", fillvalue=0). Measured against
-             scipy.signal.convolve2d on a 50x50 random image and a 9x9 random
-             kernel: conv2 5.721813067793846e-08, conv4 1.0582880349829793e-07
-             — both at float round-off, so the hand-written loops are correct. -->
-        <p>TODO prose</p>
-        <h2>Blur and Derivatives</h2>
-        <!-- PROSE: reading the selfie in as grayscale and scaling to [0, 1]. -->
-        <p>TODO prose</p>
+        <h2>1.1: Convolutions from Scratch</h2>
+        <p>
+          A convolution is the resulting image of applying the same weights to
+          every chunk in the image. Algorithmically, that looks like: for \((x,
+          y)\) in image, apply filter on \((x, y)\) and surrounding pixels, use
+          that output result for the \((x, y)\) in the new image.
+        </p>
+        <p>
+          A nuance is that we have to flip the filter first before doing this
+          operation to make it a convolution and not a cross-correlation.
+        </p>
+        <p>
+          A problem is, what to do when you apply the filter on the corners /
+          edges of the image. There are no pixels neighboring in some direction.
+          Thus, we have to pad the image with dumb values to make the
+          convolution image have the same size as the input image (or a
+          different dimension). For my demo, I will do same padding with zero
+          fill values.
+        </p>
+        <div class="code">
+          <pre class="code-src">
+def conv4(im, kern):
+    # heights, widths
+    H, W = im.shape
+    KH, KW = kern.shape
+    # paddings; "same" pad
+    PT = (KH-1)//2
+    PB = KH-1-PT
+    PL = (KW-1)//2
+    PR = KW-1-PL
+    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
+    out = np.zeros_like(im, dtype=float)
+    # conv flips cross-correlation
+    kern = np.flip(np.flip(kern, axis=0), axis=1)
+    for y in range(H):
+        for x in range(W):
+            for ky in range(KH):
+                for kx in range(KW):
+                    out[y, x] += pim[y+ky, x+kx] * kern[ky, kx]
+    return out
+          </pre>
+        </div>
+        <p>
+          We can speed this up drastically from 4 nested for loops to 2. The
+          trick is to use np.sum to sum over the entire 2d kernel in one
+          operation instead of 2 for loops. I believe the numpy convolve
+          operator is even more efficient than this!
+        </p>
+        <div class="code">
+          <pre class="code-src">
+def conv2(im, kern):
+    # heights, widths
+    H, W = im.shape
+    KH, KW = kern.shape
+    # paddings; "same" pad
+    PT = (KH-1)//2
+    PB = KH-1-PT
+    PL = (KW-1)//2
+    PR = KW-1-PL
+    pim = np.pad(im, ((PT, PB), (PL, PR)), mode="constant", constant_values=0)
+    out = np.zeros_like(im, dtype=float)
+    # conv flips cross-correlation
+    kern = np.flip(np.flip(kern, axis=0), axis=1)
+    for y in range(H):
+        for x in range(W):
+            # parallelize dot product with 0 loops instead of 2
+            out[y, x] = np.sum(pim[y:y+KH, x:x+KW] * kern)
+    return out
+</pre
+          >
+        </div>
+
+        <p>
+          Here's the results of applying our convolution code to an image and
+          standard \(9 \times 9\) box filter. This is a low pass filter which
+          blurs the image by making each pixel's new value the average of its
+          \(9 \times 9\) chunk.
+        </p>
         <div class="figure-grid">
           <figure class="figure">
-            <img src="p2/1.1/in/selfie.png" loading="lazy" />
+            <img src="p2/1.1/out/selfie.png" loading="lazy" />
             <figcaption>Input</figcaption>
           </figure>
           <figure class="figure">
@@ -114,9 +170,20 @@
             <figcaption>9 × 9 box filter</figcaption>
           </figure>
         </div>
-        <!-- PROSE: what the 9x9 box filter does to the image, and why it comes
-             back dimmer. -->
-        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+box_kern = np.ones((9, 9)) / 81
+out_box = post(conv2(im, box_kern))
+</pre
+          >
+        </div>
+
+        <p>
+          Next up, we use the finite difference filters (derivative of the image
+          in \(x\) then \(y\) directions). These should highlight when there are
+          sharp changes in brightness in the image, to highlight contrast and
+          bring about edges.
+        </p>
         <div class="figure-grid">
           <figure class="figure">
             <img src="p2/1.1/out/selfie.dx.png" loading="lazy" />
@@ -127,13 +194,20 @@
             <figcaption>\(D_y\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: what Dx and Dy pick out, and why a derivative has to be
-             rectified and rescaled before it can be shown as an image. -->
-        <p>TODO prose</p>
-        <h2>Finite Difference Operator</h2>
-        <!-- PROSE: the finite difference operator is the same machinery as 1.1
-             with a 1x3 or 3x1 kernel — no new idea, just a different kernel. -->
-        <p>TODO prose</p>
+        <div class="code">
+          <pre class="code-src">
+dx_kern = np.array([[1, 0, -1]])
+dy_kern = np.array([[1], [0], [-1]])
+out_dx = post(conv2(im, dx_kern))
+out_dy = post(conv2(im, dy_kern))
+</pre
+          >
+        </div>
+        <h2>1.2: Finite Difference Operator</h2>
+        <p>
+          We run the same \(D_x\), \(D_y\) finite difference operator kernel on
+          the classic "cameraman" image.
+        </p>
         <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/1.2/in/cameraman.png" loading="lazy" />
@@ -148,32 +222,96 @@
             <figcaption>\(D_y\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: which structures each derivative answers to — Dx picks out
-             vertical edges, Dy horizontal ones. -->
-        <p>TODO prose</p>
+
         <div class="figure-grid three">
+          <p class="span-2">
+            Those highlight the horizontal and vertical edges in the image. If
+            for each pixel we show the magnitude of the edges: \(\text{new
+            image} = \sqrt{x_{\text{image}}^2 + y_{\text{image}}^2}\) we get the
+            gradient magnitude image:
+          </p>
           <figure class="figure">
             <img src="p2/1.2/out/cameraman.g.png" loading="lazy" />
             <figcaption>Gradient magnitude</figcaption>
+          </figure>
+        </div>
+        <p>
+          Some of the things in the image aren't really edges. What if we
+          binarize the gradient magnitude image so that things that are edges
+          are shown as a 1, everything else is a 0. We try to find the right
+          threshold magnitude. Everything below that strength is 0, everything
+          above is 1. To do this, we graph a histogram of frequencies of
+          strengths. We try to find the "elbow" in the plot as a decent
+          quantitative estimate. We pick \(t = 0.3\).
+        </p>
+        <div class="figure-grid three align-bottom">
+          <figure class="figure figure-plot span-2">
+            <img src="p2/1.2/out/cameraman.elbow.png" loading="lazy" />
+            <figcaption>Elbow plot</figcaption>
           </figure>
           <figure class="figure">
             <img src="p2/1.2/out/cameraman.gt.png" loading="lazy" />
             <figcaption>Binarized edges</figcaption>
           </figure>
-          <figure class="figure figure-plot">
-            <img src="p2/1.2/out/cameraman.elbow.png" loading="lazy" />
-            <figcaption>Elbow plot</figcaption>
+        </div>
+        <p>
+          Not very good, there seems to be some noise no matter what threshold
+          we pick and many of the real edges get cutoff too.
+        </p>
+        <h2>1.3: Derivative of Gaussian (DoG) filter</h2>
+        <p>
+          Since this was rather noisy, what if we applied a gaussian filter to
+          smooth it first? We repeat the experiment above, except we apply a
+          smoothing gaussian filter first. \(15 \times 15\) and \(\sigma = 2\).
+          Note: we generate a 2D gaussian filter is to outer product a 1D
+          gaussian filter with itself.
+        </p>
+        <p>
+          Gaussian kernel: \[G(x,y) =
+          \exp\left(-\frac{x^2+y^2}{2\sigma^2}\right)\] separable \(G(x,y) =
+          g(x)\,g(y)\) \[g(x) = \exp\left(-\frac{x^2}{2\sigma^2}\right)\]
+        </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.png" loading="lazy" />
+            <figcaption>Blurred</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dx.png" loading="lazy" />
+            <figcaption>\(D_x\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.dy.png" loading="lazy" />
+            <figcaption>\(D_y\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — justify the threshold. Read it off
-             the elbow: below the knee you are keeping noise, past it you start
-             dropping real edges. -->
-        <p>TODO prose</p>
-        <h2>Derivative of Gaussian</h2>
-        <!-- PROSE: differentiating raw pixels amplifies noise, so smooth first.
-             This section does the same two operations in both orders and shows
-             they land in the same place. -->
-        <p>TODO prose</p>
+        <p>
+          Notice that the Dx and Dy images are lighter now, but also
+          significantly less noisy. We setup the elbow plot again. With t = 0.1:
+        </p>
+        <div class="figure-grid align-bottom three">
+          <figure class="figure figure-plot span-2">
+            <img src="p2/1.3/out/cameraman.elbow.png" loading="lazy" />
+            <figcaption>Elbow plot</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/1.3/out/cameraman.gt.png" loading="lazy" />
+            <figcaption>Binarized edges</figcaption>
+          </figure>
+        </div>
+        <p>
+          We observe that the outline around the cameraman is clearer and less
+          noisy. However, the edges are more thick and prominent.
+        </p>
+        <p>
+          Right now, we are doing 2 convolutions for this experiment. For the
+          first convolution, we blur the image. Second convolution, we apply the
+          finite difference operator. A beautiful property of convolutions is
+          that they are associative and commutative. We can convolve the
+          gaussian filter with the finite difference operator. This new
+          "Derivative of Gaussians" filter can then be applied as a single
+          operation which gives us the result above. Let's test out this theory.
+        </p>
         <div class="figure-grid">
           <figure class="figure figure-plot">
             <img src="p2/1.3/out/dxog.png" loading="lazy" />
@@ -184,92 +322,92 @@
             <figcaption>DoG in \(y\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: what these kernels are — the derivative of a Gaussian is an
-             odd function, so a positive lobe sits right beside a negative one. -->
-        <p>TODO prose</p>
         <div class="figure-grid three">
-          <figure class="figure">
-            <img src="p2/1.3/out/cameraman.dx.png" loading="lazy" />
-            <figcaption>\(D_x\), blurred first</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/1.3/out/cameraman.dy.png" loading="lazy" />
-            <figcaption>\(D_y\), blurred first</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/1.3/out/cameraman.g.png" loading="lazy" />
-            <figcaption>Gradient magnitude</figcaption>
-          </figure>
-        </div>
-        <!-- PROSE: these are far smoother than 1.2's — the blur has taken out
-             the pixel-level noise the raw finite difference was picking up. -->
-        <p>TODO prose</p>
-        <div class="figure-grid">
+          <p>
+            Exact same result as before. Proof that this trick works and saves
+            computation.
+          </p>
           <figure class="figure">
             <img src="p2/1.3/out/cameraman.dxog.png" loading="lazy" />
-            <figcaption>\(D_x\) of Gaussian, applied to the image</figcaption>
+            <figcaption>DoG x * image</figcaption>
           </figure>
           <figure class="figure">
             <img src="p2/1.3/out/cameraman.dyog.png" loading="lazy" />
-            <figcaption>\(D_y\) of Gaussian, applied to the image</figcaption>
+            <figcaption>DoG y * image</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — compare Result 1 against Result 2.
-             They are the same picture because convolution is associative:
-             (im * G) * D = im * (G * D). So blurring first and then
-             differentiating costs two convolutions where differentiating the
-             Gaussian first costs one. -->
-        <p>TODO prose</p>
-        <div class="figure-grid">
-          <figure class="figure">
-            <img src="p2/1.3/out/cameraman.gt.png" loading="lazy" />
-            <figcaption>Binarized edges</figcaption>
-          </figure>
-          <figure class="figure figure-plot">
-            <img src="p2/1.3/out/cameraman.elbow.png" loading="lazy" />
-            <figcaption>Elbow plot</figcaption>
-          </figure>
-        </div>
-        <!-- PROSE: REQUIRED by the spec — justify the threshold, and account
-             for it sitting far below 1.2's 0.3. The blur shrinks the derivative
-             magnitudes, so the same share of edges now falls at a smaller
-             number — the elbow has moved, not the rule for reading it. -->
-        <p>TODO prose</p>
-        <h2>Unsharp Mask</h2>
-        <!-- PROSE: derive it. Blur the image to get its low frequencies,
-             subtract that from the original to isolate what the blur threw
-             away, then add a multiple of it back. -->
-        <p>TODO prose</p>
-        <!-- PROSE: REQUIRED by the spec — the relationship to blur filters and
-             high frequencies. G is a low-pass, so the blurred copy is what
-             survives it; im minus that is exactly the high-frequency content
-             the blur discarded; sharpening is adding that band back, scaled.
-             It is one convolution rather than three steps because
-             (1 + a)·e − a·G is itself just a kernel. -->
-        <p>TODO prose</p>
+        <h2>2.1: Image Sharpening</h2>
+        <p>
+          Suppose we want to sharpen our image. To sharpen an image, we can
+          think of amplifying the existing high frequency signals within the
+          image. We want image + \(\alpha \cdot\) (high frequency parts of the
+          image). We can get the high frequency parts of the image by taking the
+          original image and subtracting the low frequency parts of the image.
+          We obtain the low frequency by applying the gaussian filter. The
+          mathematical derivation for our final result is below:
+        </p>
+
+        <p>
+          \[f + \alpha (f-f \ast g)\] \[(1 + \alpha)f-\alpha f \ast g\] \[f \ast
+          ((1+\alpha)e-\alpha g)\] Note: \(e\) is the identity kernel, not the
+          constant. all zeros except a 1 at the center.
+        </p>
+        <p>
+          This result is the unsharp mask filter, which, ironically, should
+          sharpen our image when convolved with the image.
+        </p>
         <image-compare
           class="compare-narrow"
           before="p2/2.1/in/taj.jpg"
-          after="p2/2.1/out/taj2.jpg"
-          caption="Input vs. \(a = 3\)"
+          after="p2/2.1/out/taj_s1_a3.jpg"
+          caption="Input vs. \(\sigma = 1, a = 3\)"
           label="Wipe between the original and the sharpened Taj Mahal"
         ></image-compare>
-        <!-- PROSE: the wipe. Both prints are the same photograph registered on
-             top of each other, so the eye reads the difference directly
-             instead of comparing two pictures that sit apart. -->
-        <p>TODO prose</p>
+
+        <p>
+          Taj Mahal sharpened with 3 differing alpha values, 3 differing sigma
+          values. Quite distinct results. This helps understand the effects of
+          changing each parameter by trying all combos in a grid.
+        </p>
+        <!-- The 3 x 3 sweep. Row-major: each visual row holds sigma fixed and
+             walks alpha, so the grid reads as a matrix rather than a list --
+             sigma = 1, 3, 10 down the rows, alpha = 1, 3, 10 across. -->
         <div class="figure-grid three">
           <figure class="figure">
-            <img src="p2/2.1/out/taj1.jpg" loading="lazy" />
-            <figcaption>\(a = 1\)</figcaption>
+            <img src="p2/2.1/out/taj_s1_a1.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 1, a = 1\)</figcaption>
           </figure>
           <figure class="figure">
-            <img src="p2/2.1/out/taj2.jpg" loading="lazy" />
-            <figcaption>\(a = 3\)</figcaption>
+            <img src="p2/2.1/out/taj_s1_a3.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 1, a = 3\)</figcaption>
           </figure>
           <figure class="figure">
-            <img src="p2/2.1/out/taj3.jpg" loading="lazy" />
-            <figcaption>\(a = 10\)</figcaption>
+            <img src="p2/2.1/out/taj_s1_a10.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 1, a = 10\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s3_a1.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 3, a = 1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s3_a3.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 3, a = 3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s3_a10.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 3, a = 10\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s10_a1.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 10, a = 1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s10_a3.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 10, a = 3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_s10_a10.jpg" loading="lazy" />
+            <figcaption>\(\sigma = 10, a = 10\)</figcaption>
           </figure>
         </div>
         <!-- PROSE: REQUIRED by the spec — how varying a changes the result.
@@ -278,12 +416,13 @@
              along the minarets and domes and a dark rim where the zero-filled
              boundary starves the kernel. Note too that the output is written
              with no clipping, so anything over 1.0 just saturates. -->
-        <p>TODO prose</p>
+        <!-- <p>TODO prose</p> -->
         <!-- NOT YET PRODUCED: the spec also asks for the *blurred* and the
-             *high-frequency* image, not just the sharpened one. 2.1.py writes
-             only the sharpened output, so there is no asset for either yet.
-             When the script writes them, uncomment this and point at the
-             real filenames.
+             *high-frequency* image of the Taj Mahal. 2.1.py writes only the
+             sharpened taj output, so there is no asset for either. The blurred
+             case is shown with the joshua frame in the evaluation figure at
+             the end of this section. When the script writes the taj pair,
+             uncomment this and point at the real filenames.
 
         <div class="figure-grid">
           <figure class="figure">
@@ -296,27 +435,65 @@
           </figure>
         </div>
         -->
-        <!-- PROSE: the second image, this one in colour and at full size —
-             the same filter and the same a = 3, so the change is the picture
-             rather than the setting. -->
-        <p>TODO prose</p>
-        <div class="figure-grid">
-          <figure class="figure">
-            <img src="p2/2.1/in/falls.jpg" loading="lazy" />
-            <figcaption>Input</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.1/out/falls.jpg" loading="lazy" />
-            <figcaption>Sharpened, \(a = 3\)</figcaption>
-          </figure>
-        </div>
+        <!-- PROSE: the second image, this one in colour — the same filter, so
+             the change is the picture rather than the setting. Portrait, and
+             the source is only 600px across, so it takes the narrow compare
+             width; the full 720 would upscale it and soften exactly the
+             detail the wipe is there to show. -->
+        <p>Beautiful waterfall</p>
+        <image-compare
+          class="compare-narrow"
+          before="p2/2.1/in/falls.jpg"
+          after="p2/2.1/out/falls.jpg"
+          caption="Input vs. \(\sigma = 2, a = 4\)"
+          label="Wipe between the original and the sharpened falls"
+        ></image-compare>
+        <!-- PROSE: the fox, and the strongest setting on the page — a = 8 on a
+             source that is already soft, so the wipe has real detail to pull
+             forward. Landscape, so it takes the full compare width. -->
+        <p>Beautiful fox</p>
+        <image-compare
+          before="p2/2.1/in/fox.jpg"
+          after="p2/2.1/out/fox.jpg"
+          caption="Input vs. \(\sigma = 2, a = 8\)"
+          label="Wipe between the original and the sharpened fox"
+        ></image-compare>
         <!-- PROSE: REQUIRED by the spec — the evaluation task, and it is not
              written up yet. Take a sharp image, blur it, sharpen it again,
              then compare the result against the original and say what came
              back and what did not: a sharpen can restore the contrast the
              blur took off the edges, but it cannot recover detail the blur
              destroyed, because that information is genuinely gone. -->
-        <p>TODO prose</p>
+        <p>
+          What if we blurred first, then sharpened? Could we obtain the original
+          image? My hypothesis would be no. Blurring the image makes data get
+          lost, fundamentally. Pixels get averaged / mixed around and it
+          probably is irreversible. There is not much we can do to regain all
+          the lost data. With a blur of sigma=5, and a sharpen of alpha=100, we
+          can see the image still looks blurry. We use a large alpha=100,
+          because small values you can't see the difference at all.
+        </p>
+        <p>
+          Note: we start using the cv2.GaussianBlur function from the cv2
+          library instead of our custom gaussian + convolution. This is because
+          their library is much faster, making the experiments run quicker.
+        </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.1/in/joshua.jpg" loading="lazy" />
+            <figcaption>Input</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/joshua.blur.jpg" loading="lazy" />
+            <figcaption>Blurred, \(\sigma = 5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/joshua.sharp.jpg" loading="lazy" />
+            <figcaption>
+              Blurred then sharpened, \(\sigma = 5, a = 100\)
+            </figcaption>
+          </figure>
+        </div>
         <h2>Hybrid Images</h2>
         <!-- PROSE: introduce the two-band idea — one frame carrying a picture in
              its low frequencies and a second picture in its high, so which of
@@ -638,15 +815,24 @@
         <div class="figure-grid">
           <p class="mono">Utah + Milky Way — soft sweep across the sky</p>
           <figure class="figure">
-            <img src="p2/2.3and4/utah-milky/utah-milky-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/utah-milky/utah-milky-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/utah-milky/utah-milky-object.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/utah-milky/utah-milky-object.png"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/utah-milky/utah-milky-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/utah-milky/utah-milky-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
@@ -657,15 +843,24 @@
         <div class="figure-grid">
           <p class="mono">Lake + Lava — lasso down the runoff channel</p>
           <figure class="figure">
-            <img src="p2/2.3and4/lakelava/before-after-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/lakelava/before-after-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/lakelava/before-after-object.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/lakelava/before-after-object.png"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/lakelava/before-after-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/lakelava/before-after-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
@@ -676,15 +871,24 @@
         <div class="figure-grid">
           <p class="mono">Forest + Fire — vertical wipe across the slope</p>
           <figure class="figure">
-            <img src="p2/2.3and4/forestfire/before-after-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/forestfire/before-after-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/forestfire/before-after-object.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/forestfire/before-after-object.png"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/forestfire/before-after-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/forestfire/before-after-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
@@ -693,36 +897,59 @@
           </figure>
         </div>
         <div class="figure-grid">
-          <p class="mono">Reflection 1 + Reflection 3 — straight band at the waterline</p>
+          <p class="mono">
+            Reflection 1 + Reflection 3 — straight band at the waterline
+          </p>
           <figure class="figure">
-            <img src="p2/2.3and4/reflection/reflection1-reflection3-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/reflection/reflection1-reflection3-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/reflection/reflection1-reflection3-object.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/reflection/reflection1-reflection3-object.png"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/reflection/reflection1-reflection3-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/reflection/reflection1-reflection3-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
-            <img src="p2/2.3and4/reflection/reflection1-reflection3.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/reflection/reflection1-reflection3.jpg"
+              loading="lazy"
+            />
             <figcaption>Blended</figcaption>
           </figure>
         </div>
         <div class="figure-grid">
           <p class="mono">Seasons — vertical split through the meadow</p>
           <figure class="figure">
-            <img src="p2/2.3and4/seasons/before-after-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/seasons/before-after-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/seasons/before-after-object.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/seasons/before-after-object.png"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/seasons/before-after-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/seasons/before-after-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
@@ -759,7 +986,10 @@
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/work3/reyes-campanile-mask.png" loading="lazy" />
+            <img
+              src="p2/2.3and4/work3/reyes-campanile-mask.png"
+              loading="lazy"
+            />
             <figcaption>Mask, drawn in maskroom</figcaption>
           </figure>
           <figure class="figure">
@@ -770,15 +1000,24 @@
         <div class="figure-grid">
           <p class="mono">Glacier + Volcano — the same rim, a second pair</p>
           <figure class="figure">
-            <img src="p2/2.3and4/work5/glacier-volcano-scene.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/work5/glacier-volcano-scene.jpg"
+              loading="lazy"
+            />
             <figcaption>Scene</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/work5/glacier-volcano-object.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/work5/glacier-volcano-object.jpg"
+              loading="lazy"
+            />
             <figcaption>Object</figcaption>
           </figure>
           <figure class="figure figure-framed">
-            <img src="p2/2.3and4/work5/glacier-volcano-mask.jpg" loading="lazy" />
+            <img
+              src="p2/2.3and4/work5/glacier-volcano-mask.jpg"
+              loading="lazy"
+            />
             <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
@@ -816,6 +1055,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
     <script src="assets/js/math.js"></script>
+    <script src="assets/js/code.js"></script>
     <script src="assets/js/rail.js"></script>
   </body>
 </html>

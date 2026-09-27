@@ -61,7 +61,9 @@ DIR = Path(__file__).resolve().parent
 IN_PATH = DIR / "in" / "selfie.png"
 OUT_PATH = DIR / "out"
 im = cv2.imread(IN_PATH, cv2.IMREAD_GRAYSCALE)
-# im = cv2.resize(im, (0, 0), fx=0.3, fy=0.3, interpolation=cv2.INTER_AREA)
+im = cv2.resize(im, (0, 0), fx=0.7, fy=0.7, interpolation=cv2.INTER_AREA)
+cv2.imwrite(OUT_PATH / "selfie.png", im)
+
 im = im.astype(np.float16) / 255.0
 print("input image:", IN_PATH, im.shape, im.dtype)
 

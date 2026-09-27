@@ -708,11 +708,16 @@ html.room-lit .switch-toggle {
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
 }
 
+/* A caption is a label, not decoration, so it is set to be read rather than
+   hunted for. It takes the same colour as body prose — at 13px against 1.18rem
+   the size gap and the mono face are what separate a label from a sentence, and
+   the colour was only ever making it recede. */
 figcaption {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   letter-spacing: 0.06em;
-  color: var(--dust);
+  color: var(--silver-dim);
   margin-top: 12px;
 }
 
@@ -880,6 +885,13 @@ html.room-lit .figure-plot img {
    too narrow for a line of code. */
 .figure-grid .code { grid-column: 1 / -1; }
 
+/* A grid child that takes two columns instead of one. In a three-column grid
+   that is the way to set a paragraph beside a single figure — the paragraph
+   gets two thirds of the measure rather than the third a single track would
+   leave it, and the figure takes the third beside it. In a two-column grid it
+   is the full width, same as `1 / -1`. */
+.figure-grid > .span-2 { grid-column: span 2; }
+
 /* The alignment offsets under a figure. Every cell in the grid shares the same
    column widths — a fixed 4ch per number, which is the widest value ("+177") —
    so the digits stack into readable columns straight down the grid. */
@@ -933,6 +945,12 @@ html.room-lit .figure-plot img {
   max-width: none;
 }
 
+/* Two plates in a row rarely come out the same height — a chart beside a square
+   image is the usual case. Left alone they sit at the top of their cells, so the
+   shorter one floats and its caption lands somewhere up the side of its
+   neighbour. The pair below is the vocabulary for fixing that. */
+/* Bottom, so the captions share a baseline. The default to reach for: a caption
+   stranded halfway down the row reads as belonging to nothing. */
 .figure-grid.align-bottom {
   align-items: stretch;
 }
@@ -945,9 +963,18 @@ html.room-lit .figure-plot img {
   flex: 0 0 auto;
   width: 100%;
 }
+/* Centred, which lines the *images* up and leaves the captions hanging at
+   different heights. Better when the plates carry no captions, or when the
+   subject in each frame is what should meet the eye at the same level. */
+.figure-grid.align-center {
+  align-items: center;
+}
 
 @media (max-width: 640px) {
   .figure-grid, .figure-grid.three { grid-template-columns: 1fr; }
+  /* One track left, so a two-column span would conjure a second implicit column
+     and push the page sideways. */
+  .figure-grid > .span-2 { grid-column: auto; }
 }
 
 /* The scale demonstration. A hybrid image is a trick of viewing distance, so the
