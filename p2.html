@@ -65,21 +65,63 @@
           ><span class="tag">laplacian stacks</span
           ><span class="tag">frequencies</span>
         </p> -->
+        <figure class="project-hero-figure">
+          <img src="p2/2.3and4/utah-milky/utah-milky.jpg" />
+        </figure>
+        <div class="hero-hits">
+          <a
+            class="hero-hit"
+            href="#2-3-gaussian-and-laplacian-stacks"
+            aria-label="2.3: Gaussian and Laplacian Stacks"
+          >
+            <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
+          </a>
+          <a
+            class="hero-hit"
+            href="#2-1-image-sharpening"
+            aria-label="2.1: Image Sharpening"
+          >
+            <img src="p2/2.1/out/fox.jpg" loading="lazy" />
+          </a>
+          <a
+            class="hero-hit"
+            href="#multiresolution-blending"
+            aria-label="Multiresolution Blending — sand and waves"
+          >
+            <img src="p2/2.3and4/sand-waves/sand-waves.jpg" loading="lazy" />
+          </a>
+          <a
+            class="hero-hit"
+            href="#multiresolution-blending"
+            aria-label="Multiresolution Blending — lake and lava"
+          >
+            <img
+              src="p2/2.3and4/lakelava/before-after.jpg"
+              loading="lazy"
+            />
+          </a>
+        </div>
         <p class="hero-credit">
           lucas zheng ·
           <a href="https://github.com/3LucasZ/cs180-showcase"
             >github.com/3LucasZ/cs180-showcase</a
           >
         </p>
-        <a class="tool-callout" href="maskroom.html">
-          <span class="tool-callout-name">mask<em>room</em></span>
-          <span class="tool-callout-note"
-            >Web-based tool to generate the masks for the blending
-            project.</span
-          >
-          <span class="pop-link tool-callout-go">open maskroom</span>
-        </a>
       </section>
+
+      <a class="tool-callout" href="maskroom.html">
+        <span class="tool-callout-name">mask<em>room</em></span>
+        <span class="tool-callout-note"
+          >Web-based tool to generate the masks for the blending
+          project.</span
+        >
+        <span class="pop-link tool-callout-go">open maskroom</span>
+      </a>
+
+      <figure class="figure figure-framed maskroom-shot">
+        <img src="p2/pedagogy/maskroom.png" loading="lazy" />
+        <figcaption>Placing the object</figcaption>
+      </figure>
 
       <section class="prose">
         <h2>1.1: Convolutions from Scratch</h2>
@@ -89,6 +131,10 @@
           y)\) in image, apply filter on \((x, y)\) and surrounding pixels, use
           that output result for the \((x, y)\) in the new image.
         </p>
+        <figure class="figure">
+          <img src="p2/pedagogy/convolution.png" loading="lazy" />
+          <figcaption>A \(3 \times 3\) kernel read over a patch</figcaption>
+        </figure>
         <p>
           A nuance is that we have to flip the filter first before doing this
           operation to make it a convolution and not a cross-correlation.
@@ -271,6 +317,12 @@ out_dy = post(conv2(im, dy_kern))
           \exp\left(-\frac{x^2+y^2}{2\sigma^2}\right)\] separable \(G(x,y) =
           g(x)\,g(y)\) \[g(x) = \exp\left(-\frac{x^2}{2\sigma^2}\right)\]
         </p>
+        <figure class="figure">
+          <img src="p2/pedagogy/gaussian_filter.png" loading="lazy" />
+          <figcaption>
+            \(\sigma = 2\) and \(\sigma = 5\), both \(30 \times 30\) kernels
+          </figcaption>
+        </figure>
         <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/1.3/out/cameraman.png" loading="lazy" />
@@ -312,6 +364,10 @@ out_dy = post(conv2(im, dy_kern))
           "Derivative of Gaussians" filter can then be applied as a single
           operation which gives us the result above. Let's test out this theory.
         </p>
+        <figure class="figure">
+          <img src="p2/pedagogy/derivative_gaussian.png" loading="lazy" />
+          <figcaption>A derivative of Gaussian</figcaption>
+        </figure>
         <div class="figure-grid">
           <figure class="figure figure-plot">
             <img src="p2/1.3/out/dxog.png" loading="lazy" />
@@ -356,6 +412,10 @@ out_dy = post(conv2(im, dy_kern))
           This result is the unsharp mask filter, which, ironically, should
           sharpen our image when convolved with the image.
         </p>
+        <figure class="figure">
+          <img src="p2/pedagogy/laplacian_of_gaussian.png" loading="lazy" />
+          <figcaption>Laplacian of Gaussian</figcaption>
+        </figure>
         <image-compare
           class="compare-narrow"
           before="p2/2.1/in/taj.jpg"
@@ -369,9 +429,6 @@ out_dy = post(conv2(im, dy_kern))
           values. Quite distinct results. This helps understand the effects of
           changing each parameter by trying all combos in a grid.
         </p>
-        <!-- The 3 x 3 sweep. Row-major: each visual row holds sigma fixed and
-             walks alpha, so the grid reads as a matrix rather than a list --
-             sigma = 1, 3, 10 down the rows, alpha = 1, 3, 10 across. -->
         <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/2.1/out/taj_s1_a1.jpg" loading="lazy" />
@@ -410,12 +467,6 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>\(\sigma = 10, a = 10\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — how varying a changes the result.
-             a = 1 is barely a change, a = 3 is the setting that reads as
-             "fixed", and a = 10 has overshot into ringing — bright halos
-             along the minarets and domes and a dark rim where the zero-filled
-             boundary starves the kernel. Note too that the output is written
-             with no clipping, so anything over 1.0 just saturates. -->
         <!-- <p>TODO prose</p> -->
         <!-- NOT YET PRODUCED: the spec also asks for the *blurred* and the
              *high-frequency* image of the Taj Mahal. 2.1.py writes only the
@@ -435,11 +486,6 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         -->
-        <!-- PROSE: the second image, this one in colour — the same filter, so
-             the change is the picture rather than the setting. Portrait, and
-             the source is only 600px across, so it takes the narrow compare
-             width; the full 720 would upscale it and soften exactly the
-             detail the wipe is there to show. -->
         <p>Beautiful waterfall</p>
         <image-compare
           class="compare-narrow"
@@ -448,9 +494,6 @@ out_dy = post(conv2(im, dy_kern))
           caption="Input vs. \(\sigma = 2, a = 4\)"
           label="Wipe between the original and the sharpened falls"
         ></image-compare>
-        <!-- PROSE: the fox, and the strongest setting on the page — a = 8 on a
-             source that is already soft, so the wipe has real detail to pull
-             forward. Landscape, so it takes the full compare width. -->
         <p>Beautiful fox</p>
         <image-compare
           before="p2/2.1/in/fox.jpg"
@@ -458,20 +501,14 @@ out_dy = post(conv2(im, dy_kern))
           caption="Input vs. \(\sigma = 2, a = 8\)"
           label="Wipe between the original and the sharpened fox"
         ></image-compare>
-        <!-- PROSE: REQUIRED by the spec — the evaluation task, and it is not
-             written up yet. Take a sharp image, blur it, sharpen it again,
-             then compare the result against the original and say what came
-             back and what did not: a sharpen can restore the contrast the
-             blur took off the edges, but it cannot recover detail the blur
-             destroyed, because that information is genuinely gone. -->
         <p>
           What if we blurred first, then sharpened? Could we obtain the original
           image? My hypothesis would be no. Blurring the image makes data get
           lost, fundamentally. Pixels get averaged / mixed around and it
           probably is irreversible. There is not much we can do to regain all
-          the lost data. With a blur of sigma=5, and a sharpen of alpha=100, we
-          can see the image still looks blurry. We use a large alpha=100,
-          because small values you can't see the difference at all.
+          the lost data. With a blur of sigma=5, and a sharpen of alpha=3, we
+          can see the image still looks blurry. A sharpened blurry image is
+          blurry with thicker blurrier edges.
         </p>
         <p>
           Note: we start using the cv2.GaussianBlur function from the cv2
@@ -490,34 +527,32 @@ out_dy = post(conv2(im, dy_kern))
           <figure class="figure">
             <img src="p2/2.1/out/joshua.sharp.jpg" loading="lazy" />
             <figcaption>
-              Blurred then sharpened, \(\sigma = 5, a = 100\)
+              Blurred then sharpened, \(\sigma = 5, a = 3\)
             </figcaption>
           </figure>
         </div>
-        <h2>Hybrid Images</h2>
-        <!-- PROSE: introduce the two-band idea — one frame carrying a picture in
-             its low frequencies and a second picture in its high, so which of
-             them you see depends on how far away you are standing. -->
-        <p>TODO prose</p>
-        <!-- PROSE: sigma is the cutoff, and the two are independent — one sets how
-             much survives the blur, the other how wide a band the high-pass hands
-             back. The high-pass is defined by subtraction, so it is exactly and
-             only what the low-pass threw away. Note this is a sum, not an average:
-             halving both bands costs contrast for nothing. -->
-        <p>TODO prose</p>
-        <!-- PROSE: the pair — a low band from a portrait of Theodore Roosevelt, a
-             high band from one of Abraham Lincoln. Both are scaled to 30% first,
-             and the alignment is the provided interactive step: two clicked points
-             per image, matched for centre, scale and rotation. It works by padding
-             rather than warping, so the pair is squared up by adding empty frame,
-             which is where the black border around these results comes from. -->
-        <p>TODO prose</p>
-        <!-- PROSE: how to look at every hybrid on this page. The trick is a trick
-             of distance, so draw the same frame at three sizes and let the reader's
-             eye supply the blur. Large, the high band wins and you read Lincoln;
-             small enough and only the low band survives the trip to your eye, and
-             you read Roosevelt. -->
-        <p>TODO prose</p>
+        <h2>2.2 Hybrid Images</h2>
+        <p>Things are getting harder and more interesting. Yay!</p>
+        <p>
+          The phenomena is that high frequency (details of an image) is most
+          salient when looking at an image up close. Yet, low frequency
+          (structure of the image) is most salient far away. From this, we can
+          create hybrid images which look different from close up / far away,
+          playing with our minds and our perceptions!
+        </p>
+
+        <p>
+          The algorithm is as follows: get the low frequency part of image A,
+          get the high frequency part of image B, and merge the 2 to make a
+          hybrid image! Looking up close, you'll see more of image B, looking
+          far away, you'll see more of image A. Pretty epic.
+        </p>
+        <p>
+          To simulate looking far away we make the image large. To simulate
+          looking up close we make the image tiny.
+        </p>
+        <!-- <p>Example debug image</p> -->
+        <p>Lincoln vs Roosevelt</p>
         <div class="figure-scales">
           <figure class="figure s100">
             <img src="p2/2.2/out/lincoln.jpg" loading="lazy" />
@@ -532,12 +567,13 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>25%</figcaption>
           </figure>
         </div>
-        <!-- PROSE: same frame, different pair — the low band is an Alaska range,
-             the high band a night skyline. Nothing here is mixed: the frame holds
-             both photographs at full strength the whole time, and the only thing
-             that changed is how much of the high band survived the trip to the
-             reader's eye. -->
-        <p>TODO prose</p>
+        <p>
+          I learned that the most crucial part of this was not the algorithm
+          itself, but fine tuning the sigma for the low pass filter (gaussian
+          sigma), the sigma for the high pass filter (laplacian sigma), and
+          choosing the right images / alignment.
+        </p>
+        <p>Alaska vs city</p>
         <div class="figure-scales">
           <figure class="figure s100">
             <img src="p2/2.2/out/alaska.jpg" loading="lazy" />
@@ -552,16 +588,9 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>25%</figcaption>
           </figure>
         </div>
-        <!-- PROSE: worth a sentence of its own, because the skyline's high band is
-             nothing but lit windows against a dark facade — all edge, no surface —
-             and that is exactly the band a high-pass keeps. It lands as a lighting
-             effect rather than as two pictures fighting. -->
-        <p>TODO prose</p>
-        <!-- PROSE: and a pair chosen for the opposite reason: a giant panda and a
-             red panda are the same animal in two colourings, same silhouette, so
-             both bands read as "a panda" and the switch between them is easy to
-             miss until you shrink it. -->
-        <p>TODO prose</p>
+        <!-- <p>TODO prose</p> -->
+        <!-- <p>TODO prose</p> -->
+        <p>Panda vs Red Panda</p>
         <div class="figure-scales">
           <figure class="figure s100">
             <img src="p2/2.2/out/panda.jpg" loading="lazy" />
@@ -576,12 +605,10 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>25%</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — the favourite result. Say why this pair
-             and not another. Both halves are the same photograph, split down the
-             middle, so the two "inputs" are already registered and there is nothing
-             to click; the forest is the left half and the city the right, and the
-             city half is the one that gets blurred. -->
-        <p>TODO prose</p>
+        <p>
+          This is definitely my favorite one. Is this a forest, or a city? Look
+          closely.
+        </p>
         <div class="figure-scales">
           <figure class="figure s100">
             <img src="p2/2.2/out/forestcity.png" loading="lazy" />
@@ -596,48 +623,33 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>25%</figcaption>
           </figure>
         </div>
-        <!-- PROSE: the claim is entirely a claim about which frequencies are
-             present, so the honest way to check it is to stop looking at the
-             picture and look at the frequencies instead. Two things the plates
-             need to be readable at all: the spectrum is log-scaled, because raw
-             magnitudes span too many decades, and one vmin/vmax pair is taken
-             from all five spectra pooled — by percentile, not min and max, so a
-             single bright pixel can't flatten everything else — which puts the
-             five plates on one scale and lets them be compared with each other. -->
-        <p>TODO prose</p>
-        <!-- PROSE: REQUIRED by the spec — the frequency-domain check, and the
-             argument has to be made in words. In a spectrum the centre is the low
-             frequencies and the edges are the high ones. The low-pass empties
-             everything but the centre; the high-pass does the opposite and punches
-             the centre out, which is the same statement as "im minus its blur".
-             The hybrid's spectrum is both at once, which is the whole point: it is
-             not a blend, it is a union. -->
-        <p>TODO prose</p>
+        <p>Time for some frequency analysis and math.</p>
+        <p>Below are FFT plots of the frequencies in the images.</p>
         <div class="figure-add">
           <div class="figure-add-plates">
             <figure class="figure">
               <span class="fft-plate"
                 ><img src="p2/2.2/Image_1.jpg" loading="lazy"
               /></span>
-              <figcaption>City half, before</figcaption>
+              <figcaption>City, before</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
                 ><img src="p2/2.2/Image_1_lowpass.jpg" loading="lazy"
               /></span>
-              <figcaption>City half, after the low-pass</figcaption>
+              <figcaption>City, after the low-pass</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
                 ><img src="p2/2.2/Image_2.jpg" loading="lazy"
               /></span>
-              <figcaption>Forest half, before</figcaption>
+              <figcaption>Forest, before</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
                 ><img src="p2/2.2/Image_2_highpass.jpg" loading="lazy"
               /></span>
-              <figcaption>Forest half, after the high-pass</figcaption>
+              <figcaption>Forest, after the high-pass</figcaption>
             </figure>
           </div>
           <div class="figure-add-arrows" aria-hidden="true">
@@ -658,44 +670,161 @@ out_dy = post(conv2(im, dy_kern))
             <span class="fft-plate"
               ><img src="p2/2.2/Hybrid.jpg" loading="lazy"
             /></span>
-            <figcaption>The hybrid, both bands at once</figcaption>
+            <figcaption>Hybrid, averaging the 2</figcaption>
           </figure>
         </div>
-        <!-- PROSE: when the single frame holds both pictures stacked instead of
-             side by side, so there is nothing left to align at all. -->
-        <p>TODO prose</p>
-        <!-- PROSE: the source was a pair of views of the same island stacked top
-             and bottom — the forested Mannahatta the Dutch found, and the skyline
-             on it now. Which half feeds which band is a single choice, and that is
-             what decides whether the island reads as wilderness or as city. -->
-        <p>TODO prose</p>
-        <div class="figure-scales">
-          <figure class="figure s100">
+        <p>
+          The low pass filter successfully keeps low frequency signals in the
+          image, as can be seen by the concentrated cluster of light in the
+          center. The high pass filter is not as obvious, but if you squint you
+          can see a red dot in the middle, showing low frequencies were cut out.
+        </p>
+        <p>
+          Here below are many failed trials I had. Art requires experimentation!
+        </p>
+        <div class="figure-grid three contact">
+          <figure class="figure">
             <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
-            <figcaption>100%</figcaption>
+            <figcaption>Manhattan</figcaption>
           </figure>
-          <figure class="figure s50">
-            <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
-            <figcaption>50%</figcaption>
+          <figure class="figure">
+            <img src="p2/2.2/out/env.jpg" loading="lazy" />
+            <figcaption>Factory ruins environment</figcaption>
           </figure>
-          <figure class="figure s25">
-            <img src="p2/2.2/out/mannahatta.jpg" loading="lazy" />
-            <figcaption>25%</figcaption>
+          <figure class="figure">
+            <img src="p2/2.2/out/fire.jpg" loading="lazy" />
+            <figcaption>
+              Fire burns forest, but mother nature forbids
+            </figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.2/out/fourier.jpg" loading="lazy" />
+            <figcaption>Laplace is Fourier's Doppleganger</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.2/out/taipei.jpg" loading="lazy" />
+            <figcaption>Taipei 101</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.2/out/waterfall.jpg" loading="lazy" />
+            <figcaption>Waterfall</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — the evaluation. What worked, what
-             didn't, where the result falls short of the effect, and how much of
-             the alignment step was doing the work. Also worth saying plainly that
-             a hybrid image is not a composite: neither picture is ever drawn on
-             top of the other. -->
+        <!-- <p>TODO prose</p> -->
+        <h2>2.3: Gaussian and Laplacian Stacks</h2>
+        <p>
+          I'm really excited for this one. I saw the Oraple during course
+          lecture and I instantly knew I wanted to recreate it for funzies.
+          Without GenAI, how can we blend 2 distinct images together!?
+        </p>
+        <p>
+          Problem: If we blend 2 images too slowly, than the images will visibly
+          overlap and "ghost" each other. If we blend too quickly, they will
+          create a very visible seam.
+        </p>
+        <p>
+          Digging a little deeper, we find that the window size for blending
+          depends on the feature size. Small features in the image need a small
+          window size to blend quickly without ghosting. Large features in the
+          image need a large window size to blend slowly without seams.
+        </p>
+        <p>
+          From the beauty of frequencies and filters, we know that small
+          features correlate to low frequencies... and large features correlate
+          to high frequencies! So, if we blend each pass of frequencies
+          separately with different window sizes, then combine them, it should
+          work!
+        </p>
+
+        <p>Oraple example</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack0.jpg" loading="lazy" />
+            <figcaption>apple — \(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack0.jpg" loading="lazy" />
+            <figcaption>orange — \(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack0.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack1.jpg" loading="lazy" />
+            <figcaption>apple — \(G_1 - G_2\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack1.jpg" loading="lazy" />
+            <figcaption>orange — \(G_1 - G_2\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack1.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_1 - G_2\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack2.jpg" loading="lazy" />
+            <figcaption>apple — \(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack2.jpg" loading="lazy" />
+            <figcaption>orange — \(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack2.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack3.jpg" loading="lazy" />
+            <figcaption>apple — \(G_3 - G_4\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack3.jpg" loading="lazy" />
+            <figcaption>orange — \(G_3 - G_4\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack3.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_3 - G_4\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack4.jpg" loading="lazy" />
+            <figcaption>apple — \(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack4.jpg" loading="lazy" />
+            <figcaption>orange — \(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack4.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lstack5.jpg" loading="lazy" />
+            <figcaption>apple — \(G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/rstack5.jpg" loading="lazy" />
+            <figcaption>orange — \(G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/out/lrstack5.jpg" loading="lazy" />
+            <figcaption>averaged — \(G_5\)</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/lstack.jpg" loading="lazy" />
+            <figcaption>apple — all six levels</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/rstack.jpg" loading="lazy" />
+            <figcaption>orange — all six levels</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
+            <figcaption>averaged — all six levels</figcaption>
+          </figure>
+        </div>
         <p>TODO prose</p>
-        <h2>Gaussian and Laplacian Stacks</h2>
-        <!-- PROSE: what a Gaussian stack is — one image blurred again and again,
-             each level holding the last one's low frequencies and nothing else.
-             This ladder is sigma = 0, 2, 4, 8, 16, 32, and the image is the split
-             mask rather than a photograph, because a hard edge is the clearest
-             thing to watch come apart. -->
-        <p>TODO prose</p>
+        <p>Window sizes</p>
         <div class="figure-grid three">
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask0.jpg" loading="lazy" />
@@ -722,95 +851,12 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>\(\sigma = 32\)</figcaption>
           </figure>
         </div>
-        <!-- PROSE: the Laplacian stack takes the difference between neighbouring
-             Gaussian levels, so each level holds one band of scales and nothing
-             else — the finest grain at the top, the flat colour of the picture at
-             the bottom. These are the levels of the left-hand source, rescaled to
-             be visible; the mask has already zeroed the other half. -->
-        <p>TODO prose</p>
-        <div class="figure-grid three">
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack0.jpg" loading="lazy" />
-            <figcaption>\(G_0 - G_1\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack1.jpg" loading="lazy" />
-            <figcaption>\(G_1 - G_2\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack2.jpg" loading="lazy" />
-            <figcaption>\(G_2 - G_3\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack3.jpg" loading="lazy" />
-            <figcaption>\(G_3 - G_4\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack4.jpg" loading="lazy" />
-            <figcaption>\(G_4 - G_5\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lstack5.jpg" loading="lazy" />
-            <figcaption>\(G_5\)</figcaption>
-          </figure>
-        </div>
-        <!-- PROSE: REQUIRED by the spec — the reconstruction. Adding every level
-             back up returns the source, which is the check that the decomposition
-             threw nothing away. Worth being straight about what the mask did to
-             this figure: the sum recovers the masked source, not the whole frame,
-             because the other half was multiplied out before the levels were
-             written. -->
-        <p>TODO prose</p>
-        <figure class="figure figure-framed">
-          <img src="p2/2.3and4/out/lstack.jpg" loading="lazy" />
-          <figcaption>All six levels summed</figcaption>
-        </figure>
         <h2>Multiresolution Blending</h2>
-        <!-- PROSE: now the two stacks are combined through the mask, one level at
-             a time. Each source hands over its own bands, so the seam is built
-             once per scale instead of once for the picture. The split here is a
-             straight one — the case a plain alpha blend would already handle — so
-             the point of the figure is the machinery, not the result. -->
         <p>TODO prose</p>
-        <div class="figure-grid three">
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack0.jpg" loading="lazy" />
-            <figcaption>\(G_0 - G_1\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack1.jpg" loading="lazy" />
-            <figcaption>\(G_1 - G_2\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack2.jpg" loading="lazy" />
-            <figcaption>\(G_2 - G_3\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack3.jpg" loading="lazy" />
-            <figcaption>\(G_3 - G_4\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack4.jpg" loading="lazy" />
-            <figcaption>\(G_4 - G_5\)</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.3and4/out/lrstack5.jpg" loading="lazy" />
-            <figcaption>\(G_5\)</figcaption>
-          </figure>
-        </div>
         <figure class="figure">
           <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
           <figcaption>All six levels summed</figcaption>
         </figure>
-        <!-- PROSE: the case that actually needs the pyramid — an irregular mask.
-             An outline has high frequencies all along its edge, so handing the
-             whole picture over at once leaves a rim you can see. Blending per
-             level leaves the edge only at the scales where the mask itself has
-             detail, and the coarse levels cross over slowly enough to hide it.
-             Five pairs below, all one code path: a soft sweep for a sky, a lasso
-             down a runoff channel, a vertical wipe across a slope, and two
-             straight splits — one at a waterline, one through a meadow. Only the
-             last of those is a case a plain alpha blend would already handle. -->
         <p>TODO prose</p>
         <div class="figure-grid">
           <p class="mono">Utah + Milky Way — soft sweep across the sky</p>
@@ -957,17 +1003,6 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>Blended</figcaption>
           </figure>
         </div>
-        <!-- PROSE: REQUIRED by the spec — the evaluation, and the pairs it turns
-             on are the two that did not work. Both fail the same way: the mask is
-             a loose shape rather than a tight outline, so it takes a strip of the
-             object's own background along with it. The campanile's mask is a
-             straight-sided lozenge, not the tower's silhouette, so the blue sky
-             the tower was shot against comes with it and the coarse levels smear
-             that blue outward along the left edge; its straight right side also
-             cuts the tower off instead of following it. The glacier pair is the
-             same story along the ridge. Say how much of that is the mask being
-             badly drawn versus the blend being badly computed, given the five
-             pairs above run the same code at the same number of levels. -->
         <p>TODO prose</p>
         <div class="figure-grid">
           <p class="mono">Campanile + coastline — where it does not hold up</p>

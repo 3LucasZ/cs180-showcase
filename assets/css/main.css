@@ -430,6 +430,14 @@ html.room-lit .switch-toggle {
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
 }
 
+/* What the card's tool looks like. Held to the card's own 600px so the two read
+   as one block rather than a card with a wider picture under it. Compound because
+   `.figure` sits later in this file and would otherwise reset the side margins. */
+.figure.maskroom-shot {
+  max-width: 600px;
+  margin: 14px auto 0;
+}
+
 /* ---------- light table ---------- */
 
 .table {
@@ -701,11 +709,46 @@ html.room-lit .switch-toggle {
 
 .project-hero .print-tags { justify-content: center; }
 
-.project-hero-figure { margin: 44px 0 0; }
+.project-hero-figure {
+  max-width: 900px;
+  margin: 36px auto 0;
+}
 
 .project-hero-figure img {
   width: 100%;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* The hero's own contact sheet: the writeup's best results, one frame each,
+   linked down into the section that produced them. Squares because the row
+   spans four different aspect ratios and `cover` is the only thing that keeps
+   the row even; the uncropped frames are all further down, in their sections. */
+.hero-hits {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 900px;
+  margin: 14px auto 0;
+}
+
+.hero-hit {
+  display: block;
+  line-height: 0;
+}
+
+.hero-hit img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.hero-hit:hover img {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.55);
 }
 
 /* A caption is a label, not decoration, so it is set to be read rather than
@@ -970,11 +1013,41 @@ html.room-lit .figure-plot img {
   align-items: center;
 }
 
+/* A contact sheet, for a row whose sources share no aspect ratio at all — these
+   run from a 1436x513 panorama to a 309x646 crop, and sized by width alone, the
+   way every other grid here is, that pair lands as a 550px tower beside a 94px
+   sliver. So the sheet caps height as well, and lets each frame take whichever
+   wall it reaches first: the tall ones come up against the 200px ceiling, the
+   wide ones against their column and stay short. Nothing is cropped and nothing
+   is squashed — a fixed `height` would have had `max-width: 100%` clamp the
+   panorama's width afterwards and stretch it 2.1x sideways.
+
+   `align-items: center` is load-bearing: a stretched flex item would be handed
+   the column's full width, which is the same squash by another route. The
+   caption takes itself back out of that with `align-self: stretch`, so it keeps
+   sitting flush left under the frame instead of floating centred, and
+   `margin-block: auto` drops it to the bottom of whatever height the row settled
+   on. */
+.figure-grid.contact .figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.figure-grid.contact .figure img {
+  max-height: 200px;
+  margin-block: auto;
+}
+.figure-grid.contact .figure figcaption {
+  align-self: stretch;
+}
+
 @media (max-width: 640px) {
   .figure-grid, .figure-grid.three { grid-template-columns: 1fr; }
   /* One track left, so a two-column span would conjure a second implicit column
      and push the page sideways. */
   .figure-grid > .span-2 { grid-column: auto; }
+  /* Four across would be 78px frames on a phone; two keeps them legible. */
+  .hero-hits { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* The scale demonstration. A hybrid image is a trick of viewing distance, so the

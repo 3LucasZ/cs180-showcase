@@ -67,21 +67,21 @@ def sharpen(im, sigma, a):
 #         cv2.imwrite(OUT_PATH / f"taj_s{sigma}_a{a}.jpg", out*255)
 
 
-# im = cv2.imread(DIR / "in" / "falls.jpg")
-# im = im.astype(np.float32) / 255.0
-# out = sharpen(im, sigma=2, a=4)
-# cv2.imwrite(DIR / "out" / "falls.jpg", out*255)
-
-# im = cv2.imread(DIR / "in" / "fox.jpg")
-# im = im.astype(np.float32) / 255.0
-# out = sharpen(im, sigma=2, a=8)
-# cv2.imwrite(DIR / "out" / "fox.jpg", out*255)
-
-im = cv2.imread(DIR / "in" / "joshua.jpg")
-# blur
+im = cv2.imread(DIR / "in" / "falls.jpg")
 im = im.astype(np.float32) / 255.0
-out = blur(im, sigma=5)
-cv2.imwrite(DIR / "out" / "joshua.blur.jpg", out*255)
-# sharp
-out = sharpen(out, sigma=5, a=3)
-cv2.imwrite(DIR / "out" / "joshua.sharp.jpg", out*255)
+out = sharpen(im, sigma=1, a=2)
+cv2.imwrite(DIR / "out" / "falls.jpg", out*255)
+
+im = cv2.imread(DIR / "in" / "fox.jpg")
+im = im.astype(np.float32) / 255.0
+out = sharpen(im, sigma=2, a=2)
+cv2.imwrite(DIR / "out" / "fox.jpg", out*255)
+
+# im = cv2.imread(DIR / "in" / "joshua.jpg")
+# # blur
+# im = im.astype(np.float32) / 255.0
+# out = blur(im, sigma=5)
+# cv2.imwrite(DIR / "out" / "joshua.blur.jpg", out*255)
+# # sharp
+# out = sharpen(out, sigma=5, a=3)
+# cv2.imwrite(DIR / "out" / "joshua.sharp.jpg", out*255)
