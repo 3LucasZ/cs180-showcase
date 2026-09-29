@@ -95,10 +95,7 @@
             href="#multiresolution-blending"
             aria-label="Multiresolution Blending — lake and lava"
           >
-            <img
-              src="p2/2.3and4/lakelava/before-after.jpg"
-              loading="lazy"
-            />
+            <img src="p2/2.3and4/lakelava/before-after.jpg" loading="lazy" />
           </a>
         </div>
         <p class="hero-credit">
@@ -112,8 +109,7 @@
       <a class="tool-callout" href="maskroom.html">
         <span class="tool-callout-name">mask<em>room</em></span>
         <span class="tool-callout-note"
-          >Web-based tool to generate the masks for the blending
-          project.</span
+          >Web-based tool to generate the masks for the blending project.</span
         >
         <span class="pop-link tool-callout-go">open maskroom</span>
       </a>
@@ -735,6 +731,12 @@ out_dy = post(conv2(im, dy_kern))
           separately with different window sizes, then combine them, it should
           work!
         </p>
+        <p>
+          We can separate the bands of the images. By taking the result of a
+          low-pass filter with threshold 'a' and subtracting it from a more
+          aggressive low-pass filter with threshold 'b', we get a certain
+          frequency band of the image in the interval [a, b].
+        </p>
 
         <p>Oraple example</p>
         <div class="figure-grid three">
@@ -750,18 +752,18 @@ out_dy = post(conv2(im, dy_kern))
             <img src="p2/2.3and4/out/lrstack0.jpg" loading="lazy" />
             <figcaption>averaged — \(G_0 - G_1\)</figcaption>
           </figure>
-          <figure class="figure">
+          <!-- <figure class="figure">
             <img src="p2/2.3and4/out/lstack1.jpg" loading="lazy" />
             <figcaption>apple — \(G_1 - G_2\)</figcaption>
-          </figure>
-          <figure class="figure">
+          </figure> -->
+          <!-- <figure class="figure">
             <img src="p2/2.3and4/out/rstack1.jpg" loading="lazy" />
             <figcaption>orange — \(G_1 - G_2\)</figcaption>
           </figure>
           <figure class="figure">
             <img src="p2/2.3and4/out/lrstack1.jpg" loading="lazy" />
             <figcaption>averaged — \(G_1 - G_2\)</figcaption>
-          </figure>
+          </figure> -->
           <figure class="figure">
             <img src="p2/2.3and4/out/lstack2.jpg" loading="lazy" />
             <figcaption>apple — \(G_2 - G_3\)</figcaption>
@@ -774,7 +776,7 @@ out_dy = post(conv2(im, dy_kern))
             <img src="p2/2.3and4/out/lrstack2.jpg" loading="lazy" />
             <figcaption>averaged — \(G_2 - G_3\)</figcaption>
           </figure>
-          <figure class="figure">
+          <!-- <figure class="figure">
             <img src="p2/2.3and4/out/lstack3.jpg" loading="lazy" />
             <figcaption>apple — \(G_3 - G_4\)</figcaption>
           </figure>
@@ -785,7 +787,7 @@ out_dy = post(conv2(im, dy_kern))
           <figure class="figure">
             <img src="p2/2.3and4/out/lrstack3.jpg" loading="lazy" />
             <figcaption>averaged — \(G_3 - G_4\)</figcaption>
-          </figure>
+          </figure> -->
           <figure class="figure">
             <img src="p2/2.3and4/out/lstack4.jpg" loading="lazy" />
             <figcaption>apple — \(G_4 - G_5\)</figcaption>
@@ -798,7 +800,7 @@ out_dy = post(conv2(im, dy_kern))
             <img src="p2/2.3and4/out/lrstack4.jpg" loading="lazy" />
             <figcaption>averaged — \(G_4 - G_5\)</figcaption>
           </figure>
-          <figure class="figure">
+          <!-- <figure class="figure">
             <img src="p2/2.3and4/out/lstack5.jpg" loading="lazy" />
             <figcaption>apple — \(G_5\)</figcaption>
           </figure>
@@ -809,57 +811,80 @@ out_dy = post(conv2(im, dy_kern))
           <figure class="figure">
             <img src="p2/2.3and4/out/lrstack5.jpg" loading="lazy" />
             <figcaption>averaged — \(G_5\)</figcaption>
-          </figure>
+          </figure> -->
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/lstack.jpg" loading="lazy" />
-            <figcaption>apple — all six levels</figcaption>
+            <figcaption>apple</figcaption>
           </figure>
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/rstack.jpg" loading="lazy" />
-            <figcaption>orange — all six levels</figcaption>
+            <figcaption>orange</figcaption>
           </figure>
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
-            <figcaption>averaged — all six levels</figcaption>
+            <figcaption>averaged</figcaption>
           </figure>
         </div>
-        <p>TODO prose</p>
+        <p>
+          For the windows, we start with a plain left white, right black image.
+          We apply a gaussian filter, to create the affect of having a window
+          size. Higher frequency bands need smaller window sizes, so we apply a
+          stronger gaussian filter for lower frequency bands.
+        </p>
         <p>Window sizes</p>
         <div class="figure-grid three">
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask0.jpg" loading="lazy" />
             <figcaption>\(\sigma = 0\)</figcaption>
           </figure>
-          <figure class="figure figure-framed">
+          <!-- <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask1.jpg" loading="lazy" />
             <figcaption>\(\sigma = 2\)</figcaption>
-          </figure>
+          </figure> -->
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask2.jpg" loading="lazy" />
             <figcaption>\(\sigma = 4\)</figcaption>
           </figure>
-          <figure class="figure figure-framed">
+          <!-- <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask3.jpg" loading="lazy" />
             <figcaption>\(\sigma = 8\)</figcaption>
-          </figure>
-          <figure class="figure figure-framed">
+          </figure> -->
+          <!-- <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask4.jpg" loading="lazy" />
             <figcaption>\(\sigma = 16\)</figcaption>
-          </figure>
+          </figure> -->
           <figure class="figure figure-framed">
             <img src="p2/2.3and4/out/mask5.jpg" loading="lazy" />
             <figcaption>\(\sigma = 32\)</figcaption>
           </figure>
         </div>
-        <h2>Multiresolution Blending</h2>
-        <p>TODO prose</p>
-        <figure class="figure">
+        <h2>2.4: Multiresolution Blending</h2>
+        <p>
+          Let's take this technique to a new level by applying it creatively to
+          our own images!!
+        </p>
+        <!-- <figure class="figure">
           <img src="p2/2.3and4/out/lrstack.jpg" loading="lazy" />
           <figcaption>All six levels summed</figcaption>
-        </figure>
-        <p>TODO prose</p>
+        </figure> -->
+        <!-- <p>TODO prose</p> -->
+        <p class="mono">Modern Oraple</p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.3and4/in2/apple.png" loading="lazy" />
+            <figcaption>Apple</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/in2/orange.png" loading="lazy" />
+            <figcaption>Orange</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/out2/oraple.png" loading="lazy" />
+            <figcaption>Oraple</figcaption>
+          </figure>
+        </div>
         <div class="figure-grid">
-          <p class="mono">Utah + Milky Way — soft sweep across the sky</p>
+          <p class="mono">Milky Way seen from Utah??</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/utah-milky/utah-milky-scene.jpg"
@@ -886,8 +911,89 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>Blended</figcaption>
           </figure>
         </div>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lstack0.jpg" loading="lazy" />
+            <figcaption>scene — \(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/rstack0.jpg" loading="lazy" />
+            <figcaption>object — \(G_0 - G_1\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lrstack0.jpg" loading="lazy" />
+            <figcaption>blended — \(G_0 - G_1\)</figcaption>
+          </figure>
+
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lstack2.jpg" loading="lazy" />
+            <figcaption>scene — \(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/rstack2.jpg" loading="lazy" />
+            <figcaption>object — \(G_2 - G_3\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lrstack2.jpg" loading="lazy" />
+            <figcaption>blended — \(G_2 - G_3\)</figcaption>
+          </figure>
+
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lstack4.jpg" loading="lazy" />
+            <figcaption>scene — \(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/rstack4.jpg" loading="lazy" />
+            <figcaption>object — \(G_4 - G_5\)</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/utah-milky/lrstack4.jpg" loading="lazy" />
+            <figcaption>blended — \(G_4 - G_5\)</figcaption>
+          </figure>
+
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/utah-milky/lstack.jpg" loading="lazy" />
+            <figcaption>scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/utah-milky/rstack.jpg" loading="lazy" />
+            <figcaption>object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img src="p2/2.3and4/utah-milky/lrstack.jpg" loading="lazy" />
+            <figcaption>blended</figcaption>
+          </figure>
+        </div>
         <div class="figure-grid">
-          <p class="mono">Lake + Lava — lasso down the runoff channel</p>
+          <p class="mono">Sand and waves</p>
+          <figure class="figure">
+            <img
+              src="p2/2.3and4/sand-waves/sand-waves-scene.jpg"
+              loading="lazy"
+            />
+            <figcaption>Scene</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img
+              src="p2/2.3and4/sand-waves/sand-waves-object.png"
+              loading="lazy"
+            />
+            <figcaption>Object</figcaption>
+          </figure>
+          <figure class="figure figure-framed">
+            <img
+              src="p2/2.3and4/sand-waves/sand-waves-mask.png"
+              loading="lazy"
+            />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.3and4/sand-waves/sand-waves.jpg" loading="lazy" />
+            <figcaption>Blended</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p class="mono">Lake of lava</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/lakelava/before-after-scene.jpg"
@@ -915,7 +1021,7 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         <div class="figure-grid">
-          <p class="mono">Forest + Fire — vertical wipe across the slope</p>
+          <p class="mono">Recovering forest</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/forestfire/before-after-scene.jpg"
@@ -943,9 +1049,7 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         <div class="figure-grid">
-          <p class="mono">
-            Reflection 1 + Reflection 3 — straight band at the waterline
-          </p>
+          <p class="mono">mirror, mirror on the wall</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/reflection/reflection1-reflection3-scene.jpg"
@@ -976,7 +1080,7 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         <div class="figure-grid">
-          <p class="mono">Seasons — vertical split through the meadow</p>
+          <p class="mono">Can you wait for springtime?</p>
           <figure class="figure">
             <img
               src="p2/2.3and4/seasons/before-after-scene.jpg"
@@ -1003,57 +1107,16 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>Blended</figcaption>
           </figure>
         </div>
-        <p>TODO prose</p>
+        <p>
+          This project had its hurdles. Mistake: black padded masked image
+          doesn't work. Mistake: sometimes need to fix image brightness so
+          colors match better. Here are some failures that happened a long the
+          way.
+        </p>
         <div class="figure-grid">
-          <p class="mono">Campanile + coastline — where it does not hold up</p>
-          <figure class="figure">
-            <img
-              src="p2/2.3and4/work3/reyes-campanile-scene.jpg"
-              loading="lazy"
-            />
-            <figcaption>Scene</figcaption>
-          </figure>
-          <figure class="figure">
-            <img
-              src="p2/2.3and4/work3/reyes-campanile-object.jpg"
-              loading="lazy"
-            />
-            <figcaption>Object</figcaption>
-          </figure>
-          <figure class="figure figure-framed">
-            <img
-              src="p2/2.3and4/work3/reyes-campanile-mask.png"
-              loading="lazy"
-            />
-            <figcaption>Mask, drawn in maskroom</figcaption>
-          </figure>
           <figure class="figure">
             <img src="p2/2.3and4/work3/reyes-campanile.jpg" loading="lazy" />
             <figcaption>Blended</figcaption>
-          </figure>
-        </div>
-        <div class="figure-grid">
-          <p class="mono">Glacier + Volcano — the same rim, a second pair</p>
-          <figure class="figure">
-            <img
-              src="p2/2.3and4/work5/glacier-volcano-scene.jpg"
-              loading="lazy"
-            />
-            <figcaption>Scene</figcaption>
-          </figure>
-          <figure class="figure figure-framed">
-            <img
-              src="p2/2.3and4/work5/glacier-volcano-object.jpg"
-              loading="lazy"
-            />
-            <figcaption>Object</figcaption>
-          </figure>
-          <figure class="figure figure-framed">
-            <img
-              src="p2/2.3and4/work5/glacier-volcano-mask.jpg"
-              loading="lazy"
-            />
-            <figcaption>Mask</figcaption>
           </figure>
           <figure class="figure">
             <img src="p2/2.3and4/work5/glacier-volcano.jpg" loading="lazy" />
@@ -1061,9 +1124,6 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
       </section>
-
-      Mistake 1: black padded masked image doesn't work Mistake 2: fix image
-      brightness so colors match better
     </main>
 
     <section class="reel" aria-label="Other projects">

@@ -8,6 +8,16 @@ DIR = Path(__file__).resolve().parent
 IN_PATH = DIR / "in2"
 OUT_PATH = DIR / "out2"
 
+# trying to make laplacian image viewable and not just black
+
+
+def norm2(im):
+    # return (im-im.min())/im.max()
+    # return np.clip(im+0.5, 0, 1)
+    # return np.clip(im, 0, 1)
+    mx = np.percentile(np.abs(im), 80)
+    return 0.5 + 0.5 * im / (mx+0.001)
+
 
 def lopass(im, sigma):
     if (sigma == 0):
@@ -97,7 +107,7 @@ def main(name1, name2, name3):
 # main("orange.png", "apple.png", "oraple.png")
 
 
-def main2(scene, object, mask, out):
+def main2(scene, object, mask, out, verbose=False, verbosePath=None):
     scene = cv2.imread(scene).astype(np.float32) / 255.0
     H, W, C = scene.shape
     object_rgba = cv2.imread(object, cv2.IMREAD_UNCHANGED).astype(
@@ -131,6 +141,22 @@ def main2(scene, object, mask, out):
     scene = scene_stack * (1-mask_stack)
     object = object_stack * mask_stack
     answer = scene + object
+    if (verbose):
+        for i, im in enumerate(scene):
+            # normalize
+            im = norm2(im)
+            cv2.imwrite(verbosePath / f"lstack{i}.jpg", im*255)
+        cv2.imwrite(verbosePath / f"lstack.jpg", np.sum(scene*255, axis=0))
+        for i, im in enumerate(object):
+            # normalize
+            im = norm2(im)
+            cv2.imwrite(verbosePath / f"rstack{i}.jpg", im*255)
+        cv2.imwrite(verbosePath / f"rstack.jpg", np.sum(object*255, axis=0))
+        for i, im in enumerate(answer):
+            # normalize
+            im = norm2(im)
+            cv2.imwrite(verbosePath / f"lrstack{i}.jpg", im*255)
+        cv2.imwrite(verbosePath / f"lrstack.jpg", np.sum(answer*255, axis=0))
     answer = np.sum(answer, axis=0)
     answer = np.clip(answer, 0, 1)
     cv2.imwrite(out, (answer*255).astype(np.uint8))
@@ -151,16 +177,16 @@ def main2(scene, object, mask, out):
 #       DIR / "work6" / "glacier-volcano-object.jpg",
 #       DIR / "work6" / "glacier-volcano-mask.jpg",
 #       DIR / "work6" / "glacier-volcano.jpg")
-
 # main2(DIR / "work8" / "glacier-volcano-scene.jpg",
 #       DIR / "work8" / "glacier-volcano-object.jpg",
 #       DIR / "work8" / "glacier-volcano-mask.png",
 #       DIR / "work8" / "glacier-volcano.jpg")
-
-# main2(DIR / "utah-milky" / "utah-milky-scene.jpg",
-#       DIR / "utah-milky" / "utah-milky-object.png",  # alpha channel
-#       DIR / "utah-milky" / "utah-milky-mask.png",  # lossless
-#       DIR / "utah-milky" / "utah-milky.jpg")
+main2(DIR / "utah-milky" / "utah-milky-scene.jpg",
+      DIR / "utah-milky" / "utah-milky-object.png",  # alpha channel
+      DIR / "utah-milky" / "utah-milky-mask.png",  # lossless
+      DIR / "utah-milky" / "utah-milky.jpg",
+      verbose=True,
+      verbosePath=DIR/"utah-milky")
 
 # main2(DIR / "reflection" / "reflection1-reflection3-scene.jpg",
 #       DIR / "reflection" / "reflection1-reflection3-object.png",
@@ -188,7 +214,7 @@ def main2(scene, object, mask, out):
 #       DIR / "seasons" / "before-after-mask.png",
 #       DIR / "seasons" / "before-after.jpg")
 
-main2(DIR / "seasons" / "before-after-winter-scene.jpg",
-      DIR / "seasons" / "before-after-winter-object.png",
-      DIR / "seasons" / "before-after-winter-mask.png",
-      DIR / "seasons" / "before-after-winter.jpg")
+# main2(DIR / "seasons" / "before-after-winter-scene.jpg",
+#       DIR / "seasons" / "before-after-winter-object.png",
+#       DIR / "seasons" / "before-after-winter-mask.png",
+#       DIR / "seasons" / "before-after-winter.jpg")

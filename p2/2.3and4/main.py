@@ -52,7 +52,7 @@ def norm2(im):
     # return (im-im.min())/im.max()
     # return np.clip(im+0.5, 0, 1)
     # return np.clip(im, 0, 1)
-    mx = np.max(np.abs(im))
+    mx = np.percentile(np.abs(im), 90)
     return 0.5 + 0.5 * im / mx
 
 
