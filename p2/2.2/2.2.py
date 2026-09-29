@@ -46,20 +46,21 @@ def test1(f1, f2, out):
     # Next align images (this code is provided, but may be improved)
     im1_aligned, im2_aligned = align_images(im1, im2)
     # sigma1, sigma2 are cutoff values for the high and low frequencies
-    sigma1 = 5  # larger -> more blur / less high frequencies
-    sigma2 = 5  # larger -> broader range of frequencies in high-pass
+    sigma1 = 2  # larger -> more blur / less high frequencies
+    sigma2 = 2  # larger -> broader range of frequencies in high-pass
     hybrid = hybrid_image(im1_aligned, im2_aligned, sigma1, sigma2)
     cv2.imwrite(
         OUT_PATH / out, hybrid * 255)
 
 
+# test1("DerekPicture.jpg", "nutmeg.jpg", "derek.jpg")
 # test1("panda.jpg", "redpanda.jpg", "panda.jpg")
 # test1("alaska.jpg", "skyline.jpg", "alaska.jpg")
 # test1("skyline.jpg", "alaska.jpg", "alaska.jpg")
 # test1("waterfall.jpg", "taipei.jpg", "waterfall.jpg")
 # test1("taipei.jpg", "waterfall.jpg", "taipei.jpg")
 # test1("laplace.jpg", "fourier.jpg", "fourier.jpg")
-test1("tdr.jpg", "lincoln.jpg", "lincoln.jpg")
+# test1("tdr.jpg", "lincoln.jpg", "lincoln.jpg")
 
 
 def test2(f):

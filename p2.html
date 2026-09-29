@@ -121,20 +121,27 @@
 
       <section class="prose">
         <h2>1.1: Convolutions from Scratch</h2>
-        <p>
-          A convolution is the resulting image of applying the same weights to
-          every chunk in the image. Algorithmically, that looks like: for \((x,
-          y)\) in image, apply filter on \((x, y)\) and surrounding pixels, use
-          that output result for the \((x, y)\) in the new image.
-        </p>
-        <figure class="figure">
-          <img src="p2/pedagogy/convolution.png" loading="lazy" />
-          <figcaption>A \(3 \times 3\) kernel read over a patch</figcaption>
-        </figure>
-        <p>
-          A nuance is that we have to flip the filter first before doing this
-          operation to make it a convolution and not a cross-correlation.
-        </p>
+        <div class="grid">
+          <div>
+            <p>
+              A convolution is the resulting image of applying the same weights
+              to every chunk in the image. Algorithmically, that looks like: for
+              \((x, y)\) in image, apply filter on \((x, y)\) and surrounding
+              pixels, use that output result for the \((x, y)\) in the new
+              image.
+            </p>
+            <p>
+              A nuance is that we have to flip the filter first before doing
+              this operation to make it a convolution and not a
+              cross-correlation.
+            </p>
+          </div>
+          <figure class="figure">
+            <img src="p2/pedagogy/convolution.png" loading="lazy" />
+            <figcaption>A \(3 \times 3\) kernel read over a patch</figcaption>
+          </figure>
+        </div>
+
         <p>
           A problem is, what to do when you apply the filter on the corners /
           edges of the image. There are no pixels neighboring in some direction.
@@ -212,12 +219,51 @@ def conv2(im, kern):
             <figcaption>9 × 9 box filter</figcaption>
           </figure>
         </div>
+
         <div class="code">
           <pre class="code-src">
 box_kern = np.ones((9, 9)) / 81
 out_box = post(conv2(im, box_kern))
 </pre
           >
+        </div>
+        <div class="grid">
+          <p>
+            We then numerically verify that our custom convolution algorithm
+            works by calculating it's euclidean distance to scipy's convolution
+            algorithm and measure their runtimes. This benchmark was run on a
+            random 300x300 matrix and random 9x9 kernel.
+          </p>
+          <table class="bench">
+            <thead>
+              <tr>
+                <th scope="col">Implementation</th>
+                <th scope="col">Time (s)</th>
+                <th scope="col">Speedup</th>
+                <th scope="col">Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>4 nested loops</td>
+                <td>0.0587</td>
+                <td>1×</td>
+                <td>\(1.02 \times 10^{-7}\)</td>
+              </tr>
+              <tr>
+                <td>2 nested loops</td>
+                <td>0.0045</td>
+                <td>\(13.0\times\)</td>
+                <td>\(5.64 \times 10^{-8}\)</td>
+              </tr>
+              <tr>
+                <td>scipy</td>
+                <td>0.000230</td>
+                <td>\(255\times\)</td>
+                <td>N/A</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <p>
@@ -301,24 +347,27 @@ out_dy = post(conv2(im, dy_kern))
           we pick and many of the real edges get cutoff too.
         </p>
         <h2>1.3: Derivative of Gaussian (DoG) filter</h2>
-        <p>
-          Since this was rather noisy, what if we applied a gaussian filter to
-          smooth it first? We repeat the experiment above, except we apply a
-          smoothing gaussian filter first. \(15 \times 15\) and \(\sigma = 2\).
-          Note: we generate a 2D gaussian filter is to outer product a 1D
-          gaussian filter with itself.
-        </p>
+        <div class="figure-grid">
+          <p>
+            Since this was rather noisy, what if we applied a gaussian filter to
+            smooth it first? We repeat the experiment above, except we apply a
+            smoothing gaussian filter first. \(15 \times 15\) and \(\sigma =
+            2\). Note: we generate a 2D gaussian filter is to outer product a 1D
+            gaussian filter with itself.
+          </p>
+          <figure class="figure">
+            <kernel-surface kind="gaussian">
+              <img src="p2/pedagogy/gaussian_filter.png" loading="lazy" />
+            </kernel-surface>
+            <figcaption>\(\sigma = 2\) vs \(\sigma = 5\)</figcaption>
+          </figure>
+        </div>
         <p>
           Gaussian kernel: \[G(x,y) =
           \exp\left(-\frac{x^2+y^2}{2\sigma^2}\right)\] separable \(G(x,y) =
           g(x)\,g(y)\) \[g(x) = \exp\left(-\frac{x^2}{2\sigma^2}\right)\]
         </p>
-        <figure class="figure">
-          <img src="p2/pedagogy/gaussian_filter.png" loading="lazy" />
-          <figcaption>
-            \(\sigma = 2\) and \(\sigma = 5\), both \(30 \times 30\) kernels
-          </figcaption>
-        </figure>
+
         <div class="figure-grid three">
           <figure class="figure">
             <img src="p2/1.3/out/cameraman.png" loading="lazy" />
@@ -351,19 +400,24 @@ out_dy = post(conv2(im, dy_kern))
           We observe that the outline around the cameraman is clearer and less
           noisy. However, the edges are more thick and prominent.
         </p>
-        <p>
-          Right now, we are doing 2 convolutions for this experiment. For the
-          first convolution, we blur the image. Second convolution, we apply the
-          finite difference operator. A beautiful property of convolutions is
-          that they are associative and commutative. We can convolve the
-          gaussian filter with the finite difference operator. This new
-          "Derivative of Gaussians" filter can then be applied as a single
-          operation which gives us the result above. Let's test out this theory.
-        </p>
-        <figure class="figure">
-          <img src="p2/pedagogy/derivative_gaussian.png" loading="lazy" />
-          <figcaption>A derivative of Gaussian</figcaption>
-        </figure>
+        <div class="figure-grid">
+          <p>
+            Right now, we are doing 2 convolutions for this experiment. For the
+            first convolution, we blur the image. Second convolution, we apply
+            the finite difference operator. A beautiful property of convolutions
+            is that they are associative and commutative. We can convolve the
+            gaussian filter with the finite difference operator. This new
+            "Derivative of Gaussians" filter can then be applied as a single
+            operation which gives us the result above. Let's test out this
+            theory.
+          </p>
+          <figure class="figure">
+            <kernel-surface kind="dog">
+              <img src="p2/pedagogy/derivative_gaussian.png" loading="lazy" />
+            </kernel-surface>
+            <figcaption>A derivative of Gaussian</figcaption>
+          </figure>
+        </div>
         <div class="figure-grid">
           <figure class="figure figure-plot">
             <img src="p2/1.3/out/dxog.png" loading="lazy" />
@@ -404,21 +458,53 @@ out_dy = post(conv2(im, dy_kern))
           ((1+\alpha)e-\alpha g)\] Note: \(e\) is the identity kernel, not the
           constant. all zeros except a 1 at the center.
         </p>
+        <div class="grid">
+          <div>
+            <p>
+              This result is the unsharp mask filter, which, ironically, should
+              sharpen our image when convolved with the image.
+            </p>
+            <p>
+              The high frequency filter can be thought of as a laplacian of
+              Gaussian filter.
+            </p>
+          </div>
+          <figure class="figure">
+            <kernel-surface kind="log">
+              <img src="p2/pedagogy/laplacian_of_gaussian.png" loading="lazy" />
+            </kernel-surface>
+            <figcaption>Laplacian of Gaussian</figcaption>
+          </figure>
+        </div>
+
+        <p>1: blur to get the low frequencies.</p>
+        <p>2: subtract from original image to get the high frequencies.</p>
         <p>
-          This result is the unsharp mask filter, which, ironically, should
-          sharpen our image when convolved with the image.
+          3: add the high frequencies to the original image to over-exaggerate
+          them.
         </p>
-        <figure class="figure">
-          <img src="p2/pedagogy/laplacian_of_gaussian.png" loading="lazy" />
-          <figcaption>Laplacian of Gaussian</figcaption>
-        </figure>
-        <image-compare
+
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_lo.jpg" loading="lazy" />
+            <figcaption>1: blurred</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_hi.jpg" loading="lazy" />
+            <figcaption>2: high frequencies</figcaption>
+          </figure>
+          <figure class="figure">
+            <img src="p2/2.1/out/taj_sharp.jpg" loading="lazy" />
+            <figcaption>3: sharpened</figcaption>
+          </figure>
+        </div>
+        <!-- <image-compare
           class="compare-narrow"
           before="p2/2.1/in/taj.jpg"
           after="p2/2.1/out/taj_s1_a3.jpg"
           caption="Input vs. \(\sigma = 1, a = 3\)"
           label="Wipe between the original and the sharpened Taj Mahal"
-        ></image-compare>
+        ></image-compare> -->
 
         <p>
           Taj Mahal sharpened with 3 differing alpha values, 3 differing sigma
@@ -464,24 +550,6 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         <!-- <p>TODO prose</p> -->
-        <!-- NOT YET PRODUCED: the spec also asks for the *blurred* and the
-             *high-frequency* image of the Taj Mahal. 2.1.py writes only the
-             sharpened taj output, so there is no asset for either. The blurred
-             case is shown with the joshua frame in the evaluation figure at
-             the end of this section. When the script writes the taj pair,
-             uncomment this and point at the real filenames.
-
-        <div class="figure-grid">
-          <figure class="figure">
-            <img src="p2/2.1/out/taj.blur.jpg" loading="lazy" />
-            <figcaption>Blurred</figcaption>
-          </figure>
-          <figure class="figure">
-            <img src="p2/2.1/out/taj.hf.jpg" loading="lazy" />
-            <figcaption>High frequencies</figcaption>
-          </figure>
-        </div>
-        -->
         <p>Beautiful waterfall</p>
         <image-compare
           class="compare-narrow"
@@ -548,6 +616,21 @@ out_dy = post(conv2(im, dy_kern))
           looking up close we make the image tiny.
         </p>
         <!-- <p>Example debug image</p> -->
+        <p>Derek vs Nutmeg</p>
+        <div class="figure-scales">
+          <figure class="figure s100">
+            <img src="p2/2.2/out/derek.jpg" loading="lazy" />
+            <figcaption>100%</figcaption>
+          </figure>
+          <figure class="figure s50">
+            <img src="p2/2.2/out/derek.jpg" loading="lazy" />
+            <figcaption>50%</figcaption>
+          </figure>
+          <figure class="figure s25">
+            <img src="p2/2.2/out/derek.jpg" loading="lazy" />
+            <figcaption>25%</figcaption>
+          </figure>
+        </div>
         <p>Lincoln vs Roosevelt</p>
         <div class="figure-scales">
           <figure class="figure s100">
@@ -619,33 +702,79 @@ out_dy = post(conv2(im, dy_kern))
             <figcaption>25%</figcaption>
           </figure>
         </div>
+        <div class="figure-add">
+          <div class="figure-add-plates">
+            <figure class="figure">
+              <img src="p2/2.2/out/a.jpg" loading="lazy" />
+              <figcaption>City</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="p2/2.2/out/lo.jpg" loading="lazy" />
+              <figcaption>City, low-passed</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="p2/2.2/out/b.jpg" loading="lazy" />
+              <figcaption>Forest</figcaption>
+            </figure>
+            <figure class="figure">
+              <img src="p2/2.2/out/hi.jpg" loading="lazy" />
+              <figcaption>Forest, high-passed</figcaption>
+            </figure>
+          </div>
+          <div class="figure-add-arrows" aria-hidden="true">
+            <span class="flow-arrow is-up">
+              <svg viewBox="0 0 60 24" width="60" height="24">
+                <line x1="2" y1="12" x2="52" y2="12" />
+                <polyline points="44,4 54,12 44,20" />
+              </svg>
+            </span>
+            <span class="flow-arrow is-down">
+              <svg viewBox="0 0 60 24" width="60" height="24">
+                <line x1="2" y1="12" x2="52" y2="12" />
+                <polyline points="44,4 54,12 44,20" />
+              </svg>
+            </span>
+          </div>
+          <figure class="figure figure-add-out">
+            <img src="p2/2.2/out/forestcity.png" loading="lazy" />
+            <figcaption>Hybrid</figcaption>
+          </figure>
+        </div>
+        <p>
+          I used a sigma of 6 for the low pass filter and a sigma of 6 for the
+          high pass filter. I tuned this experimentally and qualitatively to see
+          which would fool my eyes best (both up close and far away). Larger low
+          pass filter sigma -> more blur / less high frequencies. Larger high
+          pass filter sigma -> broader range of frequencies available in
+          high-pass.
+        </p>
         <p>Time for some frequency analysis and math.</p>
         <p>Below are FFT plots of the frequencies in the images.</p>
         <div class="figure-add">
           <div class="figure-add-plates">
             <figure class="figure">
               <span class="fft-plate"
-                ><img src="p2/2.2/Image_1.jpg" loading="lazy"
+                ><img src="p2/2.2/out/Image_1.jpg" loading="lazy"
               /></span>
-              <figcaption>City, before</figcaption>
+              <figcaption>City</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
-                ><img src="p2/2.2/Image_1_lowpass.jpg" loading="lazy"
+                ><img src="p2/2.2/out/Image_1_lowpass.jpg" loading="lazy"
               /></span>
-              <figcaption>City, after the low-pass</figcaption>
+              <figcaption>City, low-passed</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
-                ><img src="p2/2.2/Image_2.jpg" loading="lazy"
+                ><img src="p2/2.2/out/Image_2.jpg" loading="lazy"
               /></span>
-              <figcaption>Forest, before</figcaption>
+              <figcaption>Forest</figcaption>
             </figure>
             <figure class="figure">
               <span class="fft-plate"
-                ><img src="p2/2.2/Image_2_highpass.jpg" loading="lazy"
+                ><img src="p2/2.2/out/Image_2_highpass.jpg" loading="lazy"
               /></span>
-              <figcaption>Forest, after the high-pass</figcaption>
+              <figcaption>Forest, high-passed</figcaption>
             </figure>
           </div>
           <div class="figure-add-arrows" aria-hidden="true">
@@ -664,9 +793,9 @@ out_dy = post(conv2(im, dy_kern))
           </div>
           <figure class="figure figure-add-out">
             <span class="fft-plate"
-              ><img src="p2/2.2/Hybrid.jpg" loading="lazy"
+              ><img src="p2/2.2/out/Hybrid.jpg" loading="lazy"
             /></span>
-            <figcaption>Hybrid, averaging the 2</figcaption>
+            <figcaption>Hybrid</figcaption>
           </figure>
         </div>
         <p>
@@ -1152,5 +1281,10 @@ out_dy = post(conv2(im, dy_kern))
     <script src="assets/js/math.js"></script>
     <script src="assets/js/code.js"></script>
     <script src="assets/js/rail.js"></script>
+    <!-- three r147 is the last release that ships a classic OrbitControls.js;
+         r148 deleted examples/js, so bumping this 404s the widget. -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="assets/js/kernel-surface.js"></script>
   </body>
 </html>

@@ -43,10 +43,15 @@ def main():
     im2 = im[:, :W//2]
     if (im1.shape[1] > im2.shape[1]):
         im1 = im1[:, 1:]
+    cv2.imwrite(OUT_PATH / "a.jpg", im1 * 255)
+    cv2.imwrite(OUT_PATH / "b.jpg", im2 * 255)
+
     sigma1 = 6
     sigma2 = 6
     lo = lopass(im1, sigma1)
     hi = hipass(im2, sigma2)
+    cv2.imwrite(OUT_PATH / "lo.jpg", lo * 255)
+    cv2.imwrite(OUT_PATH / "hi.jpg", hi * 255)
     hybrid = lo + hi
     cv2.imwrite(OUT_PATH / f, hybrid * 255)
 
@@ -66,7 +71,7 @@ def main():
         plt.title(t)
         plt.axis("off")
         plt.tight_layout()
-        plt.savefig(t+".jpg")
+        plt.savefig(f"{OUT_PATH / t}.jpg")
 
 
 main()

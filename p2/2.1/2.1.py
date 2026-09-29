@@ -6,14 +6,6 @@ import cv2
 import numpy as np
 
 
-DIR = Path(__file__).resolve().parent
-IN_PATH = DIR / "in" / "taj.jpg"
-OUT_PATH = DIR / "out"
-im = cv2.imread(IN_PATH)
-im = im.astype(np.float32) / 255.0
-print("input image:", IN_PATH, im.shape, im.dtype)
-
-
 def gen_g(d, sg):
     return cv2.getGaussianKernel(ksize=d, sigma=sg, ktype=cv2.CV_32F)
 
@@ -61,21 +53,36 @@ def sharpen(im, sigma, a):
     return out
 
 
+DIR = Path(__file__).resolve().parent
+IN_PATH = DIR / "in"
+OUT_PATH = DIR / "out"
+
+im = cv2.imread(IN_PATH / "taj.jpg")
+im = im.astype(np.float32) / 255.0
+print("input image:", IN_PATH, im.shape, im.dtype)
+lo = blur(im, 6)
+cv2.imwrite(OUT_PATH / f"taj_lo.jpg", lo*255)
+hi = im - lo
+cv2.imwrite(OUT_PATH / f"taj_hi.jpg", hi*255)
+out = im + hi * 3
+cv2.imwrite(OUT_PATH / f"taj_sharp.jpg", out*255)
+
+
 # for sigma in [1, 3, 10]:
 #     for a in [1, 3, 10]:
 #         out = sharpen(im, sigma=sigma, a=a)
 #         cv2.imwrite(OUT_PATH / f"taj_s{sigma}_a{a}.jpg", out*255)
 
 
-im = cv2.imread(DIR / "in" / "falls.jpg")
-im = im.astype(np.float32) / 255.0
-out = sharpen(im, sigma=1, a=2)
-cv2.imwrite(DIR / "out" / "falls.jpg", out*255)
+# im = cv2.imread(DIR / "in" / "falls.jpg")
+# im = im.astype(np.float32) / 255.0
+# out = sharpen(im, sigma=1, a=2)
+# cv2.imwrite(DIR / "out" / "falls.jpg", out*255)
 
-im = cv2.imread(DIR / "in" / "fox.jpg")
-im = im.astype(np.float32) / 255.0
-out = sharpen(im, sigma=2, a=2)
-cv2.imwrite(DIR / "out" / "fox.jpg", out*255)
+# im = cv2.imread(DIR / "in" / "fox.jpg")
+# im = im.astype(np.float32) / 255.0
+# out = sharpen(im, sigma=2, a=2)
+# cv2.imwrite(DIR / "out" / "fox.jpg", out*255)
 
 # im = cv2.imread(DIR / "in" / "joshua.jpg")
 # # blur

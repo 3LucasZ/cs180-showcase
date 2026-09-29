@@ -928,6 +928,48 @@ html.room-lit .figure-plot img {
    too narrow for a line of code. */
 .figure-grid .code { grid-column: 1 / -1; }
 
+/* The numbers a run printed, lifted out of the sentence they were pasted into
+   so the rows line up and the reader can compare them at a glance. Dressed as
+   the same panel as `.code` above, because it is the same kind of thing — the
+   run's own output, not prose about it — and monospaced so the columns stay in
+   register. It hugs its content rather than filling the measure: three short
+   columns stretched across 900px reads as a table with something missing. */
+.bench {
+  max-width: 100%;
+  margin: 2.4em 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  /* Separate, not collapse: a collapsed table ignores its own border-radius and
+     the corners stay square. Nothing here needs collapsing — the rules are all
+     on one edge, so there is no shared border to merge. */
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--silver-dim);
+}
+
+.bench th,
+.bench td {
+  padding: 9px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+/* The panel's own border closes the last row, so a rule under it would double. */
+.bench tbody tr:last-child td { border-bottom: 0; }
+
+/* Same label treatment as every other small heading on the site. */
+.bench th {
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
 /* A grid child that takes two columns instead of one. In a three-column grid
    that is the way to set a paragraph beside a single figure — the paragraph
    gets two thirds of the measure rather than the third a single track would
@@ -1312,6 +1354,85 @@ image-compare { display: block; }
    the last thing you want between a reader and a sharpening result, since it
    competes with the very thing being judged. */
 .compare-narrow .compare { max-width: 460px; }
+
+/* ---------- convolution kernels, as surfaces ---------- */
+
+/* Until the first WebGL frame lands the plot inside is the whole figure, so it
+   is styled by .figure img like any other; the controls only appear once there
+   is something for them to drive. */
+kernel-surface { display: block; }
+kernel-surface.is-live > img { display: none; }
+
+/* The stage carries the aspect ratio and the canvas fills it. three writes the
+   drawing buffer at device pixels and is told to leave the CSS box alone, so
+   this rule — not any inline style — is what sizes the canvas at every width. */
+.kernel-surface-stage {
+  aspect-ratio: 8 / 5;
+  cursor: grab;
+}
+.kernel-surface-stage:active { cursor: grabbing; }
+.kernel-surface-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.kernel-surface-controls {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+}
+kernel-surface.is-live .kernel-surface-controls { display: flex; }
+
+.kernel-surface-readout {
+  flex: 0 0 auto;
+  min-width: 7ch;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  color: var(--dust);
+  text-align: right;
+}
+
+.kernel-surface-range {
+  flex: 1 1 auto;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.kernel-surface-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--line);
+}
+.kernel-surface-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+}
+.kernel-surface-range::-moz-range-track {
+  height: 2px;
+  background: var(--line);
+}
+.kernel-surface-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+}
+
+/* At one column the measure is ~330px, where 8:5 leaves a strip too short to
+   grab or to read the relief in. */
+@media (max-width: 640px) {
+  .kernel-surface-stage { aspect-ratio: 1 / 1; }
+}
 
 /* ---------- projection lab ---------- */
 
