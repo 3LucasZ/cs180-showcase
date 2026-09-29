@@ -10,8 +10,8 @@
 
    The <img> is the whole widget until the first WebGL frame is drawn, so the
    figure is never empty: no JS, no three.js, no WebGL, and it is still the
-   original plot. Drag to tilt it, arrow keys when it has focus, and the slider
-   moves sigma.
+   original plot. It turns on its own, and stops turning the moment you drag
+   it; arrow keys tilt it while it has focus, and the slider moves sigma.
 
    Pinned to three r147 — the last release that still ships a classic
    (non-module) examples/js/controls/OrbitControls.js. r148 deleted that tree,
@@ -32,8 +32,9 @@
     // r = 2*sigma, where it tops out at 1/e^2. That 7.4:1 ratio is why the plot
     // is a deep narrow pit in a shallow ring rather than a dome.
     //
-    // Isotropic, so spinning it shows the reader the same figure from a
-    // different side and tilt is the only motion worth allowing.
+    // Isotropic, so the turn it takes is not showing the reader anything new —
+    // it is there to say, without a word of instruction, that the figure moves
+    // and can be taken hold of.
     log: {
       label: "Laplacian of Gaussian",
       half: 12,
@@ -45,7 +46,6 @@
       lo: -1,
       hi: E2,
       sig: [1.5, 3, 2.5],
-      spin: false,
       value: (x, r2, s) => {
         const u = r2 / (2 * s * s);
         return (u - 1) * Math.exp(-u);
@@ -64,17 +64,14 @@
       lo: 0,
       hi: 1,
       sig: [2, 5, 2],
-      spin: false,
       value: (x, r2, s) => Math.exp(-r2 / (2 * s * s)),
     },
     // dG/dx. The 1/sigma^2 prefactor is dropped and one factor of sigma kept on
     // the x, which is what holds the lobes at a constant height as sigma moves.
     // Antisymmetric in x, symmetric in y — so `x` is the first argument here and
-    // r2 the second, the only kernel of the three that needs the direction.
-    //
-    // Not isotropic, so spinning it is worth allowing: a quarter turn shows the
-    // same kernel differentiated along y, which is exactly the pair of images
-    // sitting under this figure in the writeup.
+    // r2 the second, the only kernel of the three that needs the direction. A
+    // quarter turn of this one is not decoration: it shows the same kernel
+    // differentiated along y, which is the pair of images sitting under it.
     dog: {
       label: "Derivative of Gaussian",
       // Tighter than the Gaussian's window, and a tighter sigma range to match.
@@ -89,7 +86,6 @@
       lo: -P,
       hi: P,
       sig: [2, 4, 3],
-      spin: true,
       value: (x, r2, s) => (-x / s) * Math.exp(-r2 / (2 * s * s)),
     },
   };
@@ -299,6 +295,12 @@
         // is. Without it the lighting smooths the facets back out and the
         // coarse grid buys nothing but a blunter silhouette.
         flatShading: true,
+        // Mandatory now that the polar angle is unbounded: seen from below this
+        // surface is nothing but backfaces, and the default FrontSide culls
+        // every one of them. Under DOUBLE_SIDED the flat-shaded normal is flipped
+        // by gl_FrontFacing, so the underside lights as a surface rather than
+        // going black.
+        side: THREE.DoubleSide,
         // Nudges the surface back so the mesh lines drawn over it land on top
         // instead of tearing through it wherever they cross a facet.
         polygonOffset: true,
@@ -423,19 +425,19 @@
       controls.enableDamping = true;
       controls.dampingFactor = 0.085;
       controls.enablePan = false;
-      controls.autoRotate = false;
-      controls.minPolarAngle = THREE.MathUtils.degToRad(16);
-      controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
       // Turning only. Zooming would let the reader put the camera where the
       // framing no longer works — and there is nothing to zoom in on.
       controls.enableZoom = false;
-      if (!k.spin) {
-        // An isotropic kernel shows the reader the same figure from any side, so
-        // the azimuth is pinned at the camera's own angle and tilt is left as
-        // the only motion — the only one that changes what is on screen.
-        controls.minAzimuthAngle = theta;
-        controls.maxAzimuthAngle = theta;
-      }
+      // The whole sphere: stand the figure on edge, or drop under the plate and
+      // read the underside. The arrow keys clamp to these, so this is also what
+      // opens the tilt up.
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI;
+      // A turntable, not a carousel: three of these turn at once on this page,
+      // and the turn is there to say the figure can be taken hold of, not to
+      // hold attention.
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 1.2;
       controls.target.copy(target);
       controls.update();
       // The constructor sets touch-action:none. On a phone that turns a canvas
@@ -450,15 +452,19 @@
       canvas.setAttribute(
         "aria-label",
         k.label +
-          " surface. Use the up and down arrow keys to tilt it" +
-          (k.spin ? ", or drag to turn it over." : "."),
+          " surface, turning on its own. Drag to turn it, or tilt it with the up and down arrow keys.",
       );
 
       let raf = 0;
       let down = false;
+      // autoRotate makes update() report movement on every frame, so this loop
+      // no longer settles on its own the way it did when the only motion was the
+      // reader's own damping tail. Two things have to be able to stop it: the
+      // reader taking hold of the figure, who has asked for one angle and would
+      // not thank us for turning it away, and the figure leaving the screen.
+      let held = false;
+      let onScreen = false;
       const render = () => renderer.render(scene, camera);
-      // Rendered on demand: the only motion is the damping tail the reader
-      // started, and update() reports when that has run out.
       const loop = () => {
         const moving = controls.update();
         render();
@@ -471,13 +477,52 @@
       // pointerdown, and it is dispatched from inside update() when the camera
       // actually moved, which is the only honest "still settling" signal.
       controls.addEventListener("change", wake);
-      canvas.addEventListener("pointerdown", () => {
+      const grab = () => {
+        held = true;
+        controls.autoRotate = false;
+      };
+      // A press is not a grab until it moves. On a phone every scroll past the
+      // figure starts with a pointerdown on it, and reading that as "the reader
+      // has taken hold" would stop the turn for the rest of the visit.
+      let downX = 0;
+      let downY = 0;
+      canvas.addEventListener("pointerdown", (e) => {
         down = true;
+        downX = e.clientX;
+        downY = e.clientY;
         wake();
       });
-      window.addEventListener("pointerup", () => {
-        down = false;
+      canvas.addEventListener("pointermove", (e) => {
+        if (!down) return;
+        if (Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4) {
+          grab();
+        }
       });
+      // Cancel as well as up: touch-action:pan-y hands a vertical swipe to the
+      // page, which cancels the pointer — and a cancelled pointer never fires
+      // pointerup, so watching only for that leaves the loop running for the
+      // rest of the visit.
+      const release = () => {
+        down = false;
+      };
+      window.addEventListener("pointerup", release);
+      window.addEventListener("pointercancel", release);
+
+      // Off screen or in a background tab there is nobody to draw for, and a
+      // throttled rAF still keeps the reader's GPU warm. The build above already
+      // happened, so this second observer is about the running loop, not about
+      // whether to create the context — hence no rootMargin: the figure stops
+      // the moment it is out of sight.
+      const resume = () => {
+        controls.autoRotate = !held && onScreen && !document.hidden;
+        if (controls.autoRotate) wake();
+      };
+      const vis = new IntersectionObserver((entries) => {
+        onScreen = entries[0].isIntersecting;
+        resume();
+      });
+      vis.observe(this);
+      document.addEventListener("visibilitychange", resume);
 
       // rotateUp is closure-private in r147 and there are no setters for the
       // angles, so the camera is moved directly here. Going around damping is
@@ -501,6 +546,7 @@
         if (e.key === "ArrowUp") tilt(-TURN);
         else if (e.key === "ArrowDown") tilt(TURN);
         else return;
+        grab();
         e.preventDefault();
       });
 

@@ -123,11 +123,11 @@
           Our first idea to align a grey-scale image with another grey-scale
           image is via brute force search. We search over every single possible
           (x,y) shift alignment and take the the best one. This will take very
-          long if we try every single shift e.g 350x350. Luckily, it doesn't
-          seem like we have to shift too much, as from the image above the error
-          margin looks small. For a small image with a small shift, we find that
-          it suffices to just check shifts in the x and y direction within
-          \([-w, w]\) pixels, where we tried a half-width value of \(w = 32\).
+          long if we try every single shift e.g \(350 \times 350\). Luckily, it
+          doesn't seem like we have to shift too much, as from the image above
+          the error margin looks small. For a small image with a small shift, we
+          find that it suffices to just check shifts in the x and y direction
+          within \([-w, w]\) pixels, where we tried a half-width value of \(w = 32\).
         </p>
         <div class="code">
           <pre class="code-src">

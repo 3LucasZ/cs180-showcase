@@ -232,7 +232,7 @@ out_box = post(conv2(im, box_kern))
             We then numerically verify that our custom convolution algorithm
             works by calculating it's euclidean distance to scipy's convolution
             algorithm and measure their runtimes. This benchmark was run on a
-            random 300x300 matrix and random 9x9 kernel.
+            random \(300 \times 300\) matrix and random \(9 \times 9\) kernel.
           </p>
           <table class="bench">
             <thead>
@@ -507,9 +507,9 @@ out_dy = post(conv2(im, dy_kern))
         ></image-compare> -->
 
         <p>
-          Taj Mahal sharpened with 3 differing alpha values, 3 differing sigma
-          values. Quite distinct results. This helps understand the effects of
-          changing each parameter by trying all combos in a grid.
+          Taj Mahal sharpened with 3 differing \(\alpha\) values, 3 differing
+          \(\sigma\) values. Quite distinct results. This helps understand the
+          effects of changing each parameter by trying all combos in a grid.
         </p>
         <div class="figure-grid three">
           <figure class="figure">
@@ -570,9 +570,9 @@ out_dy = post(conv2(im, dy_kern))
           image? My hypothesis would be no. Blurring the image makes data get
           lost, fundamentally. Pixels get averaged / mixed around and it
           probably is irreversible. There is not much we can do to regain all
-          the lost data. With a blur of sigma=5, and a sharpen of alpha=3, we
-          can see the image still looks blurry. A sharpened blurry image is
-          blurry with thicker blurrier edges.
+          the lost data. With a blur of \(\sigma = 5\), and a sharpen of
+          \(\alpha = 3\), we can see the image still looks blurry. A sharpened
+          blurry image is blurry with thicker blurrier edges.
         </p>
         <p>
           Note: we start using the cv2.GaussianBlur function from the cv2
@@ -648,9 +648,9 @@ out_dy = post(conv2(im, dy_kern))
         </div>
         <p>
           I learned that the most crucial part of this was not the algorithm
-          itself, but fine tuning the sigma for the low pass filter (gaussian
-          sigma), the sigma for the high pass filter (laplacian sigma), and
-          choosing the right images / alignment.
+          itself, but fine tuning the \(\sigma\) for the low pass filter
+          (gaussian \(\sigma\)), the \(\sigma\) for the high pass filter
+          (laplacian \(\sigma\)), and choosing the right images / alignment.
         </p>
         <p>Alaska vs city</p>
         <div class="figure-scales">
@@ -741,12 +741,12 @@ out_dy = post(conv2(im, dy_kern))
           </figure>
         </div>
         <p>
-          I used a sigma of 6 for the low pass filter and a sigma of 6 for the
-          high pass filter. I tuned this experimentally and qualitatively to see
-          which would fool my eyes best (both up close and far away). Larger low
-          pass filter sigma -> more blur / less high frequencies. Larger high
-          pass filter sigma -> broader range of frequencies available in
-          high-pass.
+          I used a \(\sigma\) of 6 for the low pass filter and a \(\sigma\) of 6
+          for the high pass filter. I tuned this experimentally and
+          qualitatively to see which would fool my eyes best (both up close and
+          far away). Larger low pass filter \(\sigma\) -> more blur / less high
+          frequencies. Larger high pass filter \(\sigma\) -> broader range of
+          frequencies available in high-pass.
         </p>
         <p>Time for some frequency analysis and math.</p>
         <p>Below are FFT plots of the frequencies in the images.</p>
