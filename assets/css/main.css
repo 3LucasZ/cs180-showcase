@@ -1756,6 +1756,16 @@ kernel-surface.is-live .kernel-surface-controls { display: flex; }
      box is anchored to its right edge. Capping it lets the name wrap instead. */
   width: max-content;
   max-width: calc((100vw - 900px) / 2 - 18px);
+  /* A two-part writeup has enough sections to outgrow a laptop viewport.
+     Without a ceiling the list runs up behind the header, on top of the home
+     link. Centred within the cap, so it stays clear at either end. */
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.rail-list::-webkit-scrollbar {
+  display: none;
 }
 
 .rail-item {
