@@ -731,6 +731,11 @@ html.room-lit .switch-toggle {
   margin: 14px auto 0;
 }
 
+/* A row with three frames instead of four, so each takes a wider track. */
+.hero-hits.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .hero-hit {
   display: block;
   line-height: 0;
@@ -1090,6 +1095,8 @@ html.room-lit .figure-plot img {
   .figure-grid > .span-2 { grid-column: auto; }
   /* Four across would be 78px frames on a phone; two keeps them legible. */
   .hero-hits { grid-template-columns: repeat(2, 1fr); }
+  /* A three-up row has no orphan to fold onto a second line. */
+  .hero-hits.three { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* The scale demonstration. A hybrid image is a trick of viewing distance, so the
