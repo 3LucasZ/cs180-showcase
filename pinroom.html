@@ -1,0 +1,1521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pinroom — point correspondences</title>
+    <meta
+      name="description"
+      content="Click corresponding points between two photos and read them out as im1_pts / im2_pts."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%230B0A09'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23F1EAE0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0b0a09;
+        --panel: #141210;
+        --panel-2: #1b1815;
+        --rule: #2c2823;
+        --paper: #f1eae0;
+        --muted: #8b8073;
+        --seam: #e89b3c;
+        --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --serif: "Fraunces", Georgia, serif;
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --rail: 318px;
+      }
+
+      * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--ink);
+        color: var(--paper);
+        font: 400 14px/1.45 var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+
+      .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+      /* ---------- shell ---------- */
+
+      .shell {
+        height: 100dvh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) var(--rail);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+          "top   top"
+          "stage rail"
+          "strip rail";
+      }
+
+      /* ---------- top ---------- */
+
+      .top {
+        grid-area: top;
+        position: relative;
+        z-index: 20;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        height: 56px;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--rule);
+        background: var(--panel);
+      }
+
+      .mark { margin: 0; font: 420 21px/1 var(--serif); letter-spacing: -0.01em; }
+      .mark em { font-style: italic; color: var(--muted); }
+
+      .mark-sub {
+        margin: 0;
+        font: 500 10.5px/1 var(--mono);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .top-end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+      .back { color: var(--muted); font-size: 11.5px; text-decoration: none; }
+      .back:hover { color: var(--paper); }
+
+      .mini {
+        appearance: none;
+        border: 1px solid var(--rule);
+        background: transparent;
+        color: var(--muted);
+        font: 500 11px/1 var(--mono);
+        padding: 7px 9px;
+        border-radius: 2px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .mini:hover { color: var(--paper); border-color: #4a4238; }
+      .mini:focus-visible, .btn:focus-visible, .pair-pick:focus-visible, .pair-del:focus-visible,
+      .panel-hint:focus-visible, .back:focus-visible {
+        outline: 2px solid var(--seam);
+        outline-offset: 2px;
+      }
+
+      /* ---------- stage ---------- */
+
+      .stage {
+        grid-area: stage;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        padding: 16px;
+        min-height: 0;
+      }
+
+      .panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        background: var(--panel-2);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .panel[data-next] {
+        border-color: #5c4a30;
+        box-shadow: 0 0 0 1px rgba(232, 155, 60, 0.1);
+      }
+      .panel[data-next] .panel-tag { color: var(--seam); }
+      .panel.is-drop { border-color: var(--seam); background: #201a13; }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 34px;
+        padding: 0 8px 0 10px;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .panel-tag {
+        font: 500 10px/1 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        flex: none;
+      }
+
+      .panel-name {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+        color: var(--paper);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .panel-zoom { font: 400 10.5px/1 var(--mono); color: var(--muted); flex: none; }
+      .panel-head .mini { padding: 4px 6px; font-size: 10px; }
+
+      .panel-body {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: 0 0 3px 3px;
+        background: #0e0c0a;
+      }
+
+      .panel-body canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .panel-body canvas.marks { touch-action: none; cursor: crosshair; }
+
+      .panel-hint {
+        position: absolute;
+        inset: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px dashed #352f28;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--muted);
+        font: 500 13px/1.3 var(--sans);
+        cursor: pointer;
+      }
+      .panel-hint:hover { border-color: #4a4238; color: var(--paper); }
+      .panel-hint small { font: 400 11px/1.3 var(--mono); color: #6f6558; }
+
+      /* ---------- rail ---------- */
+
+      .rail {
+        grid-area: rail;
+        border-left: 1px solid var(--rule);
+        background: var(--panel);
+        overflow-y: auto;
+        padding-bottom: 26px;
+      }
+
+      .block { padding: 16px 18px; border-bottom: 1px solid var(--rule); }
+
+      .block h3 {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 10px;
+        font: 500 10.5px/1 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .block h3 .count {
+        margin-left: auto;
+        font-size: 10.5px;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: var(--seam);
+      }
+
+      .note { margin: 10px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+      .note code { font-family: var(--mono); font-size: 11px; color: var(--paper); }
+
+      .pairs {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-height: 33vh;
+        overflow-y: auto;
+      }
+      .pairs-empty { padding: 6px 2px; font-size: 11.5px; line-height: 1.5; color: #6f6558; }
+
+      .pair { display: flex; align-items: stretch; border: 1px solid transparent; border-radius: 2px; }
+      .pair:hover { background: #1f1b17; }
+      .pair.is-sel { background: #272016; border-color: #5c4a30; }
+
+      .pair-pick {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 1px 8px;
+        padding: 6px 4px 6px 7px;
+        border: 0;
+        background: none;
+        color: var(--paper);
+        text-align: left;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .pair-no { grid-row: 1 / 3; align-self: center; font: 500 11px/1 var(--mono); color: var(--seam); }
+      .pair-co { font: 400 10.5px/1.45 var(--mono); color: #b9ae9d; }
+      .side-tag { display: inline-block; width: 16px; font-size: 9px; color: #6f6558; }
+
+      .pair-del {
+        border: 0;
+        background: none;
+        color: #6f6558;
+        font: 400 15px/1 var(--sans);
+        padding: 0 8px;
+        cursor: pointer;
+        border-radius: 2px;
+      }
+      .pair-del:hover { color: var(--seam); }
+
+      .row { display: flex; gap: 6px; margin-top: 10px; }
+
+      .btn {
+        appearance: none;
+        border: 1px solid var(--rule);
+        background: var(--panel-2);
+        color: var(--paper);
+        font: 500 11.5px/1 var(--sans);
+        padding: 8px 12px;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      .btn:hover { border-color: #4a4238; }
+      .btn-quiet { background: transparent; color: var(--muted); }
+      .btn-wide { flex: 1; }
+
+      .code {
+        margin: 0;
+        padding: 12px;
+        max-height: 232px;
+        overflow: auto;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background: #0e0c0a;
+        color: #d8cdbc;
+        font: 400 11px/1.6 var(--mono);
+        white-space: pre;
+        tab-size: 4;
+      }
+
+      .import { margin-top: 12px; }
+
+      .import-label {
+        display: block;
+        margin-bottom: 6px;
+        font: 500 10px/1 var(--mono);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .import-text {
+        display: block;
+        width: 100%;
+        min-height: 118px;
+        resize: vertical;
+      }
+      .import-text:focus-visible {
+        outline: 2px solid var(--seam);
+        outline-offset: 1px;
+      }
+
+      .import-err { margin: 8px 0 0; font-size: 11.5px; color: #d98c6a; }
+
+      .keys { display: flex; flex-direction: column; gap: 7px; font-size: 11.5px; color: var(--muted); }
+      .keys > div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+      .keys > div > span:last-child { text-align: right; white-space: nowrap; }
+
+      kbd {
+        display: inline-block;
+        padding: 2px 4px;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background: #1f1a15;
+        color: #b9ae9d;
+        font: 500 10px/1 var(--mono);
+      }
+
+      /* ---------- strip ---------- */
+
+      .strip {
+        grid-area: strip;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        height: 34px;
+        padding: 0 18px;
+        border-top: 1px solid var(--rule);
+        background: var(--panel);
+      }
+
+      .strip-instr { margin: 0; font-size: 11.5px; color: #b9ae9d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .strip-instr.is-note { color: var(--seam); }
+      .strip-read { margin: 0 0 0 auto; font: 10.5px/1 var(--mono); color: #6f6558; min-width: 132px; text-align: right; }
+      .strip-count { margin: 0; font: 10.5px/1 var(--mono); letter-spacing: 0.04em; color: var(--muted); }
+
+      /* ---------- loupe ---------- */
+
+      #loupe {
+        position: fixed;
+        z-index: 60;
+        border-radius: 50%;
+        pointer-events: none;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.62);
+      }
+
+      /* ---------- narrow ---------- */
+
+      @media (max-width: 940px) {
+        body { overflow: auto; }
+        .shell {
+          height: auto;
+          min-height: 100dvh;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto auto;
+          grid-template-areas: "top" "stage" "rail" "strip";
+        }
+        .mark-sub { display: none; }
+        .stage {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(290px, 42vh) minmax(290px, 42vh);
+          padding: 12px;
+          gap: 10px;
+        }
+        .rail { border-left: 0; border-top: 1px solid var(--rule); overflow: visible; }
+        .pairs { max-height: none; }
+        .strip { position: sticky; bottom: 0; }
+        .strip-read { display: none; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="shell">
+      <header class="top">
+        <h1 class="mark">pin<em>room</em></h1>
+        <p class="mark-sub">point correspondences → homography</p>
+        <div class="top-end">
+          <button class="mini" type="button" id="fit-all" title="Fit both photos (F)">fit both</button>
+          <a class="back mono" href="p4.html">← p4</a>
+        </div>
+      </header>
+
+      <main class="stage" id="stage">
+        <section class="panel" data-side="a">
+          <div class="panel-head">
+            <span class="panel-tag">image 1</span>
+            <span class="panel-name">no photo</span>
+            <span class="panel-zoom">—</span>
+            <button class="mini" type="button" data-fit="a" title="Fit to frame">fit</button>
+            <button class="mini" type="button" data-one="a" title="Zoom to 100%">1:1</button>
+            <button class="mini" type="button" data-open="a" title="Open a photo">open</button>
+          </div>
+          <div class="panel-body">
+            <canvas class="photo"></canvas>
+            <canvas class="marks"></canvas>
+            <button class="panel-hint" type="button" data-open="a">
+              <span>Drop a photo here</span>
+              <small>or click to open · ⌘V pastes</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel" data-side="b">
+          <div class="panel-head">
+            <span class="panel-tag">image 2</span>
+            <span class="panel-name">no photo</span>
+            <span class="panel-zoom">—</span>
+            <button class="mini" type="button" data-fit="b" title="Fit to frame">fit</button>
+            <button class="mini" type="button" data-one="b" title="Zoom to 100%">1:1</button>
+            <button class="mini" type="button" data-open="b" title="Open a photo">open</button>
+          </div>
+          <div class="panel-body">
+            <canvas class="photo"></canvas>
+            <canvas class="marks"></canvas>
+            <button class="panel-hint" type="button" data-open="b">
+              <span>Drop a photo here</span>
+              <small>or click to open · ⌘V pastes</small>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <aside class="rail">
+        <section class="block">
+          <h3>Pairs <span class="count mono" id="pair-count">0 pairs</span></h3>
+          <p class="note">
+            Image 1 ▸ image 2. Click a row to select it; <kbd>⌥</kbd>-click a marker
+            deletes that pair.
+          </p>
+          <ol class="pairs" id="pairs"></ol>
+          <div class="row">
+            <button class="btn" type="button" id="undo">Undo</button>
+            <button class="btn btn-quiet" type="button" id="clear">Clear all</button>
+          </div>
+        </section>
+
+        <section class="block">
+          <h3>Export</h3>
+          <pre class="code" id="export-code">im1_pts = []
+im2_pts = []</pre>
+          <div class="row">
+            <button class="btn btn-wide" type="button" id="copy">Copy for computeH</button>
+            <button
+              class="btn btn-quiet"
+              type="button"
+              id="import-toggle"
+              aria-expanded="false"
+              aria-controls="import-panel"
+            >
+              Import
+            </button>
+          </div>
+          <div class="import" id="import-panel" hidden>
+            <label class="import-label" for="import-text">Paste points</label>
+            <textarea
+              class="code import-text"
+              id="import-text"
+              rows="7"
+              spellcheck="false"
+              aria-describedby="import-hint"
+              placeholder="im1_pts = np.array([[312.4, 208.1], …])
+im2_pts = np.array([[298.5, 201.2], …])"
+            ></textarea>
+            <p class="import-err" id="import-err" hidden></p>
+            <div class="row">
+              <button class="btn btn-wide" type="button" id="import-apply">
+                Place points
+              </button>
+              <button class="btn btn-quiet" type="button" id="import-cancel">
+                Cancel
+              </button>
+            </div>
+            <p class="note" id="import-hint">
+              Takes the export above, a JSON pair of arrays, or two blocks of
+              <code>x, y</code> lines. Replaces the current pairs. <kbd>⌘↵</kbd>
+              places them.
+            </p>
+          </div>
+          <p class="note">
+            Coordinates are in each photo's own pixels.
+            <code>computeH(im1_pts, im2_pts)</code> wants the same points in the
+            same order. Four is the minimum; six to ten spread across the frame
+            keep the solve steady.
+          </p>
+        </section>
+
+        <section class="block">
+          <h3>Keys</h3>
+          <div class="keys">
+            <div><span>place · move a point</span><span>click · drag</span></div>
+            <div><span>delete a pair</span><span><kbd>⌥</kbd> click</span></div>
+            <div><span>nudge the selected point</span><span><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>
+            <div><span>nudge 10 px</span><span><kbd>⇧</kbd> arrow</span></div>
+            <div><span>undo</span><span><kbd>⌘Z</kbd></span></div>
+            <div><span>zoom · pan</span><span>scroll · drag</span></div>
+            <div><span>fit both</span><span><kbd>F</kbd></span></div>
+            <div><span>cancel a half pair</span><span><kbd>esc</kbd></span></div>
+          </div>
+        </section>
+      </aside>
+
+      <footer class="strip">
+        <p class="strip-instr" id="instr"></p>
+        <p class="strip-read" id="readout"></p>
+        <p class="strip-count" id="top-count">0 pairs</p>
+      </footer>
+    </div>
+
+    <canvas id="loupe" width="312" height="312" hidden></canvas>
+
+    <input type="file" id="file-a" accept="image/*" hidden />
+    <input type="file" id="file-b" accept="image/*" hidden />
+
+    <script>
+      (() => {
+        "use strict";
+
+        const DPR = Math.min(window.devicePixelRatio || 1, 2);
+        const R = 10; // marker radius, CSS px
+        const HIT = 14; // marker hit radius, CSS px
+        const LOUPE = 156; // loupe diameter, CSS px
+        const LOUPE_MAG = 8; // loupe magnification, CSS px per image px
+        const SIDES = ["a", "b"];
+
+        const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+        const fmt = (n) => n.toFixed(1);
+
+        const state = {
+          pairs: [], // [{a:{x,y}, b:{x,y}}] in image pixels
+          pending: null, // {side, x, y}
+          sel: null, // {side, i}
+          hover: null, // {i}
+        };
+
+        let drag = null;
+        let lastHover = null;
+        let noteTimer = 0;
+
+        /* ============================================================
+           panels
+           ============================================================ */
+
+        const P = {};
+
+        for (const side of SIDES) {
+          const root = document.querySelector('.panel[data-side="' + side + '"]');
+          const body = root.querySelector(".panel-body");
+          P[side] = {
+            root,
+            body,
+            photo: body.querySelector("canvas.photo"),
+            marks: body.querySelector("canvas.marks"),
+            nameEl: root.querySelector(".panel-name"),
+            zoomEl: root.querySelector(".panel-zoom"),
+            hint: body.querySelector(".panel-hint"),
+            img: null,
+            name: "",
+            url: null,
+            ownUrl: false,
+            view: { scale: 1, x: 0, y: 0 },
+            w: 1,
+            h: 1,
+            fitted: false,
+          };
+          P[side].pctx = P[side].photo.getContext("2d");
+          P[side].mctx = P[side].marks.getContext("2d");
+        }
+
+        /* ============================================================
+           coordinates
+           ============================================================ */
+
+        function toImg(side, p) {
+          const v = P[side].view;
+          return { x: (p.x - v.x) / v.scale, y: (p.y - v.y) / v.scale };
+        }
+
+        function toScreen(side, q) {
+          const v = P[side].view;
+          return { x: q.x * v.scale + v.x, y: q.y * v.scale + v.y };
+        }
+
+        function clampImg(side, q) {
+          const p = P[side];
+          return {
+            x: clamp(q.x, 0, p.img.naturalWidth - 1),
+            y: clamp(q.y, 0, p.img.naturalHeight - 1),
+          };
+        }
+
+        function insideImage(side, q) {
+          const p = P[side];
+          return (
+            p.img &&
+            q.x >= 0 &&
+            q.y >= 0 &&
+            q.x <= p.img.naturalWidth - 1 &&
+            q.y <= p.img.naturalHeight - 1
+          );
+        }
+
+        function localPoint(el, e) {
+          const r = el.getBoundingClientRect();
+          return { x: e.clientX - r.left, y: e.clientY - r.top };
+        }
+
+        /* ============================================================
+           sizing, fitting, drawing
+           ============================================================ */
+
+        function resize(side) {
+          const p = P[side];
+          const w = Math.max(1, Math.round(p.body.clientWidth));
+          const h = Math.max(1, Math.round(p.body.clientHeight));
+          p.w = w;
+          p.h = h;
+          for (const c of [p.photo, p.marks]) {
+            c.width = Math.round(w * DPR);
+            c.height = Math.round(h * DPR);
+          }
+          if (p.img && !p.fitted) fit(side, false);
+          drawPhoto(side);
+          drawMarks(side);
+        }
+
+        function fit(side, redraw = true) {
+          const p = P[side];
+          if (!p.img) return;
+          const iw = p.img.naturalWidth;
+          const ih = p.img.naturalHeight;
+          const s = Math.min(p.w / iw, p.h / ih) * 0.94;
+          p.view = {
+            scale: s,
+            x: (p.w - iw * s) / 2,
+            y: (p.h - ih * s) / 2,
+          };
+          p.fitted = true;
+          updateZoom(side);
+          if (redraw) {
+            drawPhoto(side);
+            drawMarks(side);
+          }
+        }
+
+        function zoomOne(side) {
+          const p = P[side];
+          if (!p.img) return;
+          const cx = (p.w / 2 - p.view.x) / p.view.scale;
+          const cy = (p.h / 2 - p.view.y) / p.view.scale;
+          p.view.scale = 1;
+          p.view.x = p.w / 2 - cx;
+          p.view.y = p.h / 2 - cy;
+          updateZoom(side);
+          drawPhoto(side);
+          drawMarks(side);
+        }
+
+        function updateZoom(side) {
+          const p = P[side];
+          p.zoomEl.textContent = p.img ? Math.round(p.view.scale * 100) + "%" : "—";
+        }
+
+        function drawPhoto(side) {
+          const p = P[side];
+          const ctx = p.pctx;
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.clearRect(0, 0, p.w, p.h);
+          ctx.fillStyle = "#0e0c0a";
+          ctx.fillRect(0, 0, p.w, p.h);
+          if (!p.img) return;
+
+          const v = p.view;
+          const w = p.img.naturalWidth * v.scale;
+          const h = p.img.naturalHeight * v.scale;
+          ctx.imageSmoothingEnabled = v.scale < 3;
+          ctx.drawImage(p.img, v.x, v.y, w, h);
+
+          ctx.strokeStyle = "rgba(241,234,224,0.07)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(v.x + 0.5, v.y + 0.5, w - 1, h - 1);
+        }
+
+        function marker(ctx, x, y, n, opts) {
+          const sel = opts.selected || opts.hover;
+          if (sel) {
+            ctx.beginPath();
+            ctx.arc(x, y, R + 4.5, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(241,234,224,0.85)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(x, y, R, 0, Math.PI * 2);
+          if (opts.pending) {
+            ctx.fillStyle = "rgba(11,10,9,0.55)";
+            ctx.fill();
+            ctx.setLineDash([3, 3]);
+            ctx.strokeStyle = "#e89b3c";
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            ctx.fillStyle = "#e89b3c";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(11,10,9,0.85)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+
+          ctx.font = "600 " + (n > 9 ? 9 : 10) + 'px "IBM Plex Mono", monospace';
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = opts.pending ? "#e89b3c" : "#141210";
+          ctx.fillText(String(n), x, y + 0.5);
+        }
+
+        function drawMarks(side) {
+          const p = P[side];
+          const ctx = p.mctx;
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          ctx.clearRect(0, 0, p.w, p.h);
+          if (!p.img) return;
+
+          state.pairs.forEach((pair, i) => {
+            const q = toScreen(side, pair[side]);
+            marker(ctx, q.x, q.y, i + 1, {
+              selected: state.sel && state.sel.i === i,
+              hover: state.hover && state.hover.i === i,
+            });
+          });
+
+          if (state.pending && state.pending.side === side) {
+            const q = toScreen(side, state.pending);
+            marker(ctx, q.x, q.y, state.pairs.length + 1, { pending: true });
+          }
+        }
+
+        /* ============================================================
+           loupe
+           ============================================================ */
+
+        const loupe = document.getElementById("loupe");
+        const lctx = loupe.getContext("2d");
+        const LW = LOUPE * DPR;
+        loupe.width = LW;
+        loupe.height = LW;
+
+        function placeLoupe(clientX, clientY) {
+          let x = clientX + 26;
+          let y = clientY + 26;
+          if (x + LOUPE > window.innerWidth - 8) x = clientX - LOUPE - 26;
+          if (y + LOUPE > window.innerHeight - 8) y = clientY - LOUPE - 26;
+          loupe.style.left = Math.max(8, x) + "px";
+          loupe.style.top = Math.max(8, y) + "px";
+        }
+
+        function showLoupe(side, e) {
+          const p = P[side];
+          if (!p.img) return hideLoupe();
+          const pt = localPoint(p.marks, e);
+          const q = toImg(side, pt);
+          if (!insideImage(side, q)) return hideLoupe();
+
+          const span = LOUPE / LOUPE_MAG;
+          lctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          lctx.clearRect(0, 0, LOUPE, LOUPE);
+
+          lctx.save();
+          lctx.beginPath();
+          lctx.arc(LOUPE / 2, LOUPE / 2, LOUPE / 2 - 1, 0, Math.PI * 2);
+          lctx.clip();
+          lctx.fillStyle = "#0e0c0a";
+          lctx.fillRect(0, 0, LOUPE, LOUPE);
+          lctx.imageSmoothingEnabled = false;
+          lctx.drawImage(
+            p.img,
+            q.x - span / 2,
+            q.y - span / 2,
+            span,
+            span,
+            0,
+            0,
+            LOUPE,
+            LOUPE
+          );
+          lctx.restore();
+
+          lctx.beginPath();
+          lctx.arc(LOUPE / 2, LOUPE / 2, LOUPE / 2 - 1, 0, Math.PI * 2);
+          lctx.strokeStyle = "rgba(241,234,224,0.5)";
+          lctx.lineWidth = 1;
+          lctx.stroke();
+
+          const c = LOUPE / 2;
+          lctx.beginPath();
+          lctx.moveTo(c - 10, c);
+          lctx.lineTo(c - 4, c);
+          lctx.moveTo(c + 4, c);
+          lctx.lineTo(c + 10, c);
+          lctx.moveTo(c, c - 10);
+          lctx.lineTo(c, c - 4);
+          lctx.moveTo(c, c + 4);
+          lctx.lineTo(c, c + 10);
+          lctx.strokeStyle = "rgba(232,155,60,0.95)";
+          lctx.lineWidth = 1;
+          lctx.stroke();
+
+          placeLoupe(e.clientX, e.clientY);
+          loupe.hidden = false;
+        }
+
+        function hideLoupe() {
+          loupe.hidden = true;
+        }
+
+        /* ============================================================
+           points
+           ============================================================ */
+
+        function hitTest(side, pt) {
+          let best = -1;
+          let bestD = HIT;
+          state.pairs.forEach((pair, i) => {
+            const q = toScreen(side, pair[side]);
+            const d = Math.hypot(q.x - pt.x, q.y - pt.y);
+            if (d <= bestD) {
+              bestD = d;
+              best = i;
+            }
+          });
+          return best;
+        }
+
+        function place(side, q) {
+          if (!P[side].img || !insideImage(side, q)) return;
+
+          if (state.pending && state.pending.side === side) {
+            state.pending = { side, x: q.x, y: q.y };
+          } else if (state.pending) {
+            const pend = state.pending;
+            const pair = {};
+            pair[pend.side] = { x: pend.x, y: pend.y };
+            pair[side] = { x: q.x, y: q.y };
+            state.pairs.push(pair);
+            state.sel = { side, i: state.pairs.length - 1 };
+            state.pending = null;
+          } else {
+            state.pending = { side, x: q.x, y: q.y };
+          }
+          updateAll();
+        }
+
+        function removeAt(i) {
+          if (i < 0 || i >= state.pairs.length) return;
+          state.pairs.splice(i, 1);
+          if (state.sel) {
+            if (state.sel.i === i) state.sel = null;
+            else if (state.sel.i > i) state.sel.i -= 1;
+          }
+          state.hover = null;
+          updateAll();
+        }
+
+        function undo() {
+          if (state.pending) state.pending = null;
+          else if (state.pairs.length) {
+            state.pairs.pop();
+            state.sel = null;
+          }
+          state.hover = null;
+          updateAll();
+        }
+
+        function clearAll() {
+          state.pairs = [];
+          state.pending = null;
+          state.sel = null;
+          state.hover = null;
+          updateAll();
+        }
+
+        function nudge(dx, dy) {
+          if (!state.sel || !state.pairs[state.sel.i]) return;
+          const pr = state.pairs[state.sel.i];
+          const p = pr[state.sel.side];
+          pr[state.sel.side] = clampImg(state.sel.side, { x: p.x + dx, y: p.y + dy });
+          updateAll();
+        }
+
+        /* ============================================================
+           pointer
+           ============================================================ */
+
+        function setHover(side, pt) {
+          const i = hitTest(side, pt);
+          const next = i >= 0 ? { i } : null;
+          const changed =
+            (next === null) !== (state.hover === null) ||
+            (next && state.hover && next.i !== state.hover.i);
+          state.hover = next;
+          P[side].marks.style.cursor = i >= 0 ? "grab" : "crosshair";
+          if (changed) {
+            drawMarks("a");
+            drawMarks("b");
+          }
+        }
+
+        function bindPanel(side) {
+          const c = P[side].marks;
+
+          c.addEventListener("pointerdown", (e) => {
+            if (e.button !== 0 || drag || !P[side].img) return;
+            const pt = localPoint(c, e);
+            const hit = hitTest(side, pt);
+
+            if (hit >= 0 && e.altKey) {
+              removeAt(hit);
+              return;
+            }
+
+            c.setPointerCapture(e.pointerId);
+
+            if (hit >= 0) {
+              state.sel = { side, i: hit };
+              drag = { mode: "marker", side, i: hit };
+              updateAll();
+            } else {
+              drag = { mode: "tap", side, start: pt, moved: false, view: { ...P[side].view } };
+            }
+          });
+
+          c.addEventListener("pointermove", (e) => {
+            lastHover = side;
+            const pt = localPoint(c, e);
+
+            if (drag && drag.side === side) {
+              if (drag.mode === "marker") {
+                const q = clampImg(side, toImg(side, pt));
+                state.pairs[drag.i][side] = q;
+                state.readout = q;
+                drawMarks("a");
+                drawMarks("b");
+                renderReadout();
+                showLoupe(side, e);
+                return;
+              }
+              if (!drag.moved) {
+                if (Math.hypot(pt.x - drag.start.x, pt.y - drag.start.y) > 3) {
+                  drag.moved = true;
+                  P[side].marks.style.cursor = "grabbing";
+                }
+              }
+              if (drag.moved) {
+                const v = P[side].view;
+                v.x = drag.view.x + (pt.x - drag.start.x);
+                v.y = drag.view.y + (pt.y - drag.start.y);
+                drawPhoto(side);
+                drawMarks(side);
+                updateZoom(side);
+                hideLoupe();
+                return;
+              }
+            }
+
+            setHover(side, pt);
+            const q = toImg(side, pt);
+            state.readout = insideImage(side, q) ? q : null;
+            renderReadout();
+            showLoupe(side, e);
+          });
+
+          function endDrag(e) {
+            if (!drag || drag.side !== side) return;
+            if (drag.mode === "tap") {
+              const pt = localPoint(c, e);
+              if (!drag.moved) place(side, toImg(side, pt));
+            }
+            drag = null;
+            P[side].marks.style.cursor = "crosshair";
+            updateAll();
+          }
+
+          c.addEventListener("pointerup", endDrag);
+          c.addEventListener("pointercancel", () => {
+            drag = null;
+            P[side].marks.style.cursor = "crosshair";
+          });
+
+          c.addEventListener("pointerleave", () => {
+            if (drag) return;
+            state.readout = null;
+            state.hover = null;
+            hideLoupe();
+            renderReadout();
+            drawMarks("a");
+            drawMarks("b");
+          });
+
+          c.addEventListener(
+            "wheel",
+            (e) => {
+              if (!P[side].img) return;
+              e.preventDefault();
+              const pt = localPoint(c, e);
+              const p = P[side];
+              const q = toImg(side, pt);
+              const ns = clamp(p.view.scale * Math.exp(-e.deltaY * 0.002), 0.02, 24);
+              p.view.scale = ns;
+              p.view.x = pt.x - q.x * ns;
+              p.view.y = pt.y - q.y * ns;
+              updateZoom(side);
+              drawPhoto(side);
+              drawMarks(side);
+              hideLoupe();
+            },
+            { passive: false }
+          );
+        }
+
+        SIDES.forEach(bindPanel);
+
+        /* ============================================================
+           loading photos
+           ============================================================ */
+
+        function loadFile(side, file) {
+          if (!file || !file.type.startsWith("image/")) return;
+          loadImage(side, URL.createObjectURL(file), file.name, true);
+        }
+
+        function loadImage(side, src, name, own) {
+          const p = P[side];
+          const im = new Image();
+          im.decoding = "async";
+          im.onload = () => {
+            const replacing = !!p.img;
+            if (p.ownUrl && p.url) URL.revokeObjectURL(p.url);
+            p.img = im;
+            p.url = src;
+            p.ownUrl = !!own;
+            p.name = name || src.split("/").pop() || "photo";
+            p.fitted = false;
+            p.nameEl.textContent = p.name;
+            p.nameEl.title = p.name;
+            p.hint.hidden = true;
+
+            const cleared = replacing && (state.pairs.length || state.pending);
+            if (cleared) {
+              state.pairs = [];
+              state.pending = null;
+              state.sel = null;
+              state.hover = null;
+            }
+
+            fit(side);
+            updateAll();
+            if (cleared) note("photo replaced — the old points were cleared");
+          };
+          im.onerror = () => note("That image could not be loaded.");
+          im.src = src;
+        }
+
+        /* ============================================================
+           flow into the page
+           ============================================================ */
+
+        const fileInputs = {
+          a: document.getElementById("file-a"),
+          b: document.getElementById("file-b"),
+        };
+
+        document.querySelectorAll("[data-open]").forEach((btn) => {
+          btn.addEventListener("click", () => fileInputs[btn.dataset.open].click());
+        });
+
+        for (const side of SIDES) {
+          fileInputs[side].addEventListener("change", () => {
+            if (fileInputs[side].files[0]) loadFile(side, fileInputs[side].files[0]);
+            fileInputs[side].value = "";
+          });
+
+          const root = P[side].root;
+          root.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+            root.classList.add("is-drop");
+          });
+          root.addEventListener("dragleave", (e) => {
+            if (!root.contains(e.relatedTarget)) root.classList.remove("is-drop");
+          });
+          root.addEventListener("drop", (e) => {
+            e.preventDefault();
+            root.classList.remove("is-drop");
+            const f = [...(e.dataTransfer.files || [])].find((f) =>
+              f.type.startsWith("image/")
+            );
+            if (f) loadFile(side, f);
+          });
+        }
+
+        window.addEventListener("dragover", (e) => e.preventDefault());
+        window.addEventListener("drop", (e) => e.preventDefault());
+
+        document.addEventListener("paste", (e) => {
+          const f = [...((e.clipboardData && e.clipboardData.files) || [])].find((f) =>
+            f.type.startsWith("image/")
+          );
+          if (!f) return;
+          const side = !P.a.img ? "a" : !P.b.img ? "b" : lastHover || "a";
+          loadFile(side, f);
+        });
+
+        document.querySelectorAll("[data-fit]").forEach((btn) => {
+          btn.addEventListener("click", () => fit(btn.dataset.fit));
+        });
+        document.querySelectorAll("[data-one]").forEach((btn) => {
+          btn.addEventListener("click", () => zoomOne(btn.dataset.one));
+        });
+        document.getElementById("fit-all").addEventListener("click", () => {
+          fit("a");
+          fit("b");
+        });
+        document.getElementById("undo").addEventListener("click", undo);
+        document.getElementById("clear").addEventListener("click", clearAll);
+
+        /* ============================================================
+           rail
+           ============================================================ */
+
+        const pairsEl = document.getElementById("pairs");
+        const countEl = document.getElementById("pair-count");
+        const topCountEl = document.getElementById("top-count");
+        const exportEl = document.getElementById("export-code");
+
+        function renderPairs() {
+          if (!state.pairs.length) {
+            pairsEl.innerHTML =
+              '<li class="pairs-empty">No pairs yet. Click a point on image 1, then its match on image 2.</li>';
+          } else {
+            pairsEl.innerHTML = state.pairs
+              .map(
+                (pr, i) =>
+                  '<li class="pair' +
+                  (state.sel && state.sel.i === i ? " is-sel" : "") +
+                  '" data-i="' +
+                  i +
+                  '">' +
+                  '<button class="pair-pick" type="button" data-pick="' +
+                  i +
+                  '" title="Select pair ' +
+                  (i + 1) +
+                  '">' +
+                  '<span class="pair-no">' +
+                  String(i + 1).padStart(2, "0") +
+                  "</span>" +
+                  '<span class="pair-co"><span class="side-tag">1</span>' +
+                  fmt(pr.a.x) +
+                  ", " +
+                  fmt(pr.a.y) +
+                  "</span>" +
+                  '<span class="pair-co"><span class="side-tag">2</span>' +
+                  fmt(pr.b.x) +
+                  ", " +
+                  fmt(pr.b.y) +
+                  "</span>" +
+                  "</button>" +
+                  '<button class="pair-del" type="button" data-del="' +
+                  i +
+                  '" aria-label="Delete pair ' +
+                  (i + 1) +
+                  '">×</button>' +
+                  "</li>"
+              )
+              .join("");
+          }
+          const label = state.pairs.length + (state.pairs.length === 1 ? " pair" : " pairs");
+          countEl.textContent = label;
+          topCountEl.textContent = label;
+        }
+
+        pairsEl.addEventListener("click", (e) => {
+          const del = e.target.closest("[data-del]");
+          if (del) {
+            removeAt(Number(del.dataset.del));
+            return;
+          }
+          const pick = e.target.closest("[data-pick]");
+          if (pick) {
+            const i = Number(pick.dataset.pick);
+            state.sel = { side: state.sel && state.sel.i === i ? state.sel.side : "a", i };
+            updateAll();
+          }
+        });
+
+        function renderExport() {
+          if (!state.pairs.length) {
+            exportEl.textContent = "im1_pts = []\nim2_pts = []";
+            return;
+          }
+          const a = state.pairs.map((pr) => "    [" + fmt(pr.a.x) + ", " + fmt(pr.a.y) + "],").join("\n");
+          const b = state.pairs.map((pr) => "    [" + fmt(pr.b.x) + ", " + fmt(pr.b.y) + "],").join("\n");
+          exportEl.textContent =
+            "im1_pts = np.array([\n" + a + "\n])\n\nim2_pts = np.array([\n" + b + "\n])";
+        }
+
+        async function copyExport() {
+          const text = exportEl.textContent;
+          const btn = document.getElementById("copy");
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = "Copied";
+          } catch {
+            const range = document.createRange();
+            range.selectNodeContents(exportEl);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            btn.textContent = "Selected — ⌘C";
+          }
+          setTimeout(() => {
+            btn.textContent = "Copy for computeH";
+          }, 1600);
+        }
+
+        document.getElementById("copy").addEventListener("click", copyExport);
+
+        /* ============================================================
+           importing points
+           ============================================================ */
+
+        const importPanel = document.getElementById("import-panel");
+        const importToggle = document.getElementById("import-toggle");
+        const importText = document.getElementById("import-text");
+        const importErr = document.getElementById("import-err");
+
+        function pairsIn(segment) {
+          const out = [];
+          const re = /[\[(]\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*[\])]/g;
+          let m;
+          while ((m = re.exec(segment))) out.push([Number(m[1]), Number(m[2])]);
+          if (out.length) return out;
+
+          for (const line of segment.split(/\n+/)) {
+            const parts = line.trim().split(/[\s,]+/).map(Number);
+            if (parts.length === 2 && parts.every(Number.isFinite)) out.push(parts);
+          }
+          return out;
+        }
+
+        function fromArrays(arr) {
+          return arr
+            .filter((p) => Array.isArray(p) && p.length >= 2)
+            .map((p) => [Number(p[0]), Number(p[1])])
+            .filter((p) => p.every(Number.isFinite));
+        }
+
+        function parsePoints(text) {
+          const t = text.trim();
+          if (!t) return { error: "Nothing to read yet." };
+
+          const i1 = t.search(/im1_pts/i);
+          const i2 = t.search(/im2_pts/i);
+
+          if (i1 >= 0 && i2 >= 0) {
+            if (i2 < i1) return { error: "Im2_pts comes before im1_pts — swap them." };
+            return finish(pairsIn(t.slice(i1, i2)), pairsIn(t.slice(i2)));
+          }
+          if (i1 >= 0 || i2 >= 0) {
+            return { error: "Need both im1_pts and im2_pts." };
+          }
+
+          let parsed = null;
+          try {
+            parsed = JSON.parse(t);
+          } catch {
+            /* not JSON; fall through to the other shapes */
+          }
+          if (
+            Array.isArray(parsed) &&
+            parsed.length === 2 &&
+            Array.isArray(parsed[0]) &&
+            Array.isArray(parsed[1])
+          ) {
+            return finish(fromArrays(parsed[0]), fromArrays(parsed[1]));
+          }
+
+          const blocks = t.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
+          if (blocks.length === 2) return finish(pairsIn(blocks[0]), pairsIn(blocks[1]));
+
+          return { error: "Need two lists — im1_pts and im2_pts." };
+
+          function finish(a, b) {
+            if (!a.length || !b.length) {
+              return { error: "Need two lists of (x, y) points." };
+            }
+            if (a.length !== b.length) {
+              return {
+                error:
+                  "Image 1 has " + a.length + " points and image 2 has " + b.length + ".",
+              };
+            }
+            return { a, b };
+          }
+        }
+
+        function openImport() {
+          importText.value = state.pairs.length ? exportEl.textContent : "";
+          importErr.hidden = true;
+          importPanel.hidden = false;
+          importToggle.setAttribute("aria-expanded", "true");
+          importText.focus();
+          importText.setSelectionRange(
+            importText.value.length,
+            importText.value.length
+          );
+        }
+
+        function closeImport() {
+          importPanel.hidden = true;
+          importToggle.setAttribute("aria-expanded", "false");
+        }
+
+        function applyImport() {
+          const res = parsePoints(importText.value);
+          if (res.error) {
+            importErr.textContent = res.error;
+            importErr.hidden = false;
+            return;
+          }
+
+          state.pairs = res.a.map((pa, i) => {
+            const qa = { x: pa[0], y: pa[1] };
+            const qb = { x: res.b[i][0], y: res.b[i][1] };
+            return {
+              a: P.a.img ? clampImg("a", qa) : qa,
+              b: P.b.img ? clampImg("b", qb) : qb,
+            };
+          });
+          state.pending = null;
+          state.sel = null;
+          state.hover = null;
+          closeImport();
+          updateAll();
+          note(
+            "imported " + state.pairs.length +
+              (state.pairs.length === 1 ? " pair" : " pairs")
+          );
+        }
+
+        importToggle.addEventListener("click", () => {
+          if (importPanel.hidden) openImport();
+          else closeImport();
+        });
+
+        document.getElementById("import-cancel").addEventListener("click", closeImport);
+        document.getElementById("import-apply").addEventListener("click", applyImport);
+
+        importText.addEventListener("keydown", (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            e.preventDefault();
+            applyImport();
+          }
+        });
+
+        /* ============================================================
+           status
+           ============================================================ */
+
+        const instrEl = document.getElementById("instr");
+        const readoutEl = document.getElementById("readout");
+
+        function instruction() {
+          const hasA = !!P.a.img;
+          const hasB = !!P.b.img;
+          if (!hasA && !hasB) return "Open two overlapping photos.";
+          if (!hasA) return "Now open the first photo.";
+          if (!hasB) return "Now open the second photo.";
+          if (state.pending) {
+            return state.pending.side === "a"
+              ? "Click the matching point on image 2."
+              : "Click the matching point on image 1.";
+          }
+          return "Click a point on image 1, then its match on image 2.";
+        }
+
+        function note(msg) {
+          clearTimeout(noteTimer);
+          instrEl.textContent = msg;
+          instrEl.classList.add("is-note");
+          noteTimer = setTimeout(() => {
+            instrEl.textContent = instruction();
+            instrEl.classList.remove("is-note");
+          }, 3200);
+        }
+
+        function renderReadout() {
+          const q = state.readout;
+          readoutEl.textContent = q ? "x " + fmt(q.x) + " · y " + fmt(q.y) : "";
+        }
+
+        function renderStatus() {
+          const hasA = !!P.a.img;
+          const hasB = !!P.b.img;
+
+          let next = null;
+          if (state.pending) next = state.pending.side === "a" ? "b" : "a";
+          else next = hasA ? "a" : hasB ? "b" : null;
+          if (next && !P[next].img) next = next === "a" ? "b" : "a";
+
+          for (const side of SIDES) {
+            if (side === next && P[side].img) P[side].root.setAttribute("data-next", "");
+            else P[side].root.removeAttribute("data-next");
+          }
+
+          instrEl.textContent = instruction();
+          instrEl.classList.remove("is-note");
+          clearTimeout(noteTimer);
+        }
+
+        function updateAll() {
+          drawMarks("a");
+          drawMarks("b");
+          renderPairs();
+          renderExport();
+          renderStatus();
+        }
+
+        /* ============================================================
+           keys
+           ============================================================ */
+
+        document.addEventListener("keydown", (e) => {
+          if (
+            e.target instanceof Element &&
+            e.target.closest("input, textarea, select, [contenteditable]")
+          ) {
+            return;
+          }
+
+          const k = e.key;
+          const mod = e.metaKey || e.ctrlKey;
+
+          if (mod && k.toLowerCase() === "z") {
+            e.preventDefault();
+            undo();
+          } else if (k === "Escape") {
+            state.pending = null;
+            state.sel = null;
+            updateAll();
+          } else if (k === "Delete" || k === "Backspace") {
+            if (state.sel) {
+              e.preventDefault();
+              removeAt(state.sel.i);
+            }
+          } else if (k.startsWith("Arrow")) {
+            if (!state.sel) return;
+            e.preventDefault();
+            const step = e.shiftKey ? 10 : 1;
+            nudge(
+              k === "ArrowLeft" ? -step : k === "ArrowRight" ? step : 0,
+              k === "ArrowUp" ? -step : k === "ArrowDown" ? step : 0
+            );
+          } else if (k === "f" || k === "F") {
+            fit("a");
+            fit("b");
+          } else if (k === "u" || k === "U") {
+            undo();
+          }
+        });
+
+        /* ============================================================
+           boot
+           ============================================================ */
+
+        for (const side of SIDES) {
+          new ResizeObserver(() => resize(side)).observe(P[side].body);
+          resize(side);
+        }
+
+        const params = new URLSearchParams(location.search);
+        if (params.get("a")) loadImage("a", params.get("a"), null, false);
+        if (params.get("b")) loadImage("b", params.get("b"), null, false);
+
+        updateAll();
+      })();
+    </script>
+  </body>
+</html>
