@@ -831,6 +831,14 @@ figcaption {
   font-size: 1.08em;
 }
 
+/* A display equation wider than the column — the two-row homography system,
+   say — scrolls inside its own line instead of widening the whole page. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+}
+
 /* An inline link that has to be noticed. Only the treatment changes — the link
    text stays whatever the author wrote. Both tokens flip with the room light,
    so the chip is amber-on-ink in the dark and its inverse under the lamp. */

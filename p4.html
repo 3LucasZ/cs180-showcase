@@ -1,59 +1,374 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS 180 · P4 — Light Field</title>
-  <meta name="description" content="Refocusing a scene from many cameras at once.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
-</head>
-<body class="project-page">
-  <div class="aperture" aria-hidden="true">
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-    <span class="blade"></span><span class="blade"></span><span class="blade"></span>
-  </div>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="sprockets" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS 180 · P4 — Mosaics</title>
+    <meta
+      name="description"
+      content="Recovering homographies, warping photographs into a common frame, and blending them into mosaics."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0A08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23E89B3C' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23E89B3C'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,420;1,9..144,380;1,9..144,420&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+  </head>
+  <body class="project-page">
+    <div class="aperture" aria-hidden="true">
+      <span class="blade"></span><span class="blade"></span
+      ><span class="blade"></span> <span class="blade"></span
+      ><span class="blade"></span><span class="blade"></span>
+    </div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="sprockets" aria-hidden="true"></div>
 
-  <header class="site-head">
-    <a class="home-link" href="index.html" title="Back to the prints"><span class="home-arrow">←</span> home</a>
-    <button class="light-switch" type="button" aria-pressed="false" aria-label="Flip the room light" title="Flip the room light">
-      <span class="light-switch-icon" aria-hidden="true">
-        <span class="switch-plate"></span>
-        <span class="switch-toggle">
-          <span class="switch-toggle-knob"></span>
+    <header class="site-head">
+      <a class="home-link" href="index.html" title="Back to the prints"
+        ><span class="home-arrow">←</span> home</a
+      >
+      <button
+        class="light-switch"
+        type="button"
+        aria-pressed="false"
+        aria-label="Flip the room light"
+        title="Flip the room light"
+      >
+        <span class="light-switch-icon" aria-hidden="true">
+          <span class="switch-plate"></span>
+          <span class="switch-toggle">
+            <span class="switch-toggle-knob"></span>
+          </span>
         </span>
-      </span>
-    </button>
-  </header>
+      </button>
+    </header>
 
-  <main>
-    <section class="project-hero">
-      <p class="project-kicker mono">CS 180 · project 04</p>
-      <h1 class="project-title"><em>Light Field</em></h1>
-      <p class="project-pitch">Refocusing a scene from many cameras at once.</p>
-      <p class="print-tags"><span class="tag">refocusing</span><span class="tag">parallax</span><span class="tag">depth</span></p>
-      <p class="hero-credit">lucas zheng · <a href="https://github.com/3LucasZ/cs180-showcase">github.com/3LucasZ/cs180-showcase</a></p>
+    <main>
+      <section class="project-hero">
+        <p class="project-kicker mono">CS 180 · project 04</p>
+        <h1 class="project-title"><em>Mosaics</em></h1>
+        <p class="project-pitch">
+          Recovering homographies, warping photographs into one frame, and
+          blending them into mosaics.
+        </p>
+        <p class="print-tags">
+          <span class="tag">homographies</span><span class="tag">warping</span
+          ><span class="tag">blending</span>
+        </p>
+        <figure class="project-hero-figure">
+          <img
+            src="p4a/mosaic_2/mosaic.blend.jpg"
+            alt="A three-photo mosaic of Sproul Plaza and the Campanile."
+          />
+        </figure>
+        <p class="hero-credit">
+          lucas zheng ·
+          <a href="https://github.com/3LucasZ/cs180-showcase"
+            >github.com/3LucasZ/cs180-showcase</a
+          >
+        </p>
+      </section>
+
+      <section class="prose">
+        <p>
+          In Project 4A we stitch together images taken from the same CoP but at
+          different angles into a mosaic / panorama / wide-camera. During this
+          process we: (1) estimate the projective transformation between shots,
+          (2) inverse warp to a reference frame, and (3) blend the images
+          together.
+        </p>
+
+        <h2>A.1: Shoot the Pictures</h2>
+        <p>
+          For this project, I took images of 3 different scenes: a rooftop
+          portrait over downtown Berkeley, campus with the Campanile, and the
+          new CDSS Gateway building interior. For each scene, I took 3 images:
+          left, center, right with substantial overlap between each scene. I
+          stabilized my iPhone on a horizontal surface and rotated it over the
+          CoP's axis.
+        </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_1/left.JPG"
+              alt="Rooftops, left frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_1/center.JPG"
+              alt="Rooftops, centre frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_1/right.JPG"
+              alt="Rooftops, right frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_2/left.JPG"
+              alt="Sproul Plaza, left frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_2/center.JPG"
+              alt="Sproul Plaza, centre frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_2/right.JPG"
+              alt="Sproul Plaza, right frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_3/left.JPG"
+              alt="Lounge interior, left frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_3/center.JPG"
+              alt="Lounge interior, centre frame."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/mosaic_3/right.JPG"
+              alt="Lounge interior, right frame."
+              loading="lazy"
+            />
+          </figure>
+        </div>
+
+        <h2>A.2: Recover homographies</h2>
+        <p>
+          For the process, we only need a function that is able to combine 2
+          images. Once we can combine 2 images, we can combine (1,2) then
+          combine ((1,2),3).
+        </p>
+        <p>
+          First, we pick correspondences between the 2 images by hand. We use
+          these to define the homography \(p' = Hp\): a \(3\times3\) matrix with
+          eight DoF (bottom-right entry is constant 1). In homogeneous
+          coordinates it reads
+        </p>
+        \[ \begin{bmatrix} w'x' \\ w'y' \\ w' \end{bmatrix} = \begin{bmatrix}
+        h_1 & h_2 & h_3 \\ h_4 & h_5 & h_6 \\ h_7 & h_8 & 1 \end{bmatrix}
+        \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \]
+        <p>
+          so multiplying it out gives \(w' = h_7x + h_8y + 1\). Dividing each
+          image coordinate by that,
+        </p>
+        \[ \begin{aligned} x' &= \frac{h_1 x + h_2 y + h_3}{h_7 x + h_8 y + 1},
+        \\ y' &= \frac{h_4 x + h_5 y + h_6}{h_7 x + h_8 y + 1} \end{aligned} \]
+        <p>
+          and clearing the denominators and collecting the eight unknowns on the
+          left turns each correspondence into two linear equations:
+        </p>
+        \[ \begin{aligned} h_1 x + h_2 y + h_3 - h_7 x x' - h_8 y x' &= x', \\
+        h_4 x + h_5 y + h_6 - h_7 x y' - h_8 y y' &= y' \end{aligned} \]
+        <p>Each correspondence adds two rows to \(Ah = b\),</p>
+        \[ \begin{bmatrix} x & y & 1 & 0 & 0 & 0 & -x x' & -y x' \\ 0 & 0 & 0 &
+        x & y & 1 & -x y' & -y y' \end{bmatrix} \begin{bmatrix} h_1 \\ h_2 \\
+        h_3 \\ h_4 \\ h_5 \\ h_6 \\ h_7 \\ h_8 \end{bmatrix} = \begin{bmatrix}
+        x' \\ y' \end{bmatrix} \]
+        <p>
+          Stack all the rows over all \(n\) correspondences. We get \(A\) of
+          size \(2n\times8\) and \(b\) of length \(2n\). This is an
+          over-determined system and can be solved by least squares (thanks
+          EECS127)!
+        </p>
+        \[ \hat{\mathbf h} = \arg\min_{\mathbf h} \lVert A\mathbf h - \mathbf b
+        \rVert^2 = (A^\top A)^{-1} A^\top \mathbf b \]
+        <p>and \(H\) is the eight entries + with the constant 1 put back:</p>
+        \[ H = \begin{bmatrix} h_1 & h_2 & h_3 \\ h_4 & h_5 & h_6 \\ h_7 & h_8 &
+        1 \end{bmatrix} \]
+        <p>
+          The correspondences were done manually by clicking the point in one
+          photo and its 'bijection' in the other.
+        </p>
+        <figure class="figure figure-wide figure-framed">
+          <img
+            src="p4a/A2.corr1.png"
+            alt="Numbered correspondences on the first pair of rooftop photos."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide figure-framed">
+          <img
+            src="p4a/A2.corr2.png"
+            alt="Numbered correspondences on the second pair of rooftop photos."
+            loading="lazy"
+          />
+        </figure>
+        <a class="tool-callout" href="pinroom.html">
+          <span class="tool-callout-name">pin<em>room</em></span>
+          <span class="tool-callout-note"
+            >Tool I made to place the correspondences!</span
+          >
+
+          <figure class="figure figure-wide figure-framed">
+            <img src="p4a/pinroom.png" loading="lazy" />
+          </figure>
+          <span class="pop-link tool-callout-go">open pinroom</span>
+        </a>
+
+        <h2>A.3: Warp the images</h2>
+        <p>
+          Now that we have the homography, we must run inverse warping on each
+          output pixel, to know the corresponding input pixel, and apply its RGB
+          value. For this, we create out output meshgrid, apply \(H^{-1}\) to
+          the coordinages, and it yields the corresopnding input coordinates. I
+          made 2 samples: nearest-neighbor and bilinear interpolation.
+        </p>
+        <p>
+          To test that our inverse warper works, we run rectification.
+          Rectification is warping target points on a projectively transformed
+          flat surface onto the corners of a rectangle, so the plane can be seen
+          straight-on.
+        </p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4a/rect_1/src.JPG"
+              alt="A study table photographed at an angle."
+              loading="lazy"
+            />
+            <figcaption>The book is open, what does it say??</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/rect_1/dst.nn.JPG"
+              alt="The book spread rectified with nearest-neighbour sampling."
+              loading="lazy"
+            />
+            <figcaption>
+              Rectified, nearest-neighbor: still cant see whats in the book cuz
+              not high enough resolution...
+            </figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4a/rect_2/src.JPG"
+              alt="A framed sign photographed at an angle."
+              loading="lazy"
+            />
+            <figcaption>Messy desk.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4a/rect_2/dst.bil.JPG"
+              alt="The framed sign rectified with bilinear sampling."
+              loading="lazy"
+            />
+            <figcaption>Rectified, bilinear interpolation..</figcaption>
+          </figure>
+        </div>
+
+        <h2>A.4: Blend the Images into a Mosaic</h2>
+        Ok, so now we have a way to compute the homography H, and apply it to
+        the image we want to transform to create a new image. However, if we
+        naiively just combine the images together (e.g averaging out the
+        overlapping part) after doing this, we get an ugly result:
+        <figure class="figure">
+          <img
+            src="p4a/mosaic_1/mosaic.jpg"
+            alt="Rooftop panorama stitched without blending, seams visible."
+            loading="lazy"
+          />
+          <figcaption>seams showing D:</figcaption>
+        </figure>
+        <p>
+          Our old enemy from project 2! Ugly seams! This is caused by many
+          factors, e.g different exposures between photographs, wind blowing
+          some objects into different locations so their not exactly in the same
+          place. But we know exactly how to deal with this. Laplacian pyramid
+          stack multi-resolution blending :D.
+        </p>
+        <p>
+          1: we extend the image color past the warp mask by using the color of
+          the nearest colored pixel (so black fill doesn't get inside the
+          blend).
+        </p>
+        <p>
+          2: We color normalize both left and right images to be the mean of the
+          intersection (fight exposure difference).
+        </p>
+        <p>
+          3: utilize a two-band Laplacian pyramid, copying over code from
+          project 2 (to blend seamlessly)
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4a/mosaic_1/mosaic.blend.jpg"
+            alt="A lounge interior stitched from three photos, blended."
+            loading="lazy"
+          />
+        </figure>
+
+        <figure class="figure figure-wide">
+          <img
+            src="p4a/mosaic_2/mosaic.blend.jpg"
+            alt="Sproul Plaza and the Campanile, blended."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide">
+          <img
+            src="p4a/mosaic_3/mosaic.blend.jpg"
+            alt="A lounge interior stitched from three photos, blended."
+            loading="lazy"
+          />
+        </figure>
+        <p>Yay! Seamless!</p>
+      </section>
+    </main>
+
+    <section class="reel" aria-label="Other projects">
+      <a class="reel-card" href="p3.html"
+        ><span class="mono">← previous</span
+        ><span class="reel-name">P3 · Fun with Flow Models</span></a
+      >
+      <a class="reel-card is-next" href="final.html"
+        ><span class="mono">next →</span
+        ><span class="reel-name">FIN · Final</span></a
+      >
     </section>
 
-    <section class="wip reveal">
-      <p class="wip-kicker mono">under the enlarger</p>
-      <p class="wip-note">This write-up is still coming together. The approach, results, and figures land here once the project's finished.</p>
-    </section>
-  </main>
+    <div class="sprockets" aria-hidden="true"></div>
+    <div class="exposure" aria-hidden="true">
+      <div class="exposure-fill"></div>
+    </div>
 
-  <section class="reel" aria-label="Other projects">
-    <a class="reel-card" href="p3.html"><span class="mono">← previous</span><span class="reel-name">P3 · Fun with Flow Models</span></a>
-    <a class="reel-card is-next" href="final.html"><span class="mono">next →</span><span class="reel-name">FIN · Final</span></a>
-  </section>
-
-  <div class="sprockets" aria-hidden="true"></div>
-  <div class="exposure" aria-hidden="true"><div class="exposure-fill"></div></div>
-
-  <script src="assets/js/main.js"></script>
-</body>
+    <script src="assets/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.18.6/contrib/auto-render.min.js"></script>
+    <script src="assets/js/math.js"></script>
+    <script src="assets/js/rail.js"></script>
+  </body>
 </html>
