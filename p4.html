@@ -224,6 +224,12 @@
             loading="lazy"
           />
         </figure>
+        <p>
+          Above, the least-squares has an error of ~14.77 pixel units and finds
+          the homography:
+        </p>
+        \[ H = \begin{bmatrix} 0.57 & 0.02 & 1376 \\ -0.17 & 0.86 & 194\\ 0 & 0
+        & 1 \end{bmatrix} \]
         <a class="tool-callout" href="pinroom.html">
           <span class="tool-callout-name">pin<em>room</em></span>
           <span class="tool-callout-note"
@@ -323,28 +329,67 @@
           3: utilize a two-band Laplacian pyramid, copying over code from
           project 2 (to blend seamlessly)
         </p>
-        <figure class="figure figure-wide">
-          <img
-            src="p4a/mosaic_1/mosaic.blend.jpg"
-            alt="A lounge interior stitched from three photos, blended."
-            loading="lazy"
-          />
-        </figure>
+        <div class="mosaic-set">
+          <div class="figure-grid three">
+            <figure class="figure">
+              <img src="p4a/mosaic_1/left.JPG" alt="Rooftops, left frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_1/center.JPG" alt="Rooftops, centre frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_1/right.JPG" alt="Rooftops, right frame." loading="lazy" />
+            </figure>
+          </div>
+          <figure class="figure figure-wide">
+            <img
+              src="p4a/mosaic_1/mosaic.blend.jpg"
+              alt="Rooftops over downtown Berkeley, blended."
+              loading="lazy"
+            />
+          </figure>
+        </div>
 
-        <figure class="figure figure-wide">
-          <img
-            src="p4a/mosaic_2/mosaic.blend.jpg"
-            alt="Sproul Plaza and the Campanile, blended."
-            loading="lazy"
-          />
-        </figure>
-        <figure class="figure figure-wide">
-          <img
-            src="p4a/mosaic_3/mosaic.blend.jpg"
-            alt="A lounge interior stitched from three photos, blended."
-            loading="lazy"
-          />
-        </figure>
+        <div class="mosaic-set">
+          <div class="figure-grid three">
+            <figure class="figure">
+              <img src="p4a/mosaic_2/left.JPG" alt="Sproul Plaza, left frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_2/center.JPG" alt="Sproul Plaza, centre frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_2/right.JPG" alt="Sproul Plaza, right frame." loading="lazy" />
+            </figure>
+          </div>
+          <figure class="figure figure-wide">
+            <img
+              src="p4a/mosaic_2/mosaic.blend.jpg"
+              alt="Sproul Plaza and the Campanile, blended."
+              loading="lazy"
+            />
+          </figure>
+        </div>
+        <div class="mosaic-set">
+          <div class="figure-grid three">
+            <figure class="figure">
+              <img src="p4a/mosaic_3/left.JPG" alt="Lounge interior, left frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_3/center.JPG" alt="Lounge interior, centre frame." loading="lazy" />
+            </figure>
+            <figure class="figure">
+              <img src="p4a/mosaic_3/right.JPG" alt="Lounge interior, right frame." loading="lazy" />
+            </figure>
+          </div>
+          <figure class="figure figure-wide">
+            <img
+              src="p4a/mosaic_3/mosaic.blend.jpg"
+              alt="A lounge interior stitched from three photos, blended."
+              loading="lazy"
+            />
+          </figure>
+        </div>
         <p>Yay! Seamless!</p>
       </section>
     </main>

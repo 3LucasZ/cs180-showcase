@@ -1031,6 +1031,24 @@ html.room-lit .figure-plot img {
 }
 .figure-grid .figure { margin: 0; }
 
+/* A set of source frames and the image they produce, boxed together so the
+   three results read as three sets rather than one long stack. The inner
+   figures drop their own rhythm; the box supplies the spacing. */
+.mosaic-set {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 2.6em 0;
+  padding: clamp(10px, 1.6vw, 18px);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--ink-2);
+}
+.mosaic-set > .figure,
+.mosaic-set > .figure-grid {
+  margin: 0;
+}
+
 /* A label spanning the whole grid, naming the pair the panels below came from.
    Set inside the grid rather than above it, so it stays attached to the panels
    it names instead of floating in the gap before them. */
