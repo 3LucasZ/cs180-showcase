@@ -88,32 +88,41 @@ if __name__ == "__main__":
     t = 1
     IN_PATH = DIR / f"mosaic_{t}"
     OUT_PATH = DIR / f"mosaic_{t}"
-    left = cv2.imread(IN_PATH / "left.JPG")
-    center = cv2.imread(IN_PATH / "center.JPG")
-    right = cv2.imread(IN_PATH / "right.JPG")
+    im = cv2.imread(IN_PATH / "2.JPG")
 
     # downscale everything because massive images from iphone are hard to process
     f = 0.25
     # print("left.shape", left.shape)
-    left = cv2.resize(left, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
-    center = cv2.resize(center, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
-    right = cv2.resize(right, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+    im = cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     # print("left.shape", left.shape)
-    center_gray = cv2.cvtColor(center, cv2.COLOR_BGR2GRAY)
+    im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
     # harris
-    h, corners = get_harris_corners(center_gray)
-    print(corners.shape)
-    if False:
-        print(corners)
+    if True:
+        im_h, corners = get_harris_corners(im_gray)
+        # print(corners.shape)
+        # print(corners)
+        im1 = im.copy()
         for point in np.transpose(corners):
-            cv2.circle(center, center=(int(point[1]), int(point[0])),
+            cv2.circle(im1, center=(int(point[1]), int(point[0])),
                        radius=1, color=(0, 0, 255), thickness=-1)
-        cv2.imwrite(OUT_PATH / "corners.JPG", center)
-    else:
+        cv2.imwrite(OUT_PATH / "corners.JPG", im1)
+    if True:
+        # topk
+        h = im_h[corners[0], corners[1]]
+        sorted_ids = np.argsort(h)
+        best_ids = sorted_ids[::-1][:250]  # sorted by largest h
+        best_corners = corners[:, best_ids]
+        im3 = im.copy()
+        for point in np.transpose(best_corners):
+            cv2.circle(im3, center=(int(point[1]), int(point[0])),
+                       radius=5, color=(0, 0, 255), thickness=-1)
+        cv2.imwrite(OUT_PATH / "corners_besth.JPG", im3)
+    if True:
         # anms
-        corners = get_anms_corners(center_gray)
+        h, corners = get_anms_corners(im_gray)
+        im2 = im.copy()
         for point in np.transpose(corners):
-            cv2.circle(center, center=(int(point[1]), int(point[0])),
-                       radius=1, color=(0, 0, 255), thickness=-1)
-        cv2.imwrite(OUT_PATH / "corners_ANMS.JPG", center)
+            cv2.circle(im2, center=(int(point[1]), int(point[0])),
+                       radius=5, color=(0, 0, 255), thickness=-1)
+        cv2.imwrite(OUT_PATH / "corners_ANMS.JPG", im2)

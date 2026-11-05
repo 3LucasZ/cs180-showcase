@@ -1,6 +1,32 @@
+import colorsys
 from pathlib import Path
 
 import cv2
+import numpy as np
+
+from B1 import dist2, get_anms_corners
+from B2 import extract_feature_descriptor
+
+
+def find_matches(fds1, fds2):
+    d2s = dist2(fds1, fds2)
+    matches = []
+    for i in range(len(fds1)):
+        # d = np.sqrt(d2s[i])
+        d = d2s[i]
+        best_js = np.argsort(d)
+        nn1_id = best_js[0]
+        nn2_id = best_js[1]
+        if d[nn1_id] / d[nn2_id] < 0.6:
+            matches.append((i, nn1_id))
+    return matches
+
+
+def color_gen(i):
+    hue = (i * 0.61803398875) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.9, 1.0)
+    color = (int(b*255), int(g*255), int(r*255))
+    return color
 
 
 if __name__ == "__main__":
@@ -11,35 +37,31 @@ if __name__ == "__main__":
     im1 = cv2.imread(IN_PATH / "left.JPG")
     im2 = cv2.imread(IN_PATH / "center.JPG")
 
-    f = 0.25
+    f = 0.1
     im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im1_gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
     im2_gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
 
-    # get the 5 best corners
-    im_h, corners = get_anms_corners(im_gray)  # sorted by best r
-    h = im_h[corners[0], corners[1]]
-    sorted_ids = np.argsort(h)
-    best_ids = sorted_ids[::-1][:5]  # sorted by best h
-    best_corners = corners[:, best_ids]
-    print("best_corners", best_corners)
+    _, corners1 = get_anms_corners(im1_gray)
+    print("corners1:", corners1.shape)
+    _, corners2 = get_anms_corners(im2_gray)
 
-    # visualize their descriptors
-    fds = [extract_feature_descriptor(im_gray, corner)
-           for corner in best_corners.T]
-    colors = [(0, 0, 255), (0, 255, 0), (255, 0, 0),
-              (0, 255, 255), (255, 255, 0)]
-    for i in range(5):
-        cv2.circle(im, center=(best_corners[1, i], best_corners[0, i]),
-                   radius=10, color=colors[i], thickness=-1)
-        fd = (fds[i] + 2) / 4 * 255
-        fd = fd.astype(np.uint8)
-        fd = cv2.cvtColor(fd, cv2.COLOR_GRAY2BGR)
-        fd = cv2.copyMakeBorder(
-            fd, 1, 1, 1, 1,
-            borderType=cv2.BORDER_CONSTANT, value=colors[i]
-        )
-        fd = cv2.resize(fd, (256, 256), interpolation=cv2.INTER_NEAREST)
-        cv2.imwrite(OUT_PATH / f"fd_{i}.JPG", fd)
-    cv2.imwrite(OUT_PATH / "fd_base.JPG", im)
+    fds1 = np.array([extract_feature_descriptor(im1_gray, corner).flatten()
+                     for corner in corners1.T])
+    print("fds1:", fds1.shape)
+    fds2 = np.array([extract_feature_descriptor(im2_gray, corner).flatten()
+                     for corner in corners2.T])
+    matches = find_matches(fds1, fds2)
+    print("matches:", len(matches))
+
+    for match in matches:
+        i = match[0]
+        j = match[1]
+        c = color_gen(i)
+        cv2.circle(im1, center=(corners1[1, i], corners1[0, i]),
+                   radius=10, color=c, thickness=-1)
+        cv2.circle(im2, center=(corners2[1, j], corners2[0, j]),
+                   radius=10, color=c, thickness=-1)
+    cv2.imwrite(OUT_PATH / "left_matching.JPG", im1)
+    cv2.imwrite(OUT_PATH / "center_matching.JPG", im2)
