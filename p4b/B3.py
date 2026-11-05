@@ -8,7 +8,7 @@ from B1 import dist2, get_anms_corners
 from B2 import color_gen, extract_feature_descriptor
 
 
-def find_matches(fds1, fds2):
+def find_matches(fds1, fds2, t=0.6):
     d2s = dist2(fds1, fds2)
     matches = []
     for i in range(len(fds1)):
@@ -17,7 +17,7 @@ def find_matches(fds1, fds2):
         best_js = np.argsort(d)
         nn1_id = best_js[0]
         nn2_id = best_js[1]
-        if d[nn1_id] / d[nn2_id] < 0.6:
+        if d[nn1_id] / d[nn2_id] < t:
             matches.append((i, nn1_id))
     return matches
 
@@ -45,7 +45,9 @@ if __name__ == "__main__":
     print("fds1:", fds1.shape)
     fds2 = np.array([extract_feature_descriptor(im2_gray, corner).flatten()
                      for corner in corners2.T])
-    matches = find_matches(fds1, fds2)
+    # for visualization, want a very harsh threshold of 0.1
+    # in the real algo we will do the default 0.6
+    matches = find_matches(fds1, fds2, t=0.6)
     print("matches:", len(matches))
 
     for match in matches:
@@ -53,8 +55,8 @@ if __name__ == "__main__":
         j = match[1]
         c = color_gen(i)
         cv2.circle(im1, center=(corners1[1, i], corners1[0, i]),
-                   radius=10, color=c, thickness=-1)
+                   radius=5, color=c, thickness=-1)
         cv2.circle(im2, center=(corners2[1, j], corners2[0, j]),
-                   radius=10, color=c, thickness=-1)
-    cv2.imwrite(OUT_PATH / "1_matching.JPG", im1)
-    cv2.imwrite(OUT_PATH / "2_matching.JPG", im2)
+                   radius=5, color=c, thickness=-1)
+    cv2.imwrite(OUT_PATH / "matching_1.JPG", im1)
+    cv2.imwrite(OUT_PATH / "matching_2.JPG", im2)
