@@ -80,7 +80,7 @@ def get_anms_corners(im):
             r[i] = np.inf
     sorted = np.argsort(r)
     best = sorted[::-1][:250]
-    return corners[:, best]
+    return h, corners[:, best]
 
 
 if __name__ == "__main__":
