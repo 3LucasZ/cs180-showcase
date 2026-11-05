@@ -1,3 +1,4 @@
+import colorsys
 from pathlib import Path
 
 import cv2
@@ -29,9 +30,17 @@ def vis_fd(fd, color=None):
     if color:
         fd = cv2.copyMakeBorder(
             fd, 1, 1, 1, 1,
-            borderType=cv2.BORDER_CONSTANT, value=colors[i]
+            borderType=cv2.BORDER_CONSTANT, value=color
         )
     fd = cv2.resize(fd, (256, 256), interpolation=cv2.INTER_NEAREST)
+    return fd
+
+
+def color_gen(i):
+    hue = (i * 0.61803398875) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 0.9, 1.0)
+    color = (int(b*255), int(g*255), int(r*255))
+    return color
 
 
 if __name__ == "__main__":
@@ -48,20 +57,21 @@ if __name__ == "__main__":
     # get the 5 best corners
     k = 10
     im_h, corners = get_anms_corners(im_gray)  # sorted by best r
-    h = im_h[corners[0], corners[1]]
-    sorted_ids = np.argsort(h)
-    best_ids = sorted_ids[::-1][:k]  # sorted by best h
-    best_corners = corners[:, best_ids]
+    if False:
+        h = im_h[corners[0], corners[1]]
+        sorted_ids = np.argsort(h)
+        best_ids = sorted_ids[::-1][:k]  # sorted by best h
+        best_corners = corners[:, best_ids]
+    if True:
+        best_corners = corners[:, :k]
     print("best_corners", best_corners)
 
     # visualize their descriptors
     fds = [extract_feature_descriptor(im_gray, corner)
            for corner in best_corners.T]
-    colors = [(0, 0, 255), (0, 255, 0), (255, 0, 0),
-              (0, 255, 255), (255, 255, 0)]
     for i in range(k):
         cv2.circle(im, center=(best_corners[1, i], best_corners[0, i]),
-                   radius=10, color=colors[i], thickness=-1)
-        fd = vis_fd(fds[i])
+                   radius=10, color=color_gen(i), thickness=-1)
+        fd = vis_fd(fds[i], color_gen(i))
         cv2.imwrite(OUT_PATH / f"fd_{i}.JPG", fd)
     cv2.imwrite(OUT_PATH / "fd_base.JPG", im)

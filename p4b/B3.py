@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from B1 import dist2, get_anms_corners
-from B2 import extract_feature_descriptor
+from B2 import color_gen, extract_feature_descriptor
 
 
 def find_matches(fds1, fds2):
@@ -22,20 +22,13 @@ def find_matches(fds1, fds2):
     return matches
 
 
-def color_gen(i):
-    hue = (i * 0.61803398875) % 1.0
-    r, g, b = colorsys.hsv_to_rgb(hue, 0.9, 1.0)
-    color = (int(b*255), int(g*255), int(r*255))
-    return color
-
-
 if __name__ == "__main__":
     DIR = Path(__file__).resolve().parent
     t = 1
     IN_PATH = DIR / f"mosaic_{t}"
     OUT_PATH = DIR / f"mosaic_{t}"
-    im1 = cv2.imread(IN_PATH / "left.JPG")
-    im2 = cv2.imread(IN_PATH / "center.JPG")
+    im1 = cv2.imread(IN_PATH / "1.JPG")
+    im2 = cv2.imread(IN_PATH / "2.JPG")
 
     f = 0.1
     im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
@@ -63,5 +56,5 @@ if __name__ == "__main__":
                    radius=10, color=c, thickness=-1)
         cv2.circle(im2, center=(corners2[1, j], corners2[0, j]),
                    radius=10, color=c, thickness=-1)
-    cv2.imwrite(OUT_PATH / "left_matching.JPG", im1)
-    cv2.imwrite(OUT_PATH / "center_matching.JPG", im2)
+    cv2.imwrite(OUT_PATH / "1_matching.JPG", im1)
+    cv2.imwrite(OUT_PATH / "2_matching.JPG", im2)
