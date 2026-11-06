@@ -151,11 +151,36 @@ if __name__ == "__main__" and False:
     panorama = auto_mosaic_translate(ims, final_crop=True, close_loop=True)
     cv2.imwrite(OUT_PATH / "mosaic_crop_crop_loop.jpg", panorama)
 
-# time to close the loop!
-if __name__ == "__main__" and True:
+'''
+exiftool -FocalLength -FocalLengthIn35mmFormat -ImageWidth -ImageHeight panorama2/1.jpg
+Focal Length                    : 16.0 mm
+Focal Length In 35mm Format     : 24 mm
+Image Width                     : 1300
+Image Height                    : 867
+'''
+focal = 867
+if __name__ == "__main__" and False:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama3"
     OUT_PATH = DIR / f"panorama3"
+    N = 14  # most of the images after 14 are useless and bad
+    ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
+    for i in range(N):
+        warp, mask, _ = cylindrical_warp(ims[i], focal)
+        ims[i] = crop(warp)
+    panorama = auto_mosaic_translate(ims, final_crop=True, close_loop=True)
+    cv2.imwrite(OUT_PATH / "mosaic.jpg", panorama)
+'''
+Focal Length                    : 13.1 mm
+Focal Length In 35mm Format     : 74 mm
+Image Width                     : 1600
+Image Height                    : 1200
+'''
+focal = 3421
+if __name__ == "__main__" and True:
+    DIR = Path(__file__).resolve().parent
+    IN_PATH = DIR / f"panorama4"
+    OUT_PATH = DIR / f"panorama4"
     N = 12
     ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
     for i in range(N):
