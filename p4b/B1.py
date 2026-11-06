@@ -8,7 +8,7 @@ from skimage.feature import corner_harris, peak_local_max
 # GIVEN
 
 
-def get_harris_corners(im, edge_discard=20):
+def get_harris_corners(im, edge_discard=20, verbose=True):
     """
     This function takes a b&w image and an optional amount to discard
     on the edge (default is 5 pixels), and finds all harris corners
@@ -33,6 +33,8 @@ def get_harris_corners(im, edge_discard=20):
            (coords[:, 1] > edge) & \
            (coords[:, 1] < im.shape[1] - edge)
     coords = coords[mask].T
+    if verbose:
+        print("Harris corners:", coords.shape)
     return h, coords
 
 
@@ -65,8 +67,9 @@ def dist2(x, c):
 # ME AND MYSELF
 
 
-def get_anms_corners(im):
-    harris_response_image, corners = get_harris_corners(im)
+def get_anms_corners(im, verbose=True):
+    k = 250
+    harris_response_image, corners = get_harris_corners(im, verbose=verbose)
     # maybe cap the corners to like 5000 (LATER) so that my computer doesn't crash out on compute...
     cornersT = corners.T
     h = harris_response_image[corners[0], corners[1]]
@@ -79,7 +82,9 @@ def get_anms_corners(im):
         else:
             r[i] = np.inf
     sorted = np.argsort(r)
-    best = sorted[::-1][:250]
+    best = sorted[::-1][:k]
+    if verbose:
+        print("ANMS corners:", k)
     return harris_response_image, corners[:, best]
 
 

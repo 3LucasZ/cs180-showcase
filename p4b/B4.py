@@ -30,19 +30,21 @@ def ransac(pts1, pts2):
 
 
 def get_corrs(im1, im2, verbose=True):
+    if verbose:
+        print("CORRELATING...")
     im1_gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
     im2_gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
 
-    _, corners1 = get_anms_corners(im1_gray)
+    _, corners1 = get_anms_corners(im1_gray, verbose=verbose)
     # print("corners1:", corners1.shape)
-    _, corners2 = get_anms_corners(im2_gray)
+    _, corners2 = get_anms_corners(im2_gray, verbose=verbose)
 
     fds1 = np.array([extract_feature_descriptor(im1_gray, corner).flatten()
                      for corner in corners1.T])
     # print("fds1:", fds1.shape)
     fds2 = np.array([extract_feature_descriptor(im2_gray, corner).flatten()
                      for corner in corners2.T])
-    matches = find_matches(fds1, fds2)
+    matches = find_matches(fds1, fds2, verbose=verbose)
     # print("matches:", len(matches))
     # [::-1] to convert from (y,x) -> (x,y), smh so stupid
     pts1 = np.array([corners1[:, i][::-1] for i, j in matches])

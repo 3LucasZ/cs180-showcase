@@ -8,7 +8,7 @@ from B1 import dist2, get_anms_corners
 from B2 import color_gen, extract_feature_descriptor
 
 
-def find_matches(fds1, fds2, t=0.6):
+def find_matches(fds1, fds2, t=0.6, verbose=True):
     d2s = dist2(fds1, fds2)
     matches = []
     for i in range(len(fds1)):
@@ -19,6 +19,8 @@ def find_matches(fds1, fds2, t=0.6):
         nn2_id = best_js[1]
         if d[nn1_id] / d[nn2_id] < t:
             matches.append((i, nn1_id))
+    if verbose:
+        print("Lowe's matches:", len(matches))
     return matches
 
 
