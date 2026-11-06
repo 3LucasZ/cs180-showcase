@@ -856,6 +856,134 @@
           The automatic stitching looks amazing, and even smoother than the
           manual. Yippee!!
         </p>
+
+        <h2>B.5: Bells and Whistles — Panorama</h2>
+        <p>
+          Me and some friends did a fun hike around Angel Island. I took some
+          photos, albeit horrible ones. They weren't straight / rotated
+          properly, subjects were moving, and many other things went wrong.
+          However, I want to see if I can recover a panorama from it.
+        </p>
+        <p></p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img
+              src="p4b/panorama/1.JPG"
+              alt="First frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 1.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/panorama/5.JPG"
+              alt="Fifth frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 5.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/panorama/8.JPG"
+              alt="Tenth frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 8.</figcaption>
+          </figure>
+        </div>
+        <p>
+          For the first 3 images, I use the same automatic stitching algorithm
+          from before.
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama/auto_mosaic.jpg"
+            alt="A first attempt at stitching the photo-walk frames."
+            loading="lazy"
+          />
+        </figure>
+        <p>
+          The resulting image is very wide / distorted. This is because we are
+          projecting each frame onto one rectangular / perspective plane. Idea:
+          wawarprping each frame onto a cylinder first.
+        </p>
+        <div class="figure-grid three">
+          <figure class="figure">
+            <img
+              src="p4b/panorama/1_warp.JPG"
+              alt="First frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 1.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/panorama/2_warp.JPG"
+              alt="Fifth frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 2.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/panorama/3_warp.JPG"
+              alt="Tenth frame of the photo walk."
+              loading="lazy"
+            />
+            <figcaption>Frame 3.</figcaption>
+          </figure>
+        </div>
+        <p>
+          Now, stitching the 3 frames from the cylinder projection look pretty
+          good:
+        </p>
+        <img
+          src="p4b/panorama/cyl_mosaic3.jpg"
+          alt="Three frames stitched after cylindrical warping."
+          loading="lazy"
+        />
+        <p>
+          Lazy way to remove the mask is to just crop the cylindrical parts off
+          the images first:
+        </p>
+        <img
+          src="p4b/panorama/crop_cyl_mosaic3.jpg"
+          alt="Three frames stitched after cylindrical warping."
+          loading="lazy"
+        />
+        <p>
+          This is pretty good! Unfortunately, I tried for many hours to make a
+          full 360 panorama out of my dataset, but it was too crappy to really
+          do anything with. Here are some failures below:
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama/panorama_fail2.jpg"
+            alt="Failed attempt: the join is visible and the border scallops."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama/panorama_fail3.jpg"
+            alt="Failed attempt: ghosted people where the frames overlap."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama/panorama_fail4.jpg"
+            alt="Failed attempt: repeated figures and visible seams."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama/panorama_fail5.jpg"
+            alt="Failed attempt: bands of misalignment across the strip."
+            loading="lazy"
+          />
+        </figure>
       </section>
     </main>
 

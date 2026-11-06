@@ -91,7 +91,7 @@ def crop(im):
     return im[h//4:3*h//4, :]
 
 
-if __name__ == "__main__" and False:
+if __name__ == "__main__" and True:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama"
     OUT_PATH = DIR / f"panorama"
@@ -117,7 +117,7 @@ if __name__ == "__main__" and False:
 
 # do all the images now!?
 
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama"
     OUT_PATH = DIR / f"panorama"
