@@ -74,6 +74,7 @@ def auto_mosaic3(im1, im2, im3):
         im1, im2, im3, pts1_pts2[0], pts1_pts2[1], pts2_pts3[0], pts2_pts3[1])
 
 
+# RANSAC
 if __name__ == "__main__":
     DIR = Path(__file__).resolve().parent
     t = 3
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     im2 = cv2.imread(IN_PATH / "2.JPG")
     im3 = cv2.imread(IN_PATH / "3.JPG")
 
-    f = 0.5
+    f = 0.1
     im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im3 = cv2.resize(im3, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
@@ -101,6 +102,21 @@ if __name__ == "__main__":
                        radius=5, color=c, thickness=-1)
         cv2.imwrite(OUT_PATH / "ransac_1.JPG", im1cpy)
         cv2.imwrite(OUT_PATH / "ransac_2.JPG", im2cpy)
+
+# MOSAIC
+if __name__ == "__main__":
+    DIR = Path(__file__).resolve().parent
+    t = 3
+    IN_PATH = DIR / f"mosaic_{t}"
+    OUT_PATH = DIR / f"mosaic_{t}"
+    im1 = cv2.imread(IN_PATH / "1.JPG")
+    im2 = cv2.imread(IN_PATH / "2.JPG")
+    im3 = cv2.imread(IN_PATH / "3.JPG")
+
+    f = 0.5
+    im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+    im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+    im3 = cv2.resize(im3, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
 
     total = auto_mosaic3(im1, im2, im3)
     cv2.imwrite(OUT_PATH / "auto_mosaic.jpg", total)
