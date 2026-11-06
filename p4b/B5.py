@@ -3,9 +3,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from B4 import auto_mosaic3
+from B4 import auto_mosaic2, auto_mosaic3
 
-if __name__ == "__main__":
+if __name__ == "__main__" and False:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama"
     OUT_PATH = DIR / f"panorama"
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         cv2.imwrite(OUT_PATH / "auto_mosaic.jpg", total)
 
 # not good! let's do better by doing cylindrical warp!
-# THIS PART (EXTRA AND NOT PART OF CORE PROJECT) WAS DONE WITH THE AID OF AI
+# warp function is not part of core project, thus used help of AI
 
 
 def cylindrical_warp(image, focal):
@@ -61,7 +61,7 @@ Image Height                    : 3024
 13/43.27 * sqrt(4032^2 + 3024^2) =  1514
 '''
 
-if __name__ == "__main__":
+if __name__ == "__main__" and False:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama"
     OUT_PATH = DIR / f"panorama"
@@ -84,3 +84,55 @@ if __name__ == "__main__":
     cv2.imwrite(OUT_PATH / "3_warp.jpg", im3warp)
     cyl_mosaic3 = auto_mosaic3(im1warp, im2warp, im3warp)
     cv2.imwrite(OUT_PATH / "cyl_mosaic3.jpg", cyl_mosaic3)
+
+
+def crop(im):
+    h, w, _ = im.shape
+    return im[h//4:3*h//4, :]
+
+
+if __name__ == "__main__" and False:
+    DIR = Path(__file__).resolve().parent
+    IN_PATH = DIR / f"panorama"
+    OUT_PATH = DIR / f"panorama"
+    t = 1
+    im1 = cv2.imread(IN_PATH / f"{t}.JPG")
+    im2 = cv2.imread(IN_PATH / f"{t+1}.JPG")
+    im3 = cv2.imread(IN_PATH / f"{t+2}.JPG")
+
+    f = 0.25
+    im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+    im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+    im3 = cv2.resize(im3, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+
+    im1warp, _, _ = cylindrical_warp(im1, 1514 * f)
+    im2warp, _, _ = cylindrical_warp(im2, 1514 * f)
+    im3warp, _, _ = cylindrical_warp(im3, 1514 * f)
+    im1warp = crop(im1warp)
+    im2warp = crop(im2warp)
+    im3warp = crop(im3warp)
+
+    cyl_mosaic3 = auto_mosaic3(im1warp, im2warp, im3warp)
+    cv2.imwrite(OUT_PATH / "crop_cyl_mosaic3.jpg", cyl_mosaic3)
+
+# do all the images now!?
+
+if __name__ == "__main__" and True:
+    DIR = Path(__file__).resolve().parent
+    IN_PATH = DIR / f"panorama"
+    OUT_PATH = DIR / f"panorama"
+    N = 10
+    ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
+    f = 0.5
+    ims = [cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+           for im in ims]
+    focal = 1514 * f
+    for i in range(N):
+        warp, mask, _ = cylindrical_warp(ims[i], focal)
+        ims[i] = crop(warp)
+    panorama = ims[0]
+    for i in range(N-1):
+        panorama = auto_mosaic2(panorama, ims[i+1])
+        cv2.imwrite(OUT_PATH / f"crop_cyl_mosaicN_{i}.jpg", panorama)
+        print(panorama.shape)
+    cv2.imwrite(OUT_PATH / "crop_cyl_mosaicN.jpg", panorama)

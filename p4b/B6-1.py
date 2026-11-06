@@ -12,17 +12,15 @@ from B4 import get_corrs
 
 
 def auto_mosaic(ims):
-    tot_dx, tot_dy = 0, 0
+    tot_dx, tot_dy = 0.0, 0.0
     dataset = [(ims[0], (0, 0))]
     for i in range(len(ims)-1):
         im1 = ims[i]
         im2 = ims[i+1]
         pts1, pts2 = get_corrs(im1, im2)
-        dx, dy = np.median(pts2 - pts1, axis=0)
-        dx = int(dx)
-        dy = int(dy)
+        dx, dy = np.median(pts1 - pts2, axis=0)
         tot_dx, tot_dy = tot_dx + dx, tot_dy + dy
-        dataset.append((ims[i+1], (tot_dx, tot_dy)))
+        dataset.append((ims[i+1], (round(tot_dx), round(tot_dy))))
     x_min = min(origin[0] for im, origin in dataset)
     y_min = min(origin[1] for im, origin in dataset)
     x_max = max(origin[0] + im.shape[1] for im, origin in dataset)
@@ -59,7 +57,7 @@ OUT_PATH = DIR / f"panorama"
 N = 10
 
 ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
-f = 0.25
+f = 0.5
 ims = [cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
        for im in ims]
 focal = 1514 * f
@@ -67,7 +65,7 @@ for i in range(N):
     warp, mask, _ = cylindrical_warp(ims[i], focal)
     ims[i] = warp
     h, w, c = ims[i].shape
-    ims[i] = ims[i][2*h//4:3*h//4, :]
+    ims[i] = ims[i][h//4:3*h//4, :]
 
 
 panorama = auto_mosaic(ims)
