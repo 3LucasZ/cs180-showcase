@@ -139,7 +139,7 @@ if __name__ == "__main__" and False:
     cv2.imwrite(OUT_PATH / "mosaic_crop_crop.jpg", panorama)
 
 # time to close the loop!
-if __name__ == "__main__" and True:
+if __name__ == "__main__" and False:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama2"
     OUT_PATH = DIR / f"panorama2"
@@ -150,3 +150,16 @@ if __name__ == "__main__" and True:
         ims[i] = crop(warp)
     panorama = auto_mosaic_translate(ims, final_crop=True, close_loop=True)
     cv2.imwrite(OUT_PATH / "mosaic_crop_crop_loop.jpg", panorama)
+
+# time to close the loop!
+if __name__ == "__main__" and True:
+    DIR = Path(__file__).resolve().parent
+    IN_PATH = DIR / f"panorama3"
+    OUT_PATH = DIR / f"panorama3"
+    N = 12
+    ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
+    for i in range(N):
+        warp, mask, _ = cylindrical_warp(ims[i], focal)
+        ims[i] = crop(warp)
+    panorama = auto_mosaic_translate(ims, final_crop=True, close_loop=True)
+    cv2.imwrite(OUT_PATH / "mosaic.jpg", panorama)
