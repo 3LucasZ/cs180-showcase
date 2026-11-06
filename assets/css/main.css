@@ -939,6 +939,32 @@ html.room-lit .figure-plot img {
 .swap:hover .swap-only-manual,
 .swap:focus-visible .swap-only-manual { display: inline; }
 
+/* A panorama that pans by itself. The track holds the strip twice and slides
+   left by exactly one copy's width, so the wrap point is a copy of the frame
+   it started on and the loop has no seam. Hovering or focusing holds it still. */
+.pan-scroll {
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+.pan-track {
+  display: flex;
+  width: max-content;
+  animation: pan-scroll 48s linear infinite;
+}
+.pan-track img {
+  height: clamp(170px, 30vw, 320px);
+  width: auto;
+  box-shadow: none;
+}
+.pan-scroll:hover .pan-track,
+.pan-scroll:focus-visible .pan-track {
+  animation-play-state: paused;
+}
+@keyframes pan-scroll {
+  to { transform: translateX(-50%); }
+}
+
 /* Code quoted in the writeup. A panel a shade off the page so it reads as an
    inset, headed by the file and function it came from. Long lines scroll inside
    the block instead of widening the column. */

@@ -907,10 +907,22 @@
           projecting each frame onto one rectangular / perspective plane. Idea:
           wawarprping each frame onto a cylinder first.
         </p>
+        <p>
+          For an output pixel measured from the cylinder's center, the source
+          pixel is found by
+        </p>
+        \[ \theta = \frac{u}{f}, \qquad x = f\tan\theta + c_x, \qquad y =
+        \frac{v}{\cos\theta} + c_y \]
+        <p>
+          where \(f\) is the focal length in pixels and \((c_x, c_y)\) the
+          center of the source frame. The cylinder only covers the angle the
+          camera sees, so the output is trimmed to
+        </p>
+        \[ W' = 2\left\lfloor f\arctan \frac{c_x}{f} \right\rfloor + 1 \]
         <div class="figure-grid three">
           <figure class="figure">
             <img
-              src="p4b/panorama/1_warp.JPG"
+              src="p4b/panorama/1_warp.jpg"
               alt="First frame of the photo walk."
               loading="lazy"
             />
@@ -918,7 +930,7 @@
           </figure>
           <figure class="figure">
             <img
-              src="p4b/panorama/2_warp.JPG"
+              src="p4b/panorama/2_warp.jpg"
               alt="Fifth frame of the photo walk."
               loading="lazy"
             />
@@ -926,7 +938,7 @@
           </figure>
           <figure class="figure">
             <img
-              src="p4b/panorama/3_warp.JPG"
+              src="p4b/panorama/3_warp.jpg"
               alt="Tenth frame of the photo walk."
               loading="lazy"
             />
@@ -953,8 +965,8 @@
         />
         <p>
           This is pretty good! Unfortunately, I tried for many hours to make a
-          full 360 panorama out of my dataset, but it was too crappy to really
-          do anything with. Here are some failures below:
+          full 360 panorama out of my dataset, but the dataset was too crappy to
+          really do anything with. Here are some failures below:
         </p>
         <figure class="figure figure-wide">
           <img
@@ -984,6 +996,69 @@
             loading="lazy"
           />
         </figure>
+        <p>
+          Well, you know I can't end on a bad note. Unfortunately, I can't go
+          back to Angel Island to retake pictures, so the best I can do is find
+          something here at Berkeley I guess... or an online dataset. Ok an
+          online dataset I give up taking the photos myself lol!
+        </p>
+        <p>
+          Same algorithms as before, but looking beautiful now (because its
+          actually a decent dataset). We use translation instead of full
+          homography because cylindrical projection allows that :).
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama2/mosaic.jpg"
+            alt="Failed attempt: bands of misalignment across the strip."
+            loading="lazy"
+          />
+        </figure>
+        <p>
+          Crop the ugly warped parts of the image off first, and crop the final
+          masks off the final panorama.
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama2/mosaic_crop_crop.jpg"
+            alt="Failed attempt: bands of misalignment across the strip."
+            loading="lazy"
+          />
+        </figure>
+        <p>
+          Simple "close the loop algorithm": find the correspondences between
+          the first and final frames, and crop out the excess part at the end.
+        </p>
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/panorama2/mosaic_crop_crop_loop.jpg"
+            alt="The closed-loop panorama."
+            loading="lazy"
+          />
+        </figure>
+        <figure class="figure figure-wide">
+          <div
+            class="pan-scroll"
+            tabindex="0"
+            aria-label="The full loop panorama, panning continuously"
+          >
+            <div class="pan-track">
+              <img
+                src="p4b/panorama2/mosaic_crop_crop_loop.jpg"
+                alt="The full closed-loop panorama."
+                loading="lazy"
+              />
+              <img
+                src="p4b/panorama2/mosaic_crop_crop_loop.jpg"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <figcaption>The loop, panning — hover or tab to hold it still.</figcaption>
+        </figure>
+        <p>TADAAAA! Super happy now :)</p>
       </section>
     </main>
 
