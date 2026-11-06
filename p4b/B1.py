@@ -68,11 +68,17 @@ def dist2(x, c):
 
 
 def get_anms_corners(im, verbose=True):
+    capacity = 2500
+    im_h, corners = get_harris_corners(im, verbose=verbose)
+    h = im_h[corners[0], corners[1]]
+    sorted_ids = np.argsort(h)
+    best_ids = sorted_ids[::-1][:capacity]  # sorted by largest h
+    best_corners = corners[:, best_ids]
+    corners = best_corners
+
     k = 250
-    harris_response_image, corners = get_harris_corners(im, verbose=verbose)
-    # maybe cap the corners to like 5000 (LATER) so that my computer doesn't crash out on compute...
     cornersT = corners.T
-    h = harris_response_image[corners[0], corners[1]]
+    h = im_h[corners[0], corners[1]]
     r = np.zeros(len(cornersT))
     for i in range(len(cornersT)):
         js = 0.9 * h > h[i]
@@ -85,7 +91,7 @@ def get_anms_corners(im, verbose=True):
     best = sorted[::-1][:k]
     if verbose:
         print("ANMS corners:", k)
-    return harris_response_image, corners[:, best]
+    return im_h, corners[:, best]
 
 
 if __name__ == "__main__":

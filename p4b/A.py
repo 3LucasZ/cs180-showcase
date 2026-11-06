@@ -106,8 +106,8 @@ def warpImage(im, H, useNN, bbox=None):
         dy = (y-y0)[:, None]
         out[ok] = (
             (1-dx)*(1-dy)*im00 +
-            dx*(1-dy)*im10 +
-            (1-dx)*dy*im01 +
+            dx*(1-dy)*im01 +
+            (1-dx)*dy*im10 +
             dx*dy*im11
         )
     return out.reshape(out_shape[0], out_shape[1], 3), ok.reshape(out_shape), (u_min, v_min)

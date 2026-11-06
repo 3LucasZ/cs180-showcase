@@ -76,14 +76,14 @@ def auto_mosaic3(im1, im2, im3):
 
 if __name__ == "__main__":
     DIR = Path(__file__).resolve().parent
-    t = 1
+    t = 3
     IN_PATH = DIR / f"mosaic_{t}"
     OUT_PATH = DIR / f"mosaic_{t}"
     im1 = cv2.imread(IN_PATH / "1.JPG")
     im2 = cv2.imread(IN_PATH / "2.JPG")
     im3 = cv2.imread(IN_PATH / "3.JPG")
 
-    f = 0.25
+    f = 0.5
     im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im3 = cv2.resize(im3, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
@@ -91,14 +91,16 @@ if __name__ == "__main__":
     vis_ransac = True
     if vis_ransac:
         pts1, pts2 = get_corrs(im1, im2, verbose=False)
+        im1cpy = im1.copy()
+        im2cpy = im2.copy()
         for i in range(len(pts1)):
             c = color_gen(i)
-            cv2.circle(im1, center=pts1[i],
+            cv2.circle(im1cpy, center=pts1[i],
                        radius=5, color=c, thickness=-1)
-            cv2.circle(im2, center=pts2[i],
+            cv2.circle(im2cpy, center=pts2[i],
                        radius=5, color=c, thickness=-1)
-        cv2.imwrite(OUT_PATH / "ransac_1.JPG", im1)
-        cv2.imwrite(OUT_PATH / "ransac_2.JPG", im2)
+        cv2.imwrite(OUT_PATH / "ransac_1.JPG", im1cpy)
+        cv2.imwrite(OUT_PATH / "ransac_2.JPG", im2cpy)
 
     total = auto_mosaic3(im1, im2, im3)
     cv2.imwrite(OUT_PATH / "auto_mosaic.jpg", total)
