@@ -332,13 +332,25 @@
         <div class="mosaic-set">
           <div class="figure-grid three">
             <figure class="figure">
-              <img src="p4a/mosaic_1/left.JPG" alt="Rooftops, left frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_1/left.JPG"
+                alt="Rooftops, left frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_1/center.JPG" alt="Rooftops, centre frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_1/center.JPG"
+                alt="Rooftops, centre frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_1/right.JPG" alt="Rooftops, right frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_1/right.JPG"
+                alt="Rooftops, right frame."
+                loading="lazy"
+              />
             </figure>
           </div>
           <figure class="figure figure-wide">
@@ -353,13 +365,25 @@
         <div class="mosaic-set">
           <div class="figure-grid three">
             <figure class="figure">
-              <img src="p4a/mosaic_2/left.JPG" alt="Sproul Plaza, left frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_2/left.JPG"
+                alt="Sproul Plaza, left frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_2/center.JPG" alt="Sproul Plaza, centre frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_2/center.JPG"
+                alt="Sproul Plaza, centre frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_2/right.JPG" alt="Sproul Plaza, right frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_2/right.JPG"
+                alt="Sproul Plaza, right frame."
+                loading="lazy"
+              />
             </figure>
           </div>
           <figure class="figure figure-wide">
@@ -373,13 +397,25 @@
         <div class="mosaic-set">
           <div class="figure-grid three">
             <figure class="figure">
-              <img src="p4a/mosaic_3/left.JPG" alt="Lounge interior, left frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_3/left.JPG"
+                alt="Lounge interior, left frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_3/center.JPG" alt="Lounge interior, centre frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_3/center.JPG"
+                alt="Lounge interior, centre frame."
+                loading="lazy"
+              />
             </figure>
             <figure class="figure">
-              <img src="p4a/mosaic_3/right.JPG" alt="Lounge interior, right frame." loading="lazy" />
+              <img
+                src="p4a/mosaic_3/right.JPG"
+                alt="Lounge interior, right frame."
+                loading="lazy"
+              />
             </figure>
           </div>
           <figure class="figure figure-wide">
@@ -391,6 +427,435 @@
           </figure>
         </div>
         <p>Yay! Seamless!</p>
+
+        <h2 class="prose-h" id="part-b">Part B: Automatic Mosaics</h2>
+        <p>
+          Part B: we no longer manually find correspondences. Now, we do
+          automatic feature finding and alignment. The steps explored here are:
+          Harris corners, adaptive non-maximal suppression (ANMS), MOPS feature
+          descriptor, Lowe's ratio test, and RANSAC.
+        </p>
+
+        <h2>B.1: Harris Corner Detection and ANMS</h2>
+        <p>
+          Harris corner detection works by finding patches where if you move the
+          patch in any direction, the patch changes by a lot.
+        </p>
+        <p>
+          Here's the measure of change in patch \(W\) for a shift \([u, v]\):
+        </p>
+        \[ \begin{aligned} E(u,v) &= \sum_{(x,y)\in W} \left[ I(x+u,\, y+v) -
+        I(x,y) \right]^2 \\ &\approx \sum_{(x,y)\in W} \left[ I(x,y) +
+        \begin{bmatrix} I_x & I_y \end{bmatrix} \begin{bmatrix} u \\ v
+        \end{bmatrix} - I(x,y) \right]^2 \\ &= \sum_{(x,y)\in W} \left(
+        \begin{bmatrix} I_x & I_y \end{bmatrix} \begin{bmatrix} u \\ v
+        \end{bmatrix} \right)^2 \\ &= \sum_{(x,y)\in W} \begin{bmatrix} u & v
+        \end{bmatrix} \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2
+        \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} \end{aligned} \]
+        <p>Thus, we find that</p>
+        \[ E(u,v) \approx \begin{bmatrix} u & v \end{bmatrix} M \begin{bmatrix}
+        u \\ v \end{bmatrix} \]
+        <p>
+          where \(M\) is a "second moment" matrix, where elements are found by
+          computing derivatives in the pixels:
+        </p>
+        \[ M = \sum_{(x,y)\in W} \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y &
+        I_y^2 \end{bmatrix} \]
+        <p>
+          Thus, we get the final equation to find the "corner response" of a
+          pixel in the image:
+        </p>
+        \[ \begin{aligned} R &= \frac{\det M}{\operatorname{Trace} M} \\ \det M
+        &= \lambda_1\lambda_2 \\ \operatorname{Trace} M &= \lambda_1 + \lambda_2
+        \end{aligned} \]
+        <p>
+          Pixels with a corner response over the threshold, is classified as a
+          corner. Here are the harris corners detected:
+        </p>
+        <div class="figure-grid">
+          <figure class="figure figure-wide">
+            <img
+              src="p4b/mosaic_1/corners.JPG"
+              alt="Harris corners overlaid on the rooftop frame."
+              loading="lazy"
+            />
+            <figcaption>Every Harris corner.</figcaption>
+          </figure>
+          <p>
+            Unfortunately, this is extremely noisy. It looks like a messy random
+            2d point cloud without any meaning. We must find the signal within
+            the noise.
+          </p>
+        </div>
+        <p>
+          Many points which are not corners and not prominent are still
+          detected. Let's try only looking at the top 250 strongest corners:
+        </p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/corners_besth.JPG"
+              alt="The 250 strongest Harris corners."
+              loading="lazy"
+            />
+            <figcaption>250 strongest by response.</figcaption>
+          </figure>
+          This is much better, but all the points seem to be clustered around
+          the same landmarks. It's more robust to have corner feature points
+          detected more uniformly throughout the scene.
+        </div>
+        <p>
+          Thus, we try an algorithm: Adaptive Non-maximal Suppression (ANMS),
+          instead of naiively picking the top K best corner responses. In ANMS,
+          we calculate the minimum suppression radius \(r_i\) for each of our
+          harris corners:
+        </p>
+        \[ r_i = \min_j \left| \mathbf{x}_i - \mathbf{x}_j \right|, \quad
+        \text{s.t. } f(\mathbf{x}_i) < c_{\mathrm{robust}} f(\mathbf{x}_j), \;\;
+        \mathbf{x}_j \in \mathcal{I} \]
+        <p>This simplifies down to:</p>
+        \[ r_i = \min_{j:\, h_i < 0.9\, h_j} \left\| \boldsymbol{p}_i -
+        \boldsymbol{p}_j \right\|_2 \]
+        <p>
+          The intuition is that we prefer corners that are far away from
+          significantly stronger corners. Now, we pick the top 250 corners with
+          the best \(r_i\) values.
+        </p>
+        <figure class="figure">
+          <img
+            src="p4b/mosaic_1/corners_ANMS.JPG"
+            alt="250 corners chosen by adaptive non-maximal suppression."
+            loading="lazy"
+          />
+          <figcaption>250 after ANMS.</figcaption>
+        </figure>
+
+        <h2>B.2: Feature Descriptor Extraction</h2>
+        <p>
+          Now that we have the feature locations of images via corners, we have
+          to turn them into actual features that can be used. A good feature is
+          one that can be corresponded with unambiguously to the matching
+          feature in the overlapping image.
+        </p>
+        <p>
+          We use the Multi-Scale Oriented Patches (MOPS) algorithm to turn a
+          corner into a feature descriptor.
+        </p>
+        <ol>
+          <li>
+            capture the 40x40 pixel region around the corner as greyscale.
+          </li>
+          <li>blur (to avoid aliasing) and sample it down to 8x8</li>
+          <li>
+            normalize the patch so that it is 0 mean and 1 stddev
+            (intensity-invariance)
+          </li>
+        </ol>
+        <p>
+          Below, we take some of our corners and visualize their corresponding
+          feature descriptors (color-coded)!
+        </p>
+
+        <figure class="figure figure-wide">
+          <img
+            src="p4b/mosaic_1/fd_base.JPG"
+            alt="Ten sampled corners, each in a different colour."
+            loading="lazy"
+          />
+          <figcaption>Sampled corners.</figcaption>
+        </figure>
+        <div class="figure-grid three contact">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_0.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_1.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_2.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_3.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_4.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_5.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_6.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_7.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/fd_8.JPG"
+              alt="An 8×8 descriptor."
+              loading="lazy"
+            />
+          </figure>
+          <!-- <figure class="figure">
+            <img src="p4b/mosaic_1/fd_9.JPG" alt="An 8×8 descriptor." loading="lazy" />
+          </figure> -->
+        </div>
+
+        <h2>B.3: Feature Matching</h2>
+        <p>
+          Now, suppose we have extracted the feature descriptors from 2 images
+          we want to stitch together. Now, the problem is corresponding them to
+          one another; how can we match a feature in one image to a feature in
+          another image. 2 feature descriptors corresponding to the same feature
+          should be very similar in euclidean distance. Thus, we use Lowe's
+          ratio test. For each feature in the first image, we find the most
+          similar feature descriptor in the 2nd image as its match. The match is
+          used only if its error is < 0.6x the second nearest neighbor.
+        </p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/matching_1.JPG"
+              alt="Matched points on the first frame, one colour per match."
+              loading="lazy"
+            />
+            <figcaption>First frame.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/matching_2.JPG"
+              alt="The same matches on the second frame."
+              loading="lazy"
+            />
+            <figcaption>Second frame.</figcaption>
+          </figure>
+        </div>
+        <div class="figure-grid">
+          <p>
+            We use the threshold of 0.6x since it does a great job of separating
+            the correct from the incorrect points. From a Data 100 standpoint:
+            not linearly separable, we can definitely do a more accurate ROC
+            curve, type 1 / 2 analysis, etc.
+          </p>
+          <figure class="figure">
+            <img
+              src="p4b/lowe_constant.png"
+              alt="Lowe's ratio-test distributions for correct and incorrect matches."
+              loading="lazy"
+            />
+          </figure>
+        </div>
+        <h2>B.4: 4-Point RANSAC</h2>
+        <p>
+          As you can tell, it's still not perfect. Many of the matches found are
+          not true matches and errors from our algorithm. We run 1 final
+          algorithm to separate the matches into "inliers" that are correct, and
+          "outliers" that are incorrect.
+        </p>
+        <p>We use the RANdom SAmple Consensus algorithm (RANSAC) for this.</p>
+        <ol>
+          <li>repeat many times:</li>
+          <li>pick 4 random matches</li>
+          <li>
+            create the homography H which transforms from left-part of the
+            matches to the right-part of the matches
+          </li>
+          <li>
+            find how many matches are well-solved by the homography H (the
+            left-part, when applied H, becomes very close to the right-part).
+            These are called the inliers.
+          </li>
+          <li>
+            If the number of inliers is more than previous trials, use that as
+            the set of best inliers.
+          </li>
+        </ol>
+        <p>
+          These final inliers are our final correspondences, replacing the
+          manually hand-clicked points in Part A.
+        </p>
+        <div class="figure-grid">
+          <figure class="figure figure-wide">
+            <img
+              src="p4b/mosaic_1/ransac_1.JPG"
+              alt="RANSAC inliers on the first frame, one colour per match."
+              loading="lazy"
+            />
+            <figcaption>Inliers, first frame.</figcaption>
+          </figure>
+          <figure class="figure figure-wide">
+            <img
+              src="p4b/mosaic_1/ransac_2.JPG"
+              alt="The same inliers on the second frame, in the same colours."
+              loading="lazy"
+            />
+            <figcaption>Inliers, second frame.</figcaption>
+          </figure>
+        </div>
+        <p>These correspondences look really accurate!</p>
+
+        <p>
+          Now, for each of our 3 scenes, let's run our same stitching algorithm,
+          except with automatic correspondences this time instead of hand-drawn.
+          Super easy plug-and-chug to try this out.
+        </p>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/mosaic.blend.jpg"
+              alt="Rooftop mosaic from manual correspondences."
+              loading="lazy"
+            />
+            <figcaption>manual.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_1/auto_mosaic.jpg"
+              alt="Rooftop mosaic from automatic correspondences."
+              loading="lazy"
+            />
+            <figcaption>auto.</figcaption>
+          </figure>
+        </div>
+        <figure class="figure figure-wide swap" tabindex="0">
+          <div class="swap-frame">
+            <img
+              class="swap-manual"
+              src="p4b/mosaic_1/mosaic.blend.jpg"
+              alt="Rooftop mosaic stitched from manual correspondences."
+              loading="lazy"
+            />
+            <img
+              class="swap-auto"
+              src="p4b/mosaic_1/auto_mosaic.jpg"
+              alt="Rooftop mosaic stitched from automatic correspondences."
+              loading="lazy"
+            />
+          </div>
+          <figcaption>
+            <span class="swap-only-auto"
+              >Rooftops: automatic — hover or tab to see the manual one.</span
+            >
+            <span class="swap-only-manual">Rooftops: manual.</span>
+          </figcaption>
+        </figure>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_2/mosaic.blend.jpg"
+              alt="Sproul Plaza mosaic from manual correspondences."
+              loading="lazy"
+            />
+            <figcaption>manual.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_2/auto_mosaic.jpg"
+              alt="Sproul Plaza mosaic from automatic correspondences."
+              loading="lazy"
+            />
+            <figcaption>auto.</figcaption>
+          </figure>
+        </div>
+        <figure class="figure figure-wide swap" tabindex="0">
+          <div class="swap-frame">
+            <img
+              class="swap-manual"
+              src="p4b/mosaic_2/mosaic.blend.jpg"
+              alt="Sproul Plaza mosaic stitched from manual correspondences."
+              loading="lazy"
+            />
+            <img
+              class="swap-auto"
+              src="p4b/mosaic_2/auto_mosaic.jpg"
+              alt="Sproul Plaza mosaic stitched from automatic correspondences."
+              loading="lazy"
+            />
+          </div>
+          <figcaption>
+            <span class="swap-only-auto"
+              >Sproul Plaza: automatic — hover or tab to see the manual
+              one.</span
+            >
+            <span class="swap-only-manual">Sproul Plaza: manual.</span>
+          </figcaption>
+        </figure>
+        <div class="figure-grid">
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_3/mosaic.blend.jpg"
+              alt="Lounge mosaic from manual correspondences."
+              loading="lazy"
+            />
+            <figcaption>manual.</figcaption>
+          </figure>
+          <figure class="figure">
+            <img
+              src="p4b/mosaic_3/auto_mosaic.jpg"
+              alt="Lounge mosaic from automatic correspondences."
+              loading="lazy"
+            />
+            <figcaption>auto.</figcaption>
+          </figure>
+        </div>
+        <figure class="figure figure-wide swap" tabindex="0">
+          <div class="swap-frame">
+            <img
+              class="swap-manual"
+              src="p4b/mosaic_3/mosaic.blend.jpg"
+              alt="Lounge mosaic stitched from manual correspondences."
+              loading="lazy"
+            />
+            <img
+              class="swap-auto"
+              src="p4b/mosaic_3/auto_mosaic.jpg"
+              alt="Lounge mosaic stitched from automatic correspondences."
+              loading="lazy"
+            />
+          </div>
+          <figcaption>
+            <span class="swap-only-auto"
+              >Lounge: automatic — hover or tab to see the manual one.</span
+            >
+            <span class="swap-only-manual">Lounge: manual.</span>
+          </figcaption>
+        </figure>
+        <p>
+          The automatic stitching looks amazing, and even smoother than the
+          manual. Yippee!!
+        </p>
       </section>
     </main>
 

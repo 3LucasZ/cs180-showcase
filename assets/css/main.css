@@ -909,6 +909,36 @@ html.room-lit .figure-plot img {
   border: 1px solid var(--line);
 }
 
+/* An automatic result with the manual stitch underneath it. Hovering the
+   figure — or tabbing to it — fades the automatic layer away, so the two
+   stitches can be compared on the same frame. The manual image is inset to
+   the automatic one's box; the aspect ratios differ by a hair, so `cover`
+   takes the sliver out of the edges rather than letterboxing. */
+.swap-frame {
+  position: relative;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+.swap-frame img { box-shadow: none; }
+.swap-frame .swap-manual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.swap-frame .swap-auto {
+  position: relative;
+  transition: opacity 0.18s var(--ease);
+}
+.swap:hover .swap-auto,
+.swap:focus-visible .swap-auto { opacity: 0; }
+
+.swap-only-manual { display: none; }
+.swap:hover .swap-only-auto,
+.swap:focus-visible .swap-only-auto { display: none; }
+.swap:hover .swap-only-manual,
+.swap:focus-visible .swap-only-manual { display: inline; }
+
 /* Code quoted in the writeup. A panel a shade off the page so it reads as an
    inset, headed by the file and function it came from. Long lines scroll inside
    the block instead of widening the column. */
