@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for match in matches:
         i = match[0]
         j = match[1]
-        c = color_gen(i)
+        c = color_gen(corners1[1, i]*corners1[0, i])
         cv2.circle(im1, center=(corners1[1, i], corners1[0, i]),
                    radius=5, color=c, thickness=-1)
         cv2.circle(im2, center=(corners2[1, j], corners2[0, j]),
