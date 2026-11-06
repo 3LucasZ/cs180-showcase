@@ -181,10 +181,11 @@ if __name__ == "__main__" and True:
     DIR = Path(__file__).resolve().parent
     IN_PATH = DIR / f"panorama4"
     OUT_PATH = DIR / f"panorama4"
-    N = 12
+    N = 12  # last 2 images are kinda faulty.
     ims = [cv2.imread(IN_PATH / f"{i+1}.JPG") for i in range(N)]
     for i in range(N):
         warp, mask, _ = cylindrical_warp(ims[i], focal)
         ims[i] = crop(warp)
-    panorama = auto_mosaic_translate(ims, final_crop=True, close_loop=True)
+    # loop closure is not working here, faulty dataset
+    panorama = auto_mosaic_translate(ims, final_crop=False, close_loop=False)
     cv2.imwrite(OUT_PATH / "mosaic.jpg", panorama)

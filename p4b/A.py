@@ -137,8 +137,14 @@ def lopass(im, sigma):
     return f
 
 
-def stack(im, mask=False):
+def stack(im, mask=False, slow=False):
     sigmas = [2, 128] if mask else [0, 4]
+    if slow:
+        sigmas = np.array([0, 1, 2, 4, 8, 16, 32, 64])
+        if (mask):
+            sigmas = sigmas[1:]
+            sigmas = np.append(sigmas, 128)
+            sigmas *= 4
     Gstack = []
     for i, sigma in enumerate(sigmas):
         Gstack.append(lopass(im, sigma))
