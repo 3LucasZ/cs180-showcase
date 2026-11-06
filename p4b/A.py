@@ -248,3 +248,50 @@ def manual_mosaic2(left, center, left_pts, center_pts):
 
     total = stitch(frames[0], frames[1], masks[0], masks[1])
     return total
+
+
+def manual_mosaic3(left, center, right, left_pts, center_left_pts, center_right_pts, right_pts):
+    H_left = computeH(center_left_pts, left_pts)
+    H_right = computeH(center_right_pts, right_pts)
+    warp_left, mask_left, origin_left = warpImageBilinear(left, H_left)
+    warp_right, mask_right, origin_right = warpImageBilinear(right, H_right)
+    dataset = [
+        (warp_left, mask_left, origin_left),
+        (center, np.ones(center.shape[:2], dtype=bool), (0, 0)),
+        (warp_right, mask_right, origin_right),
+    ]
+
+    # messy coordinates: origin (x, y) image.shape (y, x)
+    # bbox for mosaic
+    x_min = min(origin[0] for im, mask, origin in dataset)
+    y_min = min(origin[1] for im, mask, origin in dataset)
+    x_max = max(origin[0] + im.shape[1] for im, mask, origin in dataset)
+    y_max = max(origin[1] + im.shape[0] for im, mask, origin in dataset)
+
+    # convert dataset to mosaic coordinate frame
+    h_mosaic = y_max - y_min
+    w_mosaic = x_max - x_min
+    # print("h:", h_mosaic, "w:", w_mosaic)
+    frames = []
+    masks = []
+    for im, mask, (x, y) in dataset:
+        h, w = im.shape[:2]
+        y_off = y - y_min
+        x_off = x - x_min
+        frame = np.zeros((h_mosaic, w_mosaic, 3), dtype=im.dtype)
+        frame_mask = np.zeros((h_mosaic, w_mosaic), dtype=bool)
+        frame[y_off:y_off+h, x_off:x_off+w] = im
+        frame_mask[y_off:y_off+h, x_off:x_off+w] = mask
+
+        # f = 0.25
+        # frame = cv2.resize(frame, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
+        # frame_mask = cv2.resize(frame_mask.astype(
+        #     np.uint8), (frame.shape[1], frame.shape[0]), interpolation=cv2.INTER_NEAREST).astype(bool)
+
+        frames.append(frame)
+        masks.append(frame_mask)
+
+    # frame order: left, center, right
+    part1 = stitch(frames[0], frames[1], masks[0], masks[1])
+    total = stitch(part1, frames[2], masks[0] | masks[1], masks[2])
+    return total

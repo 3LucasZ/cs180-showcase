@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 
-from A import computeH, manual_mosaic2, t_applyH
+from A import computeH, manual_mosaic2, manual_mosaic3, t_applyH
 
 
 def ransac(pts1, pts2):
@@ -67,7 +67,11 @@ def auto_mosaic2(im1, im2):
 
 
 def auto_mosaic3(im1, im2, im3):
-    return auto_mosaic2(im1, auto_mosaic2(im3, im2))
+    # return auto_mosaic2(im1, auto_mosaic2(im3, im2))
+    pts1_pts2 = get_corrs(im1, im2)
+    pts2_pts3 = get_corrs(im2, im3)
+    return manual_mosaic3(
+        im1, im2, im3, pts1_pts2[0], pts1_pts2[1], pts2_pts3[0], pts2_pts3[1])
 
 
 if __name__ == "__main__":
@@ -79,7 +83,7 @@ if __name__ == "__main__":
     im2 = cv2.imread(IN_PATH / "2.JPG")
     im3 = cv2.imread(IN_PATH / "3.JPG")
 
-    f = 0.1
+    f = 0.25
     im1 = cv2.resize(im1, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im2 = cv2.resize(im2, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
     im3 = cv2.resize(im3, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
