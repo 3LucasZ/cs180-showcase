@@ -4,11 +4,53 @@ import cv2
 import numpy as np
 
 from B5 import cylindrical_warp
-from A import computeH, manual_mosaic2
+from A import computeH
 from B4 import get_corrs
 
 from A import computeH, warpImageBilinear, warpImageNearestNeighbor, stitch
 from B4 import get_corrs
+
+
+def auto_mosaic(ims):
+    tot_dx, tot_dy = 0, 0
+    dataset = [(ims[0], (0, 0))]
+    for i in range(len(ims)-1):
+        im1 = ims[i]
+        im2 = ims[i+1]
+        pts1, pts2 = get_corrs(im1, im2)
+        dx, dy = np.median(pts2 - pts1, axis=0)
+        dx = int(dx)
+        dy = int(dy)
+        tot_dx, tot_dy = tot_dx + dx, tot_dy + dy
+        dataset.append((ims[i+1], (tot_dx, tot_dy)))
+    x_min = min(origin[0] for im, origin in dataset)
+    y_min = min(origin[1] for im, origin in dataset)
+    x_max = max(origin[0] + im.shape[1] for im, origin in dataset)
+    y_max = max(origin[1] + im.shape[0] for im, origin in dataset)
+
+    h_mosaic = y_max - y_min
+    w_mosaic = x_max - x_min
+
+    frames = []
+    masks = []
+    for im, (x, y) in dataset:
+        h, w = im.shape[:2]
+        y_off = y - y_min
+        x_off = x - x_min
+        frame = np.zeros((h_mosaic, w_mosaic, 3), dtype=im.dtype)
+        frame_mask = np.zeros((h_mosaic, w_mosaic), dtype=bool)
+        frame[y_off:y_off+h, x_off:x_off+w] = im
+        frame_mask[y_off:y_off+h, x_off:x_off+w] = 1
+        frames.append(frame)
+        masks.append(frame_mask)
+
+    total = frames[0]
+    total_mask = masks[0]
+    for i in range(len(frames)-1):
+        total = stitch(total, frames[i+1], total_mask, masks[i+1])
+        total_mask = total_mask | masks[i+1]
+
+    return total
 
 
 DIR = Path(__file__).resolve().parent
@@ -21,94 +63,12 @@ f = 0.25
 ims = [cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
        for im in ims]
 focal = 1514 * f
-masks = [None] * N
 for i in range(N):
     warp, mask, _ = cylindrical_warp(ims[i], focal)
     ims[i] = warp
-    masks[i] = mask
-
-# mask = masks[0]
-# panorama = ims[0]
-# for i, im in enumerate(ims[1:]):
-#     print("---STITCH:", i+1)
-#     im_mask = masks[i]
-#     panorama_mask, panorama = auto_mosaic2(
-#         im, im_mask, panorama, panorama_mask)
-#     cv2.imwrite(OUT_PATH / f"panorama_{i}.jpg", panorama)
-# cv2.imwrite(OUT_PATH / "panorama.jpg", panorama)
+    h, w, c = ims[i].shape
+    ims[i] = ims[i][2*h//4:3*h//4, :]
 
 
-# HAD HELP WITH AI HERE:
-
-Hs = [np.eye(3)]
-
-for i in range(1, N):
-    pts_prev, pts_curr = get_corrs(ims[i-1], ims[i])
-
-    # Map current image -> previous image
-    # H = computeH(pts_prev, pts_curr)
-    # ABOVE H IS NOT WORKING, SO TRY TRANSLATION ONLY!!!
-    dx, dy = np.median(pts_prev - pts_curr, axis=0)
-    H = np.array([
-        [1, 0, dx],
-        [0, 1, dy],
-        [0, 0, 1]
-    ])
-
-    # Compose with previous transformation
-    Hs.append(Hs[-1] @ H)
-
-
-data = []
-
-for im, mask, H in zip(ims, masks, Hs):
-    warped, inside, (x, y) = warpImageBilinear(im, H)
-    h, w = warped.shape[:2]
-
-    # Transform the cylindrical validity mask
-    mask_rgb = cv2.cvtColor(
-        mask.astype(np.uint8) * 255,
-        cv2.COLOR_GRAY2BGR
-    )
-    warped_mask, _, _ = warpImageNearestNeighbor(
-        mask_rgb, H, bbox=(x, x+w-1, y, y+h-1)
-    )
-
-    valid = inside & (warped_mask[:, :, 0] > 0)
-    data.append((warped, valid, x, y))
-
-# Global canvas dimensions
-xmin = min(x for im, mask, x, y in data)
-ymin = min(y for im, mask, x, y in data)
-xmax = max(x + im.shape[1] for im, mask, x, y in data)
-ymax = max(y + im.shape[0] for im, mask, x, y in data)
-
-W = xmax - xmin
-H = ymax - ymin
-
-# Stitchhh
-panorama = np.zeros((H, W, 3), dtype=np.uint8)
-panorama_mask = np.zeros((H, W), dtype=bool)
-
-for im, mask, x, y in data:
-    h, w = im.shape[:2]
-    x -= xmin
-    y -= ymin
-
-    frame = np.zeros_like(panorama)
-    frame_mask = np.zeros_like(panorama_mask)
-
-    frame[y:y+h, x:x+w] = im
-    frame_mask[y:y+h, x:x+w] = mask
-
-    if not panorama_mask.any():
-        panorama = frame
-    else:
-        panorama = stitch(
-            panorama, frame,
-            panorama_mask, frame_mask
-        )
-
-    panorama_mask |= frame_mask
-
+panorama = auto_mosaic(ims)
 cv2.imwrite(OUT_PATH / "panorama.jpg", panorama)

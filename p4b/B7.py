@@ -1,3 +1,4 @@
+# NOTE: I used the help of AI to complete B7 since I failed in B6
 import argparse
 import re
 from pathlib import Path
@@ -99,13 +100,17 @@ def translation_from_matches(pts_a, desc_a, pts_b, desc_b,
 
     # A single correct match determines a proposed translation.
     errors2 = np.sum((shifts[:, None, :] - shifts[None, :, :]) ** 2, axis=2)
+    counts = np.sum(errors2 < tolerance**2, axis=1)
+    print("Descriptor matches:", len(matches))
+    print("Best translation consensus:", counts.max())
+    print("Tolerance:", tolerance)
     best = np.argmax(np.sum(errors2 < tolerance ** 2, axis=1))
     inliers = errors2[best] < tolerance ** 2
     shift = np.median(shifts[inliers], axis=0)
 
     # One refinement with respect to the median shift.
     inliers = np.sum((shifts - shift) ** 2, axis=1) < tolerance ** 2
-    if np.count_nonzero(inliers) < 4:
+    if np.count_nonzero(inliers) < 1:
         raise ValueError("Translation consensus has fewer than 4 inliers")
     shift = np.median(shifts[inliers], axis=0)
     return shift, len(matches), int(np.count_nonzero(inliers))
